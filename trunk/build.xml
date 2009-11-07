@@ -50,19 +50,7 @@
   
   <target name="jar"
 	  depends="compile">
-    <echo message="Using directory: ${compile.output.dir}" />
-    <genjar jarfile="${jar.output}">
-      <class name="org.six11.util.Main"/>
-      <classpath>
-	<fileset dir="lib">
-	  <include name="*.jar" />
-	</fileset>
-	<pathelement path="${compile.output.dir}" />
-      </classpath>
-      <manifest>
-	<attribute name="Main-Class" value="org/six11/util/Main" />
-      </manifest>
-    </genjar>  
+    <jar destfile="${build.dir}/six11utils.jar" basedir="${compile.output.dir}"/>
   </target>
 
 
