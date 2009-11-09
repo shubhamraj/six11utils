@@ -1,6 +1,5 @@
-<!-- $Date$  -->
-<!-- $Author$ -->
 <!-- $Id$ -->
+
 <project name="util" default="compile" basedir=".">
 
   <property name="shortName" value="util" />
