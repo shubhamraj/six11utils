@@ -1,3 +1,5 @@
+// $Id$
+
 package org.six11.util.layout.example;
 
 import java.awt.Dimension;

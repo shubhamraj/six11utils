@@ -1,3 +1,5 @@
+// $Id$
+
 package org.six11.util.math;
 
 import static org.six11.util.data.Statistics.maximum;
