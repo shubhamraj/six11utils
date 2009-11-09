@@ -1,3 +1,5 @@
+// $Id$
+
 package org.six11.util.io;
 
 import org.six11.util.Debug;

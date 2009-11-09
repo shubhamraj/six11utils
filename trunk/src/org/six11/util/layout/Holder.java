@@ -1,3 +1,5 @@
+// $Id$
+
 package org.six11.util.layout;
 
 import java.awt.Component;

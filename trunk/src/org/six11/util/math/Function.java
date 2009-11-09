@@ -1,3 +1,5 @@
+// $Id$
+
 package org.six11.util.math;
 
 import org.six11.util.data.Statistics;

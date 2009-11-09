@@ -1,3 +1,5 @@
+// $Id$
+
 package org.six11.util.data;
 
 import java.util.Random;

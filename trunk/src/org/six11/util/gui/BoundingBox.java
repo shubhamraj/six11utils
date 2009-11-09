@@ -1,3 +1,5 @@
+// $Id$
+
 package org.six11.util.gui;
 
 import java.awt.geom.Rectangle2D;

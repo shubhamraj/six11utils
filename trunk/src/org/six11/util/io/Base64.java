@@ -1,3 +1,5 @@
+// $Id$
+
 package org.six11.util.io;
 
 // NOTE: This file was taken off the web, as it is public domain and useful. Below here is a
