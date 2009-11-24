@@ -9,14 +9,9 @@ import java.util.*;
  * that your average programmer (e.g. me) can use it without consulting any documentation aside from
  * an example.
  * 
- * It accepts boolean-presence short args like
- * 
- * <pre>
- * -x
- * </pre>
- * 
- * . It also accepts long arguments like (--enable-debugging) followed by an optional word (e.g.
- * --enable-debugging=false). All arguments that do not begin with a dash are considered positional.
+ * It accepts boolean-presence short args like -x. It also accepts long arguments like
+ * (--enable-debugging) followed by an optional word (e.g. --enable-debugging=false). All arguments
+ * that do not begin with a dash are considered positional.
  * 
  * Order does not matter except for how positional arguments are in relation to one another. So
  * 
@@ -33,69 +28,72 @@ import java.util.*;
  * The following is an example of how to use it in a very simple but powerful way:
  * 
  * <pre>
- * Arguments a = new Arguments(args);
- * 
- * if (a.hasFlag(&quot;foo&quot;)) {
- *   System.out.println(&quot;You provided the 'foo' flag.&quot;);
- * } else {
- *   System.out.println(&quot;Maybe try passing in the 'foo' flag.&quot;);
- * }
- * 
- * if (a.hasValue(&quot;foo&quot;)) {
- *   System.out.println(&quot;Huzzah! You provided a value for foo: &quot; + a.getValue(&quot;foo&quot;));
- * } else {
- *   System.out.println(&quot;You can assign foo a value like this: --foo=blahblah&quot;);
+ * public static void main(String[] args) {
+ *   Arguments a = new Arguments(args);
+ *   if (a.hasFlag(&quot;foo&quot;)) {
+ *     System.out.println(&quot;You provided the 'foo' flag.&quot;);
+ *   } else {
+ *     System.out.println(&quot;Maybe try passing in the 'foo' flag.&quot;);
+ *   }
+ *   if (a.hasValue(&quot;foo&quot;)) {
+ *     System.out.println(&quot;Huzzah! You provided a value for foo: &quot; + a.getValue(&quot;foo&quot;));
+ *   } else {
+ *     System.out.println(&quot;You can assign foo a value like this: --foo=blahblah&quot;);
+ *   }
  * }
  * </pre>
  * 
  * The following is a more involved example showing how to configure, validate, and use flags.
  * 
  * <pre>
- * Arguments a = new Arguments();
+ * public static void main(String[] args) {
+ *   Arguments a = new Arguments();
  * 
- * // set name and documentation for the program as a whole
- * a.setProgramName(&quot;look&quot;);
- * a.setDocumentationProgram(&quot;Lists files and directories.&quot;);
+ *   a.setProgramName(&quot;look&quot;); // set name and documentation for the program as a whole
+ *   a.setDocumentationProgram(&quot;Lists files and directories.&quot;);
  * 
- * // configure Arguments. Specify which are required, and which take values (e.g. --foo=bar).
- * a.addFlag(&quot;suffix&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_REQUIRED, &quot;Specify the suffix to show.&quot;);
- * a.addFlag(&quot;h&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_IGNORED,
- *     &quot;Show file sizes in a more human-readable form.&quot;);
- * a.addFlag(&quot;l&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_IGNORED,
- *     &quot;Long listing. Show many details about a file.&quot;);
- * a.addFlag(&quot;help&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_IGNORED, &quot;Shows this help.&quot;);
- * a.addFlag(&quot;long-help&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_IGNORED, &quot;Shows extended help.&quot;);
- * a.addPositional(0, &quot;dir&quot;, ValueType.VALUE_REQUIRED, &quot;The starting directory.&quot;);
+ *   // configure Arguments. Specify which are required, and which take values (e.g. --foo=bar).
+ *   a.addFlag(&quot;suffix&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_REQUIRED,
+ *       &quot;Specify the suffix to show.&quot;);
+ *   a.addFlag(&quot;h&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_IGNORED,
+ *       &quot;Show file sizes in a more human-readable form.&quot;);
+ *   a.addFlag(&quot;l&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_IGNORED,
+ *       &quot;Long listing. Show many details about a file.&quot;);
+ *   a.addFlag(&quot;help&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_IGNORED, &quot;Shows this help.&quot;);
+ *   a.addFlag(&quot;long-help&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_IGNORED, &quot;Shows extended help.&quot;);
+ *   a.addPositional(0, &quot;dir&quot;, ValueType.VALUE_REQUIRED, &quot;The starting directory.&quot;);
  * 
- * a.parseArguments(args);
+ *   a.parseArguments(args); // apply rules from above to user-supplied input.
  * 
- * if (a.hasFlag(&quot;help&quot;)) {
- *   System.out.println(a.getUsage());
- *   System.exit(0);
- * }
+ *   if (a.hasFlag(&quot;help&quot;)) { // check for --help
+ *     System.out.println(a.getUsage());
+ *     System.exit(0);
+ *   }
  * 
- * if (a.hasFlag(&quot;long-help&quot;)) {
- *   System.out.println(a.getDocumentation());
- *   System.exit(0);
- * }
+ *   if (a.hasFlag(&quot;long-help&quot;)) { // check for --help
+ *     System.out.println(a.getDocumentation());
+ *     System.exit(0);
+ *   }
  * 
- * try {
- *   a.validate();
- * } catch (IllegalArgumentException ex) {
- *   System.out.println(ex.getMessage());
- *   System.out.println(a.getUsage());
- *   System.exit(-1);
- * }
+ *   try {
+ *     a.validate(); // Ensure user input conforms to our specification and stop if it does not.
+ *   } catch (IllegalArgumentException ex) {
+ *     System.out.println(ex.getMessage());
+ *     System.out.println(a.getUsage());
+ *     System.exit(-1);
+ *   }
  * 
- * System.out.println(&quot;List files in directory &quot; + a.getValue(&quot;dir&quot;));
- * if (a.hasFlag(&quot;l&quot;)) {
- *   System.out.println(&quot;  ... use long listing.&quot;);
- * }
- * if (a.hasFlag(&quot;h&quot;)) {
- *   System.out.println(&quot;  ... use human-readable file sizes.&quot;);
- * }
- * if (a.hasFlag(&quot;suffix&quot;)) {
- *   System.out.println(&quot;  ... use suffix = '&quot; + a.getValue(&quot;suffix&quot;) + &quot;'&quot;);
+ *   // Now we can use the arguments in our simple application that doesn't do anything useful.
+ *   System.out.println(&quot;List files in directory &quot; + a.getValue(&quot;dir&quot;));
+ *   if (a.hasFlag(&quot;l&quot;)) {
+ *     System.out.println(&quot;  ... use long listing.&quot;);
+ *   }
+ *   if (a.hasFlag(&quot;h&quot;)) {
+ *     System.out.println(&quot;  ... use human-readable file sizes.&quot;);
+ *   }
+ *   if (a.hasFlag(&quot;suffix&quot;)) {
+ *     System.out.println(&quot;  ... use suffix = '&quot; + a.getValue(&quot;suffix&quot;) + &quot;'&quot;);
+ *   }
  * }
  * </pre>
  * 
@@ -110,6 +108,35 @@ import java.util.*;
  *   ... use long listing.
  *   ... use human-readable file sizes.
  *   ... use suffix = 'jpg'
+ * </pre>
+ * 
+ * If you run the program without any arguments it shows you the usage (like --help would):
+ * 
+ * <pre>
+ * $ ./run org.six11.util.args.Example2
+ * Wrong number of positional arguments. Expected 1, received 0
+ * look: Lists files and directories.
+ * look  [ -h -l ]  [ --help --long-help --suffix=... ] dir
+ * </pre>
+ * 
+ * Finally, if you run the above with --long-help it shows you this:
+ * 
+ * <pre>
+ * $ ./run org.six11.util.args.Example2 --long-help
+ * 
+ * look: Lists files and directories.
+ * 
+ *   ===   Non-required flags:
+ * 
+ * h:                    Show file sizes in a more human-readable form.
+ * help:                 Shows this help.
+ * l:                    Long listing. Show many details about a file.
+ * long-help:            Shows extended help.
+ * suffix:               Specify the suffix to show. [Must specify value]
+ * 
+ *    ===   Positional fields:
+ * 
+ * (1) dir (required):   The starting directory.
  * </pre>
  * 
  * @author Gabe Johnson <johnsogg@cmu.edu>
