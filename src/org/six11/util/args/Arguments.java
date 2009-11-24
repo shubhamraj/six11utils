@@ -1,16 +1,34 @@
+// $Id $
 package org.six11.util.args;
 
 import java.util.*;
 
 /**
- * This parses command line arguments. The design constraint here is ease of programmer use. It is
- * NOT a swiss-army-knife of command line parsers. It is designed to be easy enough to use and
- * remember that your average programmer (e.g. me) can use it without consulting any documentation
- * aside from an example.
+ * This parses command line arguments optimized for ease of programmer use. It is NOT a
+ * swiss-army-knife of command line parsers. It is designed to be easy enough to use and remember
+ * that your average programmer (e.g. me) can use it without consulting any documentation aside from
+ * an example.
  * 
- * It accepts boolean presence short args that are a dash-flags. It also accepts long arguments that
- * are double-dashed string followed by an optional word. All arguments that do not begin with a
- * dash are considered positional.
+ * It accepts boolean-presence short args like
+ * 
+ * <pre>
+ * -x
+ * </pre>
+ * 
+ * . It also accepts long arguments like (--enable-debugging) followed by an optional word (e.g.
+ * --enable-debugging=false). All arguments that do not begin with a dash are considered positional.
+ * 
+ * Order does not matter except for how positional arguments are in relation to one another. So
+ * 
+ * <pre>
+ * -x --username=billybob myFile
+ * </pre>
+ * 
+ * is equivalent to
+ * 
+ * <pre>
+ * --username=billybob myfile -x
+ * </pre>
  * 
  * The following is an example of how to use it in a very simple but powerful way:
  * 
@@ -106,12 +124,6 @@ public class Arguments {
     VALUE_OPTIONAL, VALUE_REQUIRED, VALUE_IGNORED
   }
 
-  // public static final int ARG_OPTIONAL = 0;
-  // public static final int ARG_REQUIRED = 1;
-  // public static final int VALUE_OPTIONAL = 2;
-  // public static final int VALUE_REQUIRED = 3;
-  // public static final int VALUE_IGNORED = 4;
-
   private Set<String> shortArgs = new HashSet<String>();
   private Map<String, String> longArgs = new HashMap<String, String>();
   private List<String> positionalArgs = new ArrayList<String>();
@@ -127,50 +139,22 @@ public class Arguments {
 
   private String space = "   ";
 
-  public static void main(String[] args) {
-    Arguments a = new Arguments();
-    a.setRequiredFlag("a");
-    a.setRequiredFlag("name");
-    a.setRequiredValue("name");
-    a.setRequiredValue("dog");
-    a.setOptionalFlag("q");
-    a.setOptionalFlag("birthday");
-    a.setRequiredValue("birthday");
-    a.setDocumentation("birthday", "The user's birthday (MM/DD/YYYY)");
-    a.setRequiredPositionArgs(2);
-    a.setDocumentation("name", "User's first name.");
-    a.setDocumentation("a", "This is a neat flag.");
-    a.setDocumentation("dog",
-        "The dog (Canis lupus familiaris is a domesticated form of the Wolf, a "
-            + "member of the Canidae family of the order Carnivora. The "
-            + "term is used for both feral and pet varieties. The domestic "
-            + "dog has been one of the most widely kept working and companion "
-            + "animals in human history.");
-    a.setDocumentation("favorite_food", "The user's favorite culinary dish. Use in conjunction "
-        + "with the -a flag for random results.");
-    a.setDocumentationPositional(0, "company", "Company or institution this user works for");
-    a.setDocumentationPositional(2, "job_title", "Job title");
-    a.setDocumentationPositional(1, "comments", "Other things you want to say.");
-    a.setDocumentationProgram("A nice example of using Arguments.");
-    a.setProgramName("Arguments");
-    a.parseArguments(args);
-    try {
-      a.validate();
-    } catch (IllegalArgumentException ex) {
-      System.out.println(ex.getMessage());
-    }
-    if (a.hasFlag("help")) {
-      System.out.println(a.getDocumentation());
-    } else {
-      System.out.println(a.getUsage());
-    }
-  }
-
   /**
    * Make a blank Arguments instance suitable for re-use.
+   * 
+   * Example usage:
+   * 
+   * <pre>
+   * Arguments args = new Arguments();
+   * args.addFlag(&quot;load-path&quot;, ArgType.ARG_OPTIONAL, ValueType.VALUE_REQUIRED,
+   *     &quot;Specifies the root load path for Slippy code.&quot;);
+   * args.parseArguments(userCommandStringArray);
+   * args.validate(); // throws IllegalArgumentException if something is wrong
+   * String loadPath = args.hasValue(&quot;load-path&quot;) ? args.getValue(&quot;load-path&quot;) : &quot;.&quot;;
+   * </pre>
    */
   public Arguments() {
-    // do nothing. Let me establish requirements and stuff first.
+    // do nothing. Let the programmer configure it first.
   }
 
   /**
