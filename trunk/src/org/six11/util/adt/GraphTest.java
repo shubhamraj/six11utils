@@ -1,11 +1,9 @@
-// $Id$
+// $Id: GraphTest.java 12 2009-11-09 22:58:47Z gabe.johnson $
 
-package org.six11.util;
+package org.six11.util.adt;
 
-import org.six11.util.adt.Graph;
-import org.six11.util.adt.Graph.Edge;
 import org.six11.util.adt.Graph.Node;
-
+import org.six11.util.adt.Graph.Edge;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,14 +20,8 @@ import java.util.List;
  **/
 public class GraphTest {
 
-  private String[] args;
-
   public static void main(String[] args) {
-    new GraphTest(args).go();
-  }
-
-  public GraphTest(String[] args) {
-    this.args = args;
+    new GraphTest().go();
   }
 
   public void go() {
