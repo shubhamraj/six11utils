@@ -16,8 +16,7 @@ public class Example2 {
   public static void main(String[] args) {
     Arguments a = new Arguments();
 
-    // set name and documentation for the program as a whole
-    a.setProgramName("look");
+    a.setProgramName("look"); // set name and documentation for the program as a whole
     a.setDocumentationProgram("Lists files and directories.");
 
     // configure Arguments. Specify which are required, and which take values (e.g. --foo=bar).
@@ -31,26 +30,27 @@ public class Example2 {
     a.addFlag("long-help", ArgType.ARG_OPTIONAL, ValueType.VALUE_IGNORED, "Shows extended help.");
     a.addPositional(0, "dir", ValueType.VALUE_REQUIRED, "The starting directory.");
 
-    a.parseArguments(args);
+    a.parseArguments(args); // apply rules from above to user-supplied input.
 
-    if (a.hasFlag("help")) {
+    if (a.hasFlag("help")) { // check for --help
       System.out.println(a.getUsage());
       System.exit(0);
     }
 
-    if (a.hasFlag("long-help")) {
+    if (a.hasFlag("long-help")) { // check for --help
       System.out.println(a.getDocumentation());
       System.exit(0);
     }
 
     try {
-      a.validate();
+      a.validate(); // Ensure user input conforms to our specification and stop if it does not.
     } catch (IllegalArgumentException ex) {
       System.out.println(ex.getMessage());
       System.out.println(a.getUsage());
       System.exit(-1);
     }
 
+    // Now we can use the arguments in our simple application that doesn't do anything useful.
     System.out.println("List files in directory " + a.getValue("dir"));
     if (a.hasFlag("l")) {
       System.out.println("  ... use long listing.");

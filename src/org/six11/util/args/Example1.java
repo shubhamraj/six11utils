@@ -9,15 +9,12 @@ package org.six11.util.args;
 public class Example1 {
 
   public static void main(String[] args) {
-    
     Arguments a = new Arguments(args);
-    
     if (a.hasFlag("foo")) {
       System.out.println("You provided the 'foo' flag.");
     } else {
       System.out.println("Maybe try passing in the 'foo' flag.");
     }
-
     if (a.hasValue("foo")) {
       System.out.println("Huzzah! You provided a value for foo: " + a.getValue("foo"));
     } else {
