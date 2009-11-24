@@ -2,7 +2,6 @@
 
 package org.six11.util.gui;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -16,10 +15,7 @@ import java.awt.event.ComponentEvent;
 import java.util.Random;
 import java.awt.geom.RoundRectangle2D;
 
-import javax.swing.JLabel;
 import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 
 public class Placeholder extends JComponent {
 

@@ -2,7 +2,6 @@
 
 package org.six11.util.gui.shape;
 
-import java.awt.Shape;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Point2D;
@@ -10,7 +9,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.awt.geom.FlatteningPathIterator;
 
-import org.six11.util.Debug;
 import org.six11.util.gui.GenericPathIterator;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Sequence;
@@ -18,10 +16,9 @@ import org.six11.util.pen.Sequence;
 import java.util.List;
 import java.util.ArrayList;
 
-
 /**
- * A simple shape used to put a cross (or, an X, but I didn't want a
- * class named X) on the screen somewhere.
+ * A simple shape used to put a cross (or, an X, but I didn't want a class named X) on the screen
+ * somewhere.
  **/
 public class Cross extends MovableShape {
 
@@ -30,7 +27,7 @@ public class Cross extends MovableShape {
 
   public Cross(double x, double y, double w) {
     this.w = w;
-    moveTo(x,y);
+    moveTo(x, y);
   }
 
   public List<Sequence> getGeometry() {
@@ -46,15 +43,15 @@ public class Cross extends MovableShape {
     return ret;
   }
 
- public void moveTo(double x, double y) {
-   this.x = x;
-   this.y = y;
-   double whalf = w / 2.0;
-   tl = new Pt(x - whalf, y - whalf);
-   tr = new Pt(x + whalf, y - whalf);
-   bl = new Pt(x - whalf, y + whalf);
-   br = new Pt(x + whalf, y + whalf);
- }
+  public void moveTo(double x, double y) {
+    this.x = x;
+    this.y = y;
+    double whalf = w / 2.0;
+    tl = new Pt(x - whalf, y - whalf);
+    tr = new Pt(x + whalf, y - whalf);
+    bl = new Pt(x - whalf, y + whalf);
+    br = new Pt(x + whalf, y + whalf);
+  }
 
   public void moveBy(double dx, double dy) {
     moveTo(x + dx, y + dy);
@@ -62,14 +59,13 @@ public class Cross extends MovableShape {
 
   public String getInitString() {
     double w = tr.getX() - tl.getX();
-    return "Cross(" + (tl.getX() + (w/2.0))  + ", " 
-      + (tl.getY() + (w/2.0)) + ", " + w + ")";
+    return "Cross(" + (tl.getX() + (w / 2.0)) + ", " + (tl.getY() + (w / 2.0)) + ", " + w + ")";
   }
-  
+
   public Rectangle getBounds() {
     Rectangle2D twodee = getBounds2D();
-    return new Rectangle((int) twodee.getX(), (int) twodee.getY(),
-			 (int) twodee.getWidth(), (int) twodee.getHeight());
+    return new Rectangle((int) twodee.getX(), (int) twodee.getY(), (int) twodee.getWidth(),
+        (int) twodee.getHeight());
   }
 
   public Rectangle2D getBounds2D() {
@@ -119,8 +115,4 @@ public class Cross extends MovableShape {
     return new FlatteningPathIterator(getPathIterator(affine), flatness);
   }
 
-  private void bug(String what) {
-    Debug.out("Cross", what);
-  }
-    
 }

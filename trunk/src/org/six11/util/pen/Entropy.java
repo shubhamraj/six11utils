@@ -4,8 +4,6 @@ package org.six11.util.pen;
 
 import java.util.Random;
 
-import org.six11.util.Debug;
-
 /**
  * A source of entropy. Use it before it changes!
  **/

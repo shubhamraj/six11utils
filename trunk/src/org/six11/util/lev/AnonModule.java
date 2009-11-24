@@ -2,10 +2,6 @@
 
 package org.six11.util.lev;
 
-import java.util.List;
-import java.util.Vector;
-import java.util.Iterator;
-
 /**
  * An anonymous module, suitable for scoping a module at a narrower
  * level than at the application. This is useful for 'editors', when
@@ -23,8 +19,6 @@ public abstract class AnonModule extends Module  {
     
   private static int anonCounter = 1;
   
-  private List lis;
-
   public AnonModule(Application app_) {
     super(app_, "");
     String s = getClass().getName();

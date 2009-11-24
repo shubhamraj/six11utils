@@ -5,13 +5,11 @@ package org.six11.util.pen;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.six11.util.Debug;
-
 /**
  * 
  **/
 public class ConvexHull {
-  
+
   protected List<Pt> points;
   protected List<Pt> rotatedRect;
   protected double rotatedRectArea;
@@ -36,7 +34,7 @@ public class ConvexHull {
 
   public List<Pt> getRotatedRect() {
     if (rotatedRect == null) {
-      //      Antipodal anti = new Antipodal(points);
+      // Antipodal anti = new Antipodal(points);
       Antipodal2 anti = new Antipodal2(points);
       rotatedRect = anti.getMinimumBoundingRect();
     }
@@ -69,14 +67,14 @@ public class ConvexHull {
 
   private void calcCentroidAndArea() {
     List<Pt> rect = getRotatedRect();
-    Pt m = Functions.getMean(rect);           // the mean of the rect.
-    List<Pt> c = new ArrayList<Pt>();         // triangle centroids
+    Pt m = Functions.getMean(rect); // the mean of the rect.
+    List<Pt> c = new ArrayList<Pt>(); // triangle centroids
     List<Double> a = new ArrayList<Double>(); // triangle areas
     int n = points.size();
     Pt p1, p2;
-    for (int i=0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
       p1 = points.get(i);
-      p2 = points.get(next(i,n));
+      p2 = points.get(next(i, n));
       c.add(Functions.getMean(p1, p2, m));
       Vec v1 = new Vec(p1, m);
       Vec v2 = new Vec(p2, m);
@@ -89,16 +87,17 @@ public class ConvexHull {
     } else {
       double sumX = 0.0;
       double sumY = 0.0;
-      for (int i=0; i < n; i++) {
-	Pt scaledC = (c.get(i).getScaled(a.get(i)));
-	sumX = sumX + scaledC.getX();
-	sumY = sumY + scaledC.getY();
+      for (int i = 0; i < n; i++) {
+        Pt scaledC = (c.get(i).getScaled(a.get(i)));
+        sumX = sumX + scaledC.getX();
+        sumY = sumY + scaledC.getY();
       }
       double cX = sumX / convexArea;
       double cY = sumY / convexArea;
       convexCentroid = new Pt(cX, cY);
     }
   }
+
   private static int next(int cur, int upperBound) {
     return (cur + 1) % upperBound;
   }

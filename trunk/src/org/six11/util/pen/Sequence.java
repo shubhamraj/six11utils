@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import java.util.Collections;
 import java.awt.Color;
 import java.awt.BasicStroke;
 import java.awt.Rectangle;
@@ -17,7 +16,6 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
-import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 
 import org.six11.util.Debug;
@@ -385,10 +383,6 @@ public class Sequence implements Shape, Iterable<Pt> {
     drawFunction.draw(this, g);
   }
 
-  private void bug(String what) {
-    Debug.out("Sequence", what);
-  }
-
   /**
    * A PathIterator for going through a Sequence as though it were a Shape. (in fact, this Sequence
    * IS a Shape, and this is what Sequence uses).
@@ -440,9 +434,6 @@ public class Sequence implements Shape, Iterable<Pt> {
       return type;
     }
 
-    private void bug(String what) {
-      Debug.out("PtPathIterator", what);
-    }
   }
 
   public static Sequence loadFromFile(String file) {

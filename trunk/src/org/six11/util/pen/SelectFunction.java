@@ -2,10 +2,6 @@
 
 package org.six11.util.pen;
 
-import java.awt.Graphics2D;
-import java.awt.Color;
-import java.awt.BasicStroke;
-
 /**
  * An interface for a hunk of code that takes care of selecting points
  * along a sequence. 

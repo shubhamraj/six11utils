@@ -5,23 +5,21 @@ package org.six11.util.pen;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.six11.util.Debug;
-
 /**
  * 
  **/
 public class Antipodal2 {
-  
+
   public static void main(String[] args) {
     Sequence seq = Sequence.loadFromFile(args[0]);
     if (seq.get(0).equals(seq.getLast())) {
       seq.removeLast();
     }
     List<Pt> points = Graham.getConvexHull(seq.getPoints(), true);
-    
-    Antipodal2 ap = new Antipodal2(points);
+
+    new Antipodal2(points);
   }
-  
+
   List<Pt> mbr; // minimum bounding rectangle
 
   public Antipodal2(List<Pt> convexHull) {
@@ -29,19 +27,16 @@ public class Antipodal2 {
     double bestArea = Double.MAX_VALUE;
     double d;
     List<Pt> r;
-    for (int i=0; i < convexHull.size(); i++) {
+    for (int i = 0; i < convexHull.size(); i++) {
       r = findBox(i, convexHull, false);
       d = area(r);
-      //       Debug.out("Antipodal2", "Area at " + i + " of " + convexHull.size() + ": " +
-      // 		Debug.num(d));
       if (d < bestArea) {
-        bestArea= d;
-	bestIdx = i;
-	mbr = r;
-	// 	Debug.out("Antipodal2", " * Improvement at " + i + " of " + convexHull.size() + " involving points " + Debug.num(convexHull.get(i)) + " and " + Debug.num(convexHull.get(inc(convexHull, i))));
+        bestArea = d;
+        bestIdx = i;
+        mbr = r;
       }
     }
-    
+
     // just debug the best one
     findBox(bestIdx, convexHull, true);
   }
@@ -54,7 +49,7 @@ public class Antipodal2 {
 
   private List<Pt> findBox(int i, List<Pt> convexHull, boolean debug) {
     // algorithm is on page 161
-    int n = convexHull.size();
+    convexHull.size();
     Line a = lineAt(i, convexHull);
     Vec aVec = new Vec(a);
     Vec aVecNormal = aVec.getNormal();
@@ -84,7 +79,7 @@ public class Antipodal2 {
     }
     return ret;
   }
-  
+
   private Line makeLongLine(Line in, double len) {
     Vec dirA = new Vec(in).getVectorOfMagnitude(len / 2.0);
     Vec dirB = dirA.getFlip();
@@ -99,15 +94,15 @@ public class Antipodal2 {
     int smallestIdx = -1;
     int highestIdx = -1;
     double d;
-    for (int i=0; i < convexHull.size(); i++) {
+    for (int i = 0; i < convexHull.size(); i++) {
       d = Functions.getSignedDistanceBetweenPointAndLine(convexHull.get(i), line);
       if (d < smallestVal) {
-	smallestIdx = i;
-	smallestVal = d;
+        smallestIdx = i;
+        smallestVal = d;
       }
       if (d > highestVal) {
-	highestIdx = i;
-	highestVal = d;
+        highestIdx = i;
+        highestVal = d;
       }
     }
     return new Extreme(smallestIdx, smallestVal, highestIdx, highestVal);
@@ -120,8 +115,8 @@ public class Antipodal2 {
     double highestVal;
 
     Extreme(int lowestIdx, double lowestVal, int highestIdx, double highestVal) {
-      this.lowestIdx  = lowestIdx;
-      this.lowestVal  = lowestVal;
+      this.lowestIdx = lowestIdx;
+      this.lowestVal = lowestVal;
       this.highestIdx = highestIdx;
       this.highestVal = highestVal;
     }
@@ -140,7 +135,7 @@ public class Antipodal2 {
     return new Line(points.get(i), points.get(j));
   }
 
-  private static int inc(List list, int current) {
+  private static int inc(List<Pt> list, int current) {
     return inc(list.size(), current);
   }
 

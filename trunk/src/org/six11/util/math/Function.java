@@ -2,8 +2,6 @@
 
 package org.six11.util.math;
 
-import org.six11.util.data.Statistics;
-
 public abstract class Function {
   public abstract double eval(double x);
 

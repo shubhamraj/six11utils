@@ -2,9 +2,6 @@
 
 package org.six11.util.gui;
 
-import org.six11.util.Debug;
-//import org.six11.util.pen.Pt;
-
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.util.List;
@@ -68,9 +65,5 @@ public class GenericPathIterator implements PathIterator {
     coords[1] = points.get(index).getY();
     return type;
   }    
-  
-  private void bug(String what) {
-    Debug.out("GenericIterator", what);
-  }
-  
+    
 }

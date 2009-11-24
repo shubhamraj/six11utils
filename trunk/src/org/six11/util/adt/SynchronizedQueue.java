@@ -8,8 +8,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import org.six11.util.Debug;
-
 /**
  * This class allows threads to communicate asynchronously by putting messages into and reading
  * messages out of a synchronized queue.
@@ -20,19 +18,18 @@ public class SynchronizedQueue<T> {
 
   private Queue<T> messages;
   private QueueObjectSerializer<T> defaultSerializer;
-  
+
   public SynchronizedQueue() {
     messages = new LinkedList<T>();
   }
-  
+
   public void add(T t) {
     synchronized (this) {
       messages.add(t);
       this.notifyAll();
-      // bug("Added " + t + ". Queue size is now " + messages.size());
     }
   }
-  
+
   public Collection<T> getAll(boolean remove) {
     synchronized (this) {
       Collection<T> ret = new ArrayList<T>();
@@ -45,7 +42,7 @@ public class SynchronizedQueue<T> {
       return ret;
     }
   }
-  
+
   public void flush(PrintWriter out, QueueObjectSerializer<T> serializer, boolean hold) {
     synchronized (this) {
       T t;
@@ -61,15 +58,11 @@ public class SynchronizedQueue<T> {
       }
     }
   }
-  
-  private void bug(String what) {
-    Debug.out("SynchronizedQueue", what);
-  }
-  
+
   public interface QueueObjectSerializer<T> {
     public void serialize(PrintWriter writer, T t);
   }
-  
+
   public QueueObjectSerializer<T> getDefaultSerializer() {
     if (defaultSerializer == null) {
       defaultSerializer = new QueueObjectSerializer<T>() {

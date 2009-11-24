@@ -61,8 +61,10 @@ public class TestPt extends TestCase {
     a.setAttribute("color", blue);
     assertEquals(blue, a.getAttribute("color"));
     try {
-      double d = a.getDouble("curvature"); // not there yet
-    } catch (Exception expected) {}
+      a.getDouble("curvature"); // not there yet
+    } catch (Exception expected) {
+      // ignore
+    }
     a.setDouble("curvature", 0.04);
     double d = a.getDouble("curvature");
     assertEquals(0.04, d);

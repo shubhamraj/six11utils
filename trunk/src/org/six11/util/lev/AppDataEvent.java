@@ -2,8 +2,6 @@
 
 package org.six11.util.lev;
 
-import java.util.EventObject;
-
 
 /**
  * This is a marker class indicating that the subclass is to be used in the lev

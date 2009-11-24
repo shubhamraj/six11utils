@@ -4,8 +4,6 @@ package org.six11.util.pen;
 
 import java.util.Iterator;
 
-import org.six11.util.Debug;
-
 /**
  * 
  **/
