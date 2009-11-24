@@ -11,9 +11,6 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.FlatteningPathIterator;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Stack;
-
-import org.six11.util.Debug;
 import org.six11.util.gui.BoundingBox;
 import org.six11.util.gui.GenericPathIterator;
 import org.six11.util.pen.Functions;
@@ -101,7 +98,6 @@ public abstract class MovableShape implements Shape {
   public List<Sequence> getGeometry() {
     if (dirty) {
       transformedGeometry.clear();
-      Sequence seq;
       Pt pt2;
       AffineTransform transform = getTransform();
       for (Sequence in : originalGeometry) {

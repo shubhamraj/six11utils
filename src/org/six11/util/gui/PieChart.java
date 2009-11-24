@@ -138,10 +138,6 @@ public class PieChart extends JComponent {
     return System.currentTimeMillis() > endTime;
   }
 
-  private static void bug(String what) {
-    Debug.out("PieChart", what);
-  }
-
   public Color getFullCircleColor() {
     return fullCircleColor;
   }

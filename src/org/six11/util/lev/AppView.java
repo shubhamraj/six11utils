@@ -9,12 +9,6 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.Window;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
 
 
@@ -26,7 +20,6 @@ import javax.swing.SwingUtilities;
  */
 public abstract class AppView {
 
-  private static final int BUFFER_SIZE = 2048;
 
   private Application app;
   private Container root;
@@ -125,12 +118,12 @@ public abstract class AppView {
     centerMe.setLocation(topLeft);
   }
 
-  /**
-   * Retrieve an icon with the given path name from the classpath. If
-   * your application has jar files, these are checked. This will
-   * return an ImageIcon if the icon can be loaded; null otherwise.
-   */
-  public static ImageIcon getIcon(String name) {
-    throw new RuntimeException("This method shouldn't be used at Ecovate because it doesn't use an allowed network connection.");
-  }
+//  /**
+//   * Retrieve an icon with the given path name from the classpath. If
+//   * your application has jar files, these are checked. This will
+//   * return an ImageIcon if the icon can be loaded; null otherwise.
+//   */
+//  public static ImageIcon getIcon(String name) {
+//    throw new RuntimeException("This method shouldn't be used at Ecovate because it doesn't use an allowed network connection.");
+//  }
 }

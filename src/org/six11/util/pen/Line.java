@@ -3,7 +3,6 @@
 package org.six11.util.pen;
 
 import java.awt.geom.Line2D;
-import java.awt.Polygon;
 
 /**
  * A Line that behaves how I want it to as I go through a series of

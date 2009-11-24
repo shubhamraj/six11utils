@@ -2,11 +2,9 @@
 
 package org.six11.util.gui;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import javax.swing.JTextArea;
 
 /**
  * 
@@ -18,11 +16,6 @@ public class InfoTextBox extends ColoredTextPane {
   public InfoTextBox() {
     super();
     setEditable(false);
-    // setEnabled(false);
-    //setWrapStyleWord(true);
-    //setLineWrap(true);
-    // setForeground(Color.BLACK);
-    // setDisabledTextColor(Color.BLACK); // necessary since the component is set to disabled above.
   }
 
   public void paint(Graphics g) {

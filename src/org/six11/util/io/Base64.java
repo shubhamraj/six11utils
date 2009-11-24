@@ -623,6 +623,7 @@ public class Base64 {
    *           if there is an error
    * @since 2.0
    */
+  @SuppressWarnings("null")
   public static String encodeObject(java.io.Serializable serializableObject, int options)
       throws java.io.IOException {
 
@@ -891,6 +892,7 @@ public class Base64 {
    *           if source array, offset, or length are invalid
    * @since 2.3.1
    */
+  @SuppressWarnings("null")
   public static byte[] encodeBytesToBytes(byte[] source, int off, int len, int options)
       throws java.io.IOException {
 
@@ -1244,6 +1246,7 @@ public class Base64 {
    *           if <tt>s</tt> is null
    * @since 1.4
    */
+  @SuppressWarnings("null")
   public static byte[] decode(String s, int options) throws java.io.IOException {
 
     if (s == null) {
@@ -1353,6 +1356,7 @@ public class Base64 {
    *           if the decoded object is of a class that cannot be found by the JVM
    * @since 2.3.4
    */
+  @SuppressWarnings("null")
   public static Object decodeToObject(String encodedObject, int options, final ClassLoader loader)
       throws java.io.IOException, java.lang.ClassNotFoundException {
 
@@ -1378,7 +1382,7 @@ public class Base64 {
           @Override
           public Class<?> resolveClass(java.io.ObjectStreamClass streamClass)
               throws java.io.IOException, ClassNotFoundException {
-            Class c = Class.forName(streamClass.getName(), false, loader);
+            Class<?> c = Class.forName(streamClass.getName(), false, loader);
             if (c == null) {
               return super.resolveClass(streamClass);
             } else {
@@ -1429,6 +1433,7 @@ public class Base64 {
    *           if dataToEncode is null
    * @since 2.1
    */
+  @SuppressWarnings("null")
   public static void encodeToFile(byte[] dataToEncode, String filename) throws java.io.IOException {
 
     if (dataToEncode == null) {
@@ -1469,6 +1474,7 @@ public class Base64 {
    *           if there is an error
    * @since 2.1
    */
+  @SuppressWarnings("null")
   public static void decodeToFile(String dataToDecode, String filename) throws java.io.IOException {
 
     Base64.OutputStream bos = null;
@@ -1504,6 +1510,7 @@ public class Base64 {
    *           if there is an error
    * @since 2.1
    */
+  @SuppressWarnings("null")
   public static byte[] decodeFromFile(String filename) throws java.io.IOException {
 
     byte[] decodedData = null;
@@ -1565,6 +1572,7 @@ public class Base64 {
    *           if there is an error
    * @since 2.1
    */
+  @SuppressWarnings("null")
   public static String encodeFromFile(String filename) throws java.io.IOException {
 
     String encodedData = null;
@@ -1614,6 +1622,7 @@ public class Base64 {
    *           if there is an error
    * @since 2.2
    */
+  @SuppressWarnings("null")
   public static void encodeFileToFile(String infile, String outfile) throws java.io.IOException {
 
     String encoded = Base64.encodeFromFile(infile);
@@ -1644,6 +1653,7 @@ public class Base64 {
    *           if there is an error
    * @since 2.2
    */
+  @SuppressWarnings("null")
   public static void decodeFileToFile(String infile, String outfile) throws java.io.IOException {
 
     byte[] decoded = Base64.decodeFromFile(infile);

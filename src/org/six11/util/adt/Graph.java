@@ -2,8 +2,6 @@
 
 package org.six11.util.adt;
 
-import org.six11.util.Debug;
-
 import java.util.List;
 import java.util.Queue;
 import java.util.Map;
@@ -93,7 +91,7 @@ public class Graph {
 
     public Node(Object data) {
       this.data = data;
-      this.actions = new HashMap();
+      this.actions = new HashMap<Integer, NodeCallback>();
     }
 
     protected boolean isVisited() { 
@@ -550,11 +548,5 @@ public class Graph {
       }
     }
     edgeDataValid = true;
-  }
-
-  private static void out(String mode, String message) {
-    StringBuffer buf = new StringBuffer(mode);
-    while (buf.length() < 6) buf.append(" ");
-    System.out.println("    " + buf + ": " + message);
   }
 }

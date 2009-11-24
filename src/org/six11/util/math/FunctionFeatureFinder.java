@@ -16,7 +16,6 @@ public class FunctionFeatureFinder {
   public final static int TARGET_VALUE = 3;
   
   private GaussianHat hat;
-  private double target;
   private int maxIterations;
   private double inputTolerance;
   private double outputTolerance;
@@ -124,14 +123,11 @@ public class FunctionFeatureFinder {
    */
   public double seekTarget(Function f, double lowerBound, double upperBound, 
 		     double target) {
-    boolean bogus = false;
     double fa = f.eval(lowerBound);
     double fb = f.eval(upperBound);
     // ensure target is in the range.
     if (isValueBetween(fa, fb, target)) {
-      bogus = false;
     } else {
-      bogus = true;
       Debug.out("FunctionFeatureFinder", "The target value (" + target + ") can't be found in the function in the range");
       return 0d;
     }
@@ -148,7 +144,7 @@ public class FunctionFeatureFinder {
       iteration++;
     }
     double input = inputInterval.getMid();
-    double output = f.eval(input);
+    f.eval(input);
     return input;
   }
 
@@ -163,7 +159,6 @@ public class FunctionFeatureFinder {
     double c = hat.getDouble();
 
     double fa = f.eval(a);
-    double fb = f.eval(b);
     double fc = f.eval(c);
 
     // This assumes that the input interval contains the number.

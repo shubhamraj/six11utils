@@ -14,12 +14,9 @@ import org.six11.util.io.StreamUtil;
 public class ProcessWatcher {
 
   private static WorkerThread workerThread;
-  
-  private Process proc;
 
   public ProcessWatcher(final Process proc, final long timeout, final Runnable onFail,
       final Runnable onSuccess, final Runnable onTimeout) {
-    this.proc = proc;
     Runnable runner = new Runnable() {
       public void run() {
         int result;
@@ -42,7 +39,7 @@ public class ProcessWatcher {
       Runnable timeoutRunner = new Runnable() {
         public void run() {
           long endTime = System.currentTimeMillis() + timeout;
-          while(System.currentTimeMillis() < endTime) {
+          while (System.currentTimeMillis() < endTime) {
             try {
               Thread.sleep(50);
             } catch (InterruptedException ignore) {
@@ -50,7 +47,7 @@ public class ProcessWatcher {
           }
           boolean stillRunning = true;
           try {
-            int result = proc.exitValue();
+            proc.exitValue();
             stillRunning = false;
           } catch (IllegalThreadStateException ex) {
           }
@@ -65,14 +62,14 @@ public class ProcessWatcher {
       new Thread(timeoutRunner).start();
     }
   }
-  
+
   private static WorkerThread getWorkerThread() {
     if (workerThread == null) {
       workerThread = new WorkerThread("ProcessWatcher worker thread");
     }
     return workerThread;
   }
-  
+
   public static Runnable getDiagnostic(final Process proc) {
     return new Runnable() {
       public void run() {

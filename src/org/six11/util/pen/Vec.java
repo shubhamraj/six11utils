@@ -2,12 +2,7 @@
 
 package org.six11.util.pen;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.awt.geom.Line2D;
 import java.util.Comparator;
-
-import org.six11.util.Debug;
 
 /**
  * Represents a 2D vector from one point to another. This gives you
@@ -16,8 +11,6 @@ import org.six11.util.Debug;
  */
 public class Vec {
 
-  private static final Vec UNIT_X_VEC = new Vec(1.0, 0.0);
-  private static NumberFormat nf = new DecimalFormat("#.0");
   public static final int DIR_LEFT = 1;
   public static final int DIR_RIGHT = 2;
 

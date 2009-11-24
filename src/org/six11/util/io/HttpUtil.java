@@ -36,7 +36,6 @@ public class HttpUtil {
     }
   }
 
-  @SuppressWarnings("unused")
   private void bug(String what) {
     Debug.out("HttpUtil", what);
   }

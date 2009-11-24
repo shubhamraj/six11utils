@@ -236,7 +236,7 @@ public class FrontEnd extends JComponent {
     public void addRule(String parentName, String parentAnchorStr,
         String childName, String childAnchorStr, int offset) {
         addRule(parentName, Anchor.findAnchor(parentAnchorStr), childName,
-            Anchor.findAnchor(childAnchorStr), 0);
+            Anchor.findAnchor(childAnchorStr), offset);
     }
 
     /**
@@ -332,11 +332,11 @@ public class FrontEnd extends JComponent {
     }
 
     protected void traverseEdgeForCorrectness(Edge e) {
-        List /* <Edge> */ entering = graph.findEdgesEntering(e.b);
+        List<Edge> entering = graph.findEdgesEntering(e.b);
         boolean oneExplicit = false;
         Edge f;
 
-        for (Iterator it = entering.iterator(); it.hasNext();) {
+        for (Iterator<Edge> it = entering.iterator(); it.hasNext();) {
             f = (Edge) it.next();
 
             if (!((EdgeData) f.data).isDerived()) {
@@ -347,7 +347,7 @@ public class FrontEnd extends JComponent {
         }
 
         if (oneExplicit) {
-            for (Iterator it = entering.iterator(); it.hasNext();) {
+            for (Iterator<Edge> it = entering.iterator(); it.hasNext();) {
                 f = (Edge) it.next();
 
                 if (((EdgeData) f.data).isDerived()) {
@@ -397,7 +397,7 @@ public class FrontEnd extends JComponent {
      */
     protected Node findOrMakePrefNode(PrefData pd, Graph g) {
         Node ret = null;
-        List list = g.getNodes(pd);
+        List<Node> list = g.getNodes(pd);
 
         if (list.size() == 0) {
             ret = new Node(pd);
@@ -431,7 +431,7 @@ public class FrontEnd extends JComponent {
             pd.name = a.name;
         }
 
-        List list = g.getNodes(pd);
+        List<Node> list = g.getNodes(pd);
 
         if (list.size() == 0) {
             ret = pd;
@@ -484,11 +484,11 @@ public class FrontEnd extends JComponent {
         return ret;
     }
 
-    private static void error(String what) {
+    private static void error(@SuppressWarnings("unused") String what) {
         // logger.log(debugID + ": " + what);
     }
 
-    private void thisOut(String what) {
+    private void thisOut(@SuppressWarnings("unused") String what) {
         if (debugging) {
             // logger.log((getName() == null ? "" : getName() + ": ") + what);
         }
@@ -727,7 +727,7 @@ public class FrontEnd extends JComponent {
             Dimension ps = parent.getSize();
             Box b;
 
-            for (Iterator it = boxes.values().iterator(); it.hasNext();) {
+            for (Iterator<Box> it = boxes.values().iterator(); it.hasNext();) {
                 b = (Box) it.next();
                 b.clear();
             }
@@ -782,7 +782,7 @@ public class FrontEnd extends JComponent {
                 graph.dfs(graph.findStartNodes());
 
                 if (applyBounds) {
-                    for (Iterator it = boxes.values().iterator(); it.hasNext();) {
+                    for (Iterator<Box> it = boxes.values().iterator(); it.hasNext();) {
                         b = (Box) it.next();
 
                         if (!b.name.equals(ROOT) && b.isDone()) {
@@ -808,7 +808,7 @@ public class FrontEnd extends JComponent {
             if (fireResize && (resizeListeners.size() > 0)) {
                 ResizeListener rl;
 
-                for (Iterator it = resizeListeners.iterator(); it.hasNext();) {
+                for (Iterator<ResizeListener> it = resizeListeners.iterator(); it.hasNext();) {
                     rl = (ResizeListener) it.next();
                     rl.componentPreferredSizeChanged();
                 }
@@ -825,8 +825,8 @@ public class FrontEnd extends JComponent {
             Node node;
             PrefData pd;
 
-            for (Iterator it = sizeGraph.getNodes().iterator(); it.hasNext();) {
-                node = (Node) it.next();
+            for (Iterator<Node> it = sizeGraph.getNodes().iterator(); it.hasNext();) {
+                node = it.next();
                 pd = (PrefData) node.data;
 
                 if (pd.isCardinal()) {

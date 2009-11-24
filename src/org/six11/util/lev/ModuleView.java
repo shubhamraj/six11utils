@@ -12,7 +12,6 @@ public abstract class ModuleView extends JPanel implements AppDataListener {
   private Module mod;
   private boolean firstFocus;
   private Component defaultFocus;
-  private Component lastFocus;
   private FocusListener focusListener;
 
   /**
@@ -22,15 +21,17 @@ public abstract class ModuleView extends JPanel implements AppDataListener {
     super();
     mod = mod_;
     focusListener = new FocusListener() {
-	public void focusGained(FocusEvent ev) {
-	  if (firstFocus) {
-	    focusDefault();
-	    firstFocus = false;
-	  }
-	  
-	}
-	public void focusLost(FocusEvent ev) { }
-      };
+      public void focusGained(FocusEvent ev) {
+        if (firstFocus) {
+          focusDefault();
+          firstFocus = false;
+        }
+
+      }
+
+      public void focusLost(FocusEvent ev) {
+      }
+    };
     addFocusListener(focusListener);
   }
 
@@ -44,7 +45,8 @@ public abstract class ModuleView extends JPanel implements AppDataListener {
   /**
    * Called when this module is registered with the given model.
    */
-  public void modelRegistered(Model model) { }
+  public void modelRegistered(@SuppressWarnings("unused") Model model) {
+  }
 
   public void setDefaultFocusedItem(Component comp) {
     defaultFocus = comp;
@@ -53,12 +55,12 @@ public abstract class ModuleView extends JPanel implements AppDataListener {
 
   private void focusDefault() {
     Runnable runner = new Runnable() {
-	public void run() {
-	  if (defaultFocus != null) {
-	    defaultFocus.requestFocus();
-	  }
-	}
-      };
+      public void run() {
+        if (defaultFocus != null) {
+          defaultFocus.requestFocus();
+        }
+      }
+    };
     SwingUtilities.invokeLater(runner);
   }
 }

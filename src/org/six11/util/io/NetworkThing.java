@@ -190,7 +190,6 @@ public class NetworkThing {
   }
 
   private void upload(Collection<Message> outbound) {
-    long begin = System.currentTimeMillis();
     try {
       HttpURLConnection ht = initConnection();
       Element root = new Element("messages");
@@ -209,10 +208,6 @@ public class NetworkThing {
     } catch (Exception ex) {
       ex.printStackTrace();
     }
-    long end = System.currentTimeMillis();
-    long duration = end - begin;
-    // TODO: it might be useful to display 'duration' somewhere, or have it on hand for a
-    // slash-command to show latency.
   }
 
   @SuppressWarnings("unchecked")

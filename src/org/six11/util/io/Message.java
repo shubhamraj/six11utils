@@ -13,7 +13,6 @@ import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
-import org.six11.util.Debug;
 
 /**
  * A client or server message object. It can be serialized to and from XML. A message always has a
@@ -39,10 +38,6 @@ public class Message {
     xml = new Document(root);
   }
   
-  private void bug(String what) {
-    Debug.out("Message", what);
-  }
-
   public String getAttribute(String name) {
     return xml.getRootElement().getAttributeValue(name);
   }
