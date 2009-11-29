@@ -55,7 +55,7 @@ public class Debug {
   };
 
   public static boolean useColor = true;
-  public static boolean useTime = false;
+  public static boolean useTime = true;
 
   public static PrintStream outputStream = System.out;
   private static final Map<String, String> colorbag = new HashMap<String, String>();
@@ -343,7 +343,7 @@ public class Debug {
       colorStart = getColor(who);
       colorEnd = NEUTRAL;
     }
-    if (true || useTime) {
+    if (useTime) {
       time = " (" + now() + ") ";
     }
     outputStream.println(colorStart + spaces + ": " + colorEnd + time + what);
