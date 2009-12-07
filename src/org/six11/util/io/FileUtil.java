@@ -22,16 +22,20 @@ public abstract class FileUtil {
     return loadStringFromFile(new File(fileName));
   }
 
-  public static void writeStringToFile(String fileName, String contents, boolean append) {
+  public static void writeStringToFile(File file, String contents, boolean append) {
     BufferedWriter out;
     try {
-      out = new BufferedWriter(new FileWriter(fileName, append));
+      out = new BufferedWriter(new FileWriter(file, append));
       out.write(contents);
       out.close();
     } catch (IOException ex) {
       ex.printStackTrace();
       bug("Continuing without re-throwing above exception.");
     }
+  }
+
+  public static void writeStringToFile(String fileName, String contents, boolean append) {
+    writeStringToFile(new File(fileName), contents, append);
   }
 
   private static void bug(String what) {
