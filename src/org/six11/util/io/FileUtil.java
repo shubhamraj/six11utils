@@ -4,6 +4,7 @@ package org.six11.util.io;
 
 import org.six11.util.Debug;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.io.File;
 import java.io.IOException;
@@ -78,11 +79,11 @@ public abstract class FileUtil {
       return allText.toString();
     } catch (Exception ex) {
       if (!f.exists()) {
-//        Debug.out("FileUtil", f.getName() + ": no such file");
+        // Debug.out("FileUtil", f.getName() + ": no such file");
         throw new RuntimeException(f.getName() + ": no such file");
       }
       if (!f.canRead()) {
-//        Debug.out("FileUtil", f.getName() + ": can not read");
+        // Debug.out("FileUtil", f.getName() + ": can not read");
         throw new RuntimeException(f.getName() + ": can not read");
       }
       ex.printStackTrace();
@@ -113,6 +114,24 @@ public abstract class FileUtil {
     return ret;
   }
 
+  public static List<File> searchForSuffix(String suffix, File baseDir) {
+    List<File> ret = new ArrayList<File>();
+    SuffixFileFilter filter = new SuffixFileFilter(suffix);
+    searchForSuffix(filter, baseDir, ret);
+    return ret;
+  }
+
+  private static void searchForSuffix(SuffixFileFilter suffix, File dir, List<File> inOut) {
+    for (File child : dir.listFiles()) {
+      if (suffix.accept(child)) {
+        inOut.add(child);
+      }
+      if (child.isDirectory()) {
+        searchForSuffix(suffix, child, inOut);
+      }
+    }
+  }
+
   public static class FileFinder {
     List<File> dirs;
 
@@ -120,7 +139,6 @@ public abstract class FileUtil {
       this.dirs = dirs;
       for (File d : dirs) {
         if (!d.exists() || !d.canRead()) {
-//          Debug.out("FileUtil", "Can't read path element: " + d.getAbsolutePath());
           throw new RuntimeException(d.getAbsolutePath() + " not readable");
         }
       }
@@ -138,6 +156,7 @@ public abstract class FileUtil {
       }
       return ret;
     }
+
   }
 
   public static String getPath(String file) {
