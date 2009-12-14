@@ -6,11 +6,12 @@ import org.six11.util.Debug;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileFilter;
 import java.io.*;
 
 /**
@@ -106,11 +107,12 @@ public abstract class FileUtil {
         return (f != null && (f.getName().endsWith(suffixWithDot) || f.isDirectory()));
       }
 
+      @SuppressWarnings("unused")
       public String getDescription() {
         return description;
       }
     };
-    ret.setFileFilter(filter);
+    ret.setFileFilter((javax.swing.filechooser.FileFilter) filter);
     return ret;
   }
 
@@ -130,6 +132,91 @@ public abstract class FileUtil {
         searchForSuffix(suffix, child, inOut);
       }
     }
+  }
+
+  public static void copyTree(File src, File dest, FileFilter whitelist, FileFilter blacklist)
+      throws IOException {
+    Stack<File> sources = new Stack<File>();
+    sources.push(src);
+    while (!sources.empty()) {
+      File copyMe = sources.pop();
+      File[] children = copyMe.listFiles();
+      for (File child : children) {
+        boolean ok = true;
+        if (whitelist != null) {
+          ok = whitelist.accept(child);
+        }
+        if (blacklist != null) {
+          ok = !blacklist.accept(child);
+        }
+        if (ok && child.isDirectory()) {
+          sources.push(child);
+        } else if (ok) {
+          copyTree(src, dest, child);
+        }
+      }
+    }
+  }
+
+  public static void copyTree(File srcBase, File destBase, File copyMe) throws IOException {
+    String path = copyMe.getAbsolutePath().replace(srcBase.getAbsolutePath(),
+        destBase.getAbsolutePath());
+    File destFile = new File(path);
+    destFile.getParentFile().mkdirs();
+    destFile.createNewFile();
+    FileOutputStream destFileOutput = new FileOutputStream(destFile);
+    StreamUtil.writeFileToOutputStream(copyMe, destFileOutput);
+    destFileOutput.close();
+    System.out.println(destFile.getAbsolutePath() + " (" + destFile.length() + " bytes)");
+  }
+
+  public static boolean copy(File source, File dest) {
+    boolean ret = true;
+    try {
+      FileInputStream in = new FileInputStream(source);
+      FileOutputStream out = new FileOutputStream(dest);
+      StreamUtil.writeInputStreamToOutputStream(in, out);
+      out.close();
+    } catch (FileNotFoundException ex) {
+      ret = false;
+    } catch (IOException ex) {
+      ret = false;
+    }
+    return ret;
+  }
+
+  public static void complainIfNotExist(File f) throws IOException {
+    if (!f.exists()) {
+      throw new IOException(f.getAbsolutePath() + " does not exist");
+    }
+  }
+
+  public static void complainIfNotReadable(File f) throws IOException {
+    complainIfNotExist(f);
+    if (!f.canRead()) {
+      throw new IOException(f.getAbsolutePath() + " not readable");
+    }
+  }
+
+  public static void complainIfNotWriteable(File f) throws IOException {
+    complainIfNotReadable(f);
+    if (!f.canWrite()) {
+      throw new IOException(f.getAbsolutePath() + " not writeable");
+    }
+  }
+
+  public static boolean deleteTree(File f) {
+    boolean ret = true;
+    if (f.isDirectory()) {
+      for (File child : f.listFiles()) {
+        ret = ret && deleteTree(child);
+      }
+    }
+    ret = ret && f.delete();
+    if (!f.exists()) {
+      System.out.println("Deleted  "+ f.getAbsolutePath());
+    }
+    return ret;
   }
 
   public static class FileFinder {
