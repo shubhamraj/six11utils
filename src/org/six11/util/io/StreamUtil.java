@@ -16,28 +16,16 @@ public abstract class StreamUtil {
 
   public static String inputStreamToString(InputStream in) {
     StringBuilder out = new StringBuilder();
-//    int runningSum = 0;
     try {
       byte[] b = new byte[4096];
       for (int n; (n = in.read(b)) != -1;) {
         out.append(new String(b, 0, n));
-//        if (reportProgress) {
-//          runningSum = runningSum + n;
-////          SlippyMachine.outputStream.println("Downloaded " + runningSum + " bytes...");
-//        }
       }
     } catch (IOException ex) {
       out.append("exception: " + ex.getMessage());
     }
-//    if (reportProgress) {
-//      SlippyMachine.outputStream.println("Completed downloading " + runningSum + " bytes.");
-//    }
     return out.toString();
   }
-
-//  public static String inputStreamToString(InputStream in) {
-//    return inputStreamToString(in, false);
-//  }
 
   public static void writeFileToOutputStream(File f, OutputStream out) throws IOException {
     FileInputStream fin = new FileInputStream(f);
