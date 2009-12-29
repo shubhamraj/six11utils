@@ -7,8 +7,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 
 import org.six11.util.Debug;
 
@@ -36,6 +38,7 @@ public class HttpUtil {
     }
   }
 
+  @SuppressWarnings("unused")
   private void bug(String what) {
     Debug.out("HttpUtil", what);
   }
@@ -62,24 +65,44 @@ public class HttpUtil {
     return ht;
   }
 
-  public String downloadUrlToString(String fullFileName) throws IOException {
+  public String downloadUrlToString(String urlString) throws IOException {
     String ret = "";
-    HttpURLConnection con = initGetConnection(fullFileName);
+    HttpURLConnection con = initGetConnection(urlString);
     InputStream response = con.getInputStream();
     ret = StreamUtil.inputStreamToString(response);
     return ret;
   }
 
-  public void postBytes(String urlString, byte[] bytes) throws IOException {
-    bug("Posting " + bytes.length + " bytes to " + urlString + "...");
+  public void setParam(String key, String value, StringBuilder buffer) {
+    if (buffer.length() > 0) {
+      buffer.append("&");
+    }
+    buffer.append(key + "=");
+    try {
+      buffer.append(URLEncoder.encode(value, "UTF-8"));
+    } catch (UnsupportedEncodingException ex) {
+      // if this happens, there are bigger problems for you to work out.
+    }
+  }
+  
+  public String post(String urlString, StringBuilder paramBuffer) throws IOException {
+    HttpURLConnection con = initPostConnection(urlString);
+    ByteArrayInputStream in = new ByteArrayInputStream(paramBuffer.toString().getBytes("UTF-8"));
+    OutputStream out = con.getOutputStream();
+    StreamUtil.writeInputStreamToOutputStream(in, out);
+    out.flush();
+    out.close();
+    return StreamUtil.inputStreamToString(con.getInputStream());
+  }
+
+  public String postBytes(String urlString, byte[] bytes) throws IOException {
     HttpURLConnection con = initPostConnection(urlString);
     ByteArrayInputStream in = new ByteArrayInputStream(bytes);
     OutputStream out = con.getOutputStream();
     StreamUtil.writeInputStreamToOutputStream(in, out);
     out.flush();
     out.close();
-    con.getInputStream();
-    bug("Done posting " + bytes.length + " bytes to " + urlString + ".");
+    return StreamUtil.inputStreamToString(con.getInputStream());
   }
 
 }
