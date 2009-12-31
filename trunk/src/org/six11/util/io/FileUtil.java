@@ -27,6 +27,8 @@ public abstract class FileUtil {
   public static void writeStringToFile(File file, String contents, boolean append) {
     BufferedWriter out;
     try {
+      file.getParentFile().mkdirs();
+      file.createNewFile();
       out = new BufferedWriter(new FileWriter(file, append));
       out.write(contents);
       out.close();
