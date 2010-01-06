@@ -5,6 +5,8 @@ package org.six11.util.gui;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 import javax.swing.JTextPane;
 import javax.swing.text.*;
@@ -19,6 +21,7 @@ public class ColoredTextPane extends JTextPane {
   protected boolean autoscroll;
   protected boolean lineWrap;
   protected Component viewport;
+  private RedirectedOutputStream myOutputStream;
 
   /**
    * 
@@ -87,5 +90,38 @@ public class ColoredTextPane extends JTextPane {
   public void setAutoscroll(boolean autoscroll) {
     this.autoscroll = autoscroll;
   }
+  
+  public ByteArrayOutputStream getOutputStream() {
+    if (myOutputStream == null) {
+      myOutputStream = new RedirectedOutputStream(this);
+    }
+    return myOutputStream;
+  }
+  
+  private class RedirectedOutputStream extends ByteArrayOutputStream {
+    
+    private String lineSeparator;
+    private ColoredTextPane text;
+
+    RedirectedOutputStream(ColoredTextPane text) {
+      super();
+      lineSeparator = System.getProperty("line.separator");
+      this.text = text;
+    }
+
+    public void flush() throws IOException {
+      String record;
+      synchronized (this) {
+        super.flush();
+        record = this.toString();
+        super.reset();
+        if (record.length() == 0 || record.equals(lineSeparator)) {
+          return;
+        }
+        text.append(Color.BLACK, record + "\n");
+      }
+    }
+  }
+
 
 }
