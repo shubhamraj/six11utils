@@ -6,6 +6,8 @@ import junit.framework.TestCase;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 
+import org.six11.util.data.FSM;
+
 /**
  * 
  **/
@@ -20,11 +22,8 @@ public class TestFSM extends TestCase {
   protected void setUp() {
     fsm = new FSM("JUnit Testing FSM");
     /*
-      A: 1 (to B)
-      B: 2 (to A), 3 (to C)
-      C: 4 (to C), 5 (to D), 6 (to B)
-      D: 7 (to A)
-    */
+     * A: 1 (to B) B: 2 (to A), 3 (to C) C: 4 (to C), 5 (to D), 6 (to B) D: 7 (to A)
+     */
     fsm.addState("A");
     fsm.addState("B");
     fsm.addState("C");
@@ -51,7 +50,7 @@ public class TestFSM extends TestCase {
   }
 
   public void testSameNameEvents() {
-    // augment fsm with a new state 'Held' and three new transitions: 
+    // augment fsm with a new state 'Held' and three new transitions:
     // B: hold (to Held)
     // C: hold (to Held)
     // Held: done (to A)
@@ -85,7 +84,7 @@ public class TestFSM extends TestCase {
     assertEquals("C", fsm.getState());
     fsm.addEvent("2"); // should have no effect
     assertEquals("C", fsm.getState());
-    for (int i=0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
       fsm.addEvent("4"); // transition from C back to itself
       assertEquals("C", fsm.getState());
     }
@@ -101,10 +100,10 @@ public class TestFSM extends TestCase {
     // this tests both the doBefore/doAfter as well as the change
     // listeners
     fsm.addChangeListener(new ChangeListener() {
-	public void stateChanged(ChangeEvent ev) {
-	  val4++;
-	}
-      });
+      public void stateChanged(ChangeEvent ev) {
+        val4++;
+      }
+    });
     assertEquals(0, val1);
     assertEquals(0, val2);
     assertEquals(0, val3);
@@ -128,20 +127,24 @@ public class TestFSM extends TestCase {
     assertEquals(0, val2);
     assertEquals(3, val3);
     assertEquals(7, val4);
-    
+
   }
-  
-  private FSM.Transition mkTrans(String evtName, String startState, String endState) {
+
+  private FSM.Transition mkTrans(String evtName, final String startState, final String endState) {
     return new FSM.Transition(evtName, startState, endState) {
-	public void doBeforeTransition() {
-	  if (startState.equals("A")) val1++;
-	  if (startState.equals("B")) val2++;
-	  if (endState.equals("D")) val2 = 0;
-	}
-	
-	public void doAfterTransition() {
-	  if (endState.equals("C")) val3 = val1 * val2;	  
-	}
-      };
+      public void doBeforeTransition() {
+        if (startState.equals("A"))
+          val1++;
+        if (startState.equals("B"))
+          val2++;
+        if (endState.equals("D"))
+          val2 = 0;
+      }
+
+      public void doAfterTransition() {
+        if (endState.equals("C"))
+          val3 = val1 * val2;
+      }
+    };
   }
 }

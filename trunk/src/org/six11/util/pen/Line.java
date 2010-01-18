@@ -6,7 +6,6 @@ import java.awt.geom.Line2D;
 
 /**
  * A Line that behaves how I want it to as I go through a series of
- * points, formating a line between subsequent sections of said
  * points. This is just for clearer code.
  **/
 public class Line extends Line2D.Double {

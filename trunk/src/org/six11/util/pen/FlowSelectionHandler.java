@@ -3,6 +3,9 @@
 package org.six11.util.pen;
 
 import javax.swing.Timer;
+
+import org.six11.util.data.FSM;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;

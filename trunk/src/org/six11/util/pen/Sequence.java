@@ -4,6 +4,7 @@ package org.six11.util.pen;
 
 import java.util.NoSuchElementException;
 import java.awt.geom.FlatteningPathIterator;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -19,8 +20,10 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 import org.six11.util.Debug;
+import org.six11.util.io.FileUtil;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.FileReader;
 
@@ -125,9 +128,6 @@ public class Sequence implements Shape, Iterable<Pt> {
   }
 
   public Pt get(int idx) {
-    if (idx < 0 || idx >= points.size()) {
-      Debug.out("Sequence", "index " + idx + " invalid for list of size " + points.size());
-    }
     return points.get(idx);
   }
 
@@ -155,9 +155,18 @@ public class Sequence implements Shape, Iterable<Pt> {
    * Returns the arc length of the entire sequence, assuming straight lines between each point pair.
    */
   public double length() {
+    return getPathLength(0, points.size() - 1);
+  }
+
+  /**
+   * Returns the arc length of the portion of the sequence beginning and ending at the given
+   * indices, assuming straight lines between each pair of successive points.
+   */
+  public double getPathLength(int idxStartInclusive, int idxEndInclusive) {
     double ret = 0.0;
     Pt prev = null;
-    for (Pt pt : this) {
+    for (int i = idxStartInclusive; i <= idxEndInclusive; i++) {
+      Pt pt = points.get(i);
       if (prev != null) {
         ret += prev.distance(pt);
       }
@@ -204,6 +213,22 @@ public class Sequence implements Shape, Iterable<Pt> {
       if (pt.hasAttribute("curvature")) {
         ret += pt.getDouble("curvature");
       }
+    }
+    return ret;
+  }
+
+  public double getCurvature(int idx, int windowSize) {
+    double ret = 0.0;
+    int lower = idx - windowSize;
+    int upper = idx + windowSize;
+    if (lower >= 0 && upper < points.size()) {
+      double dx = points.get(upper).x - points.get(lower).x;
+      double dy = points.get(upper).y - points.get(lower).y;
+      double numer = Math.atan2(dy, dx);
+      double denom = getPathLength(lower, upper);
+      ret = numer / denom;
+    } else if (windowSize > 1) {
+      return getCurvature(idx, windowSize - 1);
     }
     return ret;
   }
@@ -433,7 +458,16 @@ public class Sequence implements Shape, Iterable<Pt> {
       }
       return type;
     }
+  }
 
+  public void writeToFile(String fileName) {
+    File outFile = new File(fileName);
+    StringBuilder buf = new StringBuilder();
+    buf.append("# Sequence.java: " + points.size() + " points; " + new Date().toString() + "\n");
+    for (Pt pt : points) {
+      buf.append(pt.x + "\t" + pt.y + "\n");
+    }
+    FileUtil.writeStringToFile(outFile, buf.toString(), false);
   }
 
   public static Sequence loadFromFile(String file) {
@@ -444,9 +478,11 @@ public class Sequence implements Shape, Iterable<Pt> {
       String line;
       while (in.ready()) {
         line = in.readLine();
-        if (!line.trim().startsWith("#")) { // comment lines.
-          tok = new StringTokenizer(in.readLine(), "\t");
-          ret.add(new Pt(Double.valueOf(tok.nextToken()), Double.valueOf(tok.nextToken())));
+        if (!line.trim().startsWith("#")) { // avoid comment lines.
+          tok = new StringTokenizer(line, "\t");
+          String x = tok.nextToken();
+          String y = tok.nextToken();
+          ret.add(new Pt(Double.valueOf(x), Double.valueOf(y)));
         }
       }
     } catch (IOException ex) {
