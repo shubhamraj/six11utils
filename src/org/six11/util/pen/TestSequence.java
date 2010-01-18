@@ -2,6 +2,9 @@
 
 package org.six11.util.pen;
 
+import java.io.File;
+import java.io.IOException;
+
 import junit.framework.TestCase;
 
 import org.six11.util.Debug;
@@ -11,6 +14,9 @@ import org.six11.util.Debug;
  **/
 public class TestSequence extends TestCase {
 
+  static {
+    Debug.useColor = false;
+  }
   protected Sequence seq;
 
   protected void setUp() {
@@ -49,10 +55,6 @@ public class TestSequence extends TestCase {
       assertEquals(pt.getX() * pt.getX(), pt.getY());
     }
 
-    // ret.add(new Pt(0.0, 0.0));
-    // ret.add(new Pt(1.0, 1.0));
-    // ret.add(new Pt(2.0, 1.5));
-    // ret.add(new Pt(3.0, 1.8));
     Sequence smallSequence = makeSequence();
     int forwardCount = 0;
     for (Pt pt : smallSequence.forward(0)) {
@@ -135,14 +137,12 @@ public class TestSequence extends TestCase {
     }
   }
 
-  public void testGetSpline() {
+  public Sequence testGetSpline() {
     Sequence base = new Sequence();
-    for (int i = 1; i <= 100; i++)
+    for (int i = 1; i <= 100; i++) {
       base.add(f(i));
-    Sequence spline = null; // Functions.getSpline(base, 10, 1.0);
-    spline = Functions.getSpline(base, 4, 10);
-    bug("There are " + spline.size() + " points in the spline, and " + base.size()
-        + " points in the orignal sequence");
+    }
+    return Functions.getSpline(base, 4, 10);
   }
 
   public void testGetPointAtDistance() {
@@ -261,8 +261,23 @@ public class TestSequence extends TestCase {
   private static Pt f(double x) {
     return new Pt(x, x * x);
   }
-
-  private void bug(String what) {
-    Debug.out("TestSequence", what);
+  
+  public void testReadWriteSequence() {
+    Sequence seq = makeSequence();
+    try {
+      String tmpFile = File.createTempFile("TestSequence", ".test").getAbsolutePath();
+      seq.writeToFile(tmpFile);
+      Sequence readFromDisk = Sequence.loadFromFile(tmpFile);
+      assertEquals(seq.size(), readFromDisk.size());
+      for (int i=0; i < seq.size(); i++) {
+        assertEquals(seq.getPoints().get(i), readFromDisk.getPoints().get(i));
+      }
+    } catch (IOException ex) {
+      ex.printStackTrace();
+    }
   }
+
+//  private void bug(String what) {
+//    Debug.out("TestSequence", what);
+//  }
 }

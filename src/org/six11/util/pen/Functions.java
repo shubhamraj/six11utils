@@ -311,64 +311,59 @@ public abstract class Functions {
     return getAngleBetween(va, vb);
   }
 
-  public static double getAngleBetween(Vec a, Vec b) {
-    double ret = 0.0;
-    double numerator = Functions.getDotProduct(a, b);
-    double denom = a.mag() * b.mag();
-    if (denom != 0.0) {
-      double cos = numerator / denom;
-      double det = Functions.getDeterminant(a, b);
-      ret = Math.acos(cos) * ((det < 0) ? -1.0 : 1.0);
-    }
+  public static double getAngleBetween(Vec a, Vec b) {    
+    double a1 = Math.atan2(b.getY(), b.getX());
+    double a2 = Math.atan2(a.getY(), a.getX());
+    double ret = a1 - a2;
     return ret;
   }
 
-  public static double getAngleBetweenFullcircle(Vec a, Vec b) {
-    double ret = 0.0;
-    double numerator = Functions.getDotProduct(a, b);
-    double denom = a.mag() * b.mag();
-    if (denom != 0.0) {
-      double cos = numerator / denom;
-      double det = Functions.getDeterminant(a, b);
-      double ang = Math.acos(cos);
-      if (det > 0.0) {
-        ang = Math.PI + ang;
-      }
-      ret = ang;
-    }
-    return ret;
-  }
+//  public static double getAngleBetweenFullcircle(Vec a, Vec b) {
+//    double ret = 0.0;
+//    double numerator = Functions.getDotProduct(a, b);
+//    double denom = a.mag() * b.mag();
+//    if (denom != 0.0) {
+//      double cos = numerator / denom;
+//      double det = Functions.getDeterminant(a, b);
+//      double ang = Math.acos(cos);
+//      if (det > 0.0) {
+//        ang = Math.PI + ang;
+//      }
+//      ret = ang;
+//    }
+//    return ret;
+//  }
 
   public static double getDotProduct(Vec a, Vec b) {
     return a.getX() * b.getX() + a.getY() * b.getY();
   }
 
-  @SuppressWarnings("unused")
-  public static Vec getCrossProduct(Vec a, Vec b) {
-    // TODO implement me NOTE: It seems that the cross product of two
-    // 2D vectors yields a 'vector' with one component... a scalar.
-
-    // NOTE: if you are using this to get the signed angle between two
-    // vectors, look at getAngleBetween()
-    return null;
-  }
+//  @SuppressWarnings("unused")
+//  public static Vec getCrossProduct(Vec a, Vec b) {
+//    // TODO implement me NOTE: It seems that the cross product of two
+//    // 2D vectors yields a 'vector' with one component... a scalar.
+//
+//    // NOTE: if you are using this to get the signed angle between two
+//    // vectors, look at getAngleBetween()
+//    return null;
+//  }
 
   public static double getDeterminant(Vec a, Vec b) {
     // det(ab, cd) = a*d - b*c;
     return a.getX() * b.getY() - a.getY() * b.getX();
   }
 
-  @SuppressWarnings("unused")
-  public static double getVectorMagnitude(Vec vec) {
-    // TODO implement me
-    return 0.0;
-  }
-
-  @SuppressWarnings("unused")
-  public static Pt getLineMidpoint(Line line) {
-    // TODO implement me
-    return null;
-  }
+//  @SuppressWarnings("unused")
+//  public static double getVectorMagnitude(Vec vec) {
+//    // TODO implement me
+//    return 0.0;
+//  }
+//
+//  @SuppressWarnings("unused")
+//  public static Pt getLineMidpoint(Line line) {
+//    // TODO implement me
+//    return null;
+//  }
 
   // public static double getLineLength(Line line) {
 
