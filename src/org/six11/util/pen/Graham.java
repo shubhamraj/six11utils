@@ -13,24 +13,25 @@ import java.io.FileWriter;
 public class Graham {
 
   public static void main(String[] args) {
-    List<Pt> unsorted = new ArrayList<Pt>();
-    if (args.length == 0) {
-      System.out.println("give me x y pairs, or a single number indicating "
-          + " number of random points to generate.");
-    } else if (args.length == 1) {
-      // args[0] is a filename (read data points from file)
-      unsorted = Sequence.loadFromFile(args[0]).getPoints();
-    } else {
-      for (int i = 0; i < args.length; i += 2) {
-        unsorted.add(new Pt(Double.valueOf(args[i]), Double.valueOf(args[i + 1])));
-      }
-    }
-    // all of the above served to populate a list of points called
-    // 'unsorted'. In a single call, I can get the convex hull:
-    List<Pt> hull = Graham.getConvexHull(unsorted, true);
-    for (Pt pt : hull) {
-      System.out.println(pt.toString());
-    }
+//    List<Pt> unsorted = new ArrayList<Pt>();
+//    if (args.length == 0) {
+//      System.out.println("give me x y pairs, or a single number indicating "
+//          + " number of random points to generate.");
+//    } else if (args.length == 1) {
+//      // args[0] is a filename (read data points from file)
+//      unsorted = Sequence.loadFromFile(args[0]).getPoints();
+//    } else {
+//      for (int i = 0; i < args.length; i += 2) {
+//        unsorted.add(new Pt(Double.valueOf(args[i]), Double.valueOf(args[i + 1])));
+//      }
+//    }
+//    // all of the above served to populate a list of points called
+//    // 'unsorted'. In a single call, I can get the convex hull:
+//    List<Pt> hull = Graham.getConvexHull(unsorted);
+//    for (Pt pt : hull) {
+//      System.out.println(pt.toString());
+//    }
+    System.out.println("Broken until Sequence.loadFromFile() has a replacement.");
   }
 
   public static void outputFile(String file, List<Pt> points) {
@@ -53,17 +54,10 @@ public class Graham {
   }
 
   public static List<Pt> getConvexHull(List<Pt> unsorted) {
-    return getConvexHull(unsorted, false);
-  }
-
-  public static List<Pt> getConvexHull(List<Pt> unsorted, boolean debug) {
     if (unsorted.size() < 3) {
       List<Pt> ret = new ArrayList<Pt>();
       ret.addAll(unsorted);
       return ret;
-    }
-    if (debug) {
-      outputFile("gr-input.data", unsorted);
     }
     // Sort all points in 'unsorted' using their x coordinates
     List<Pt> sorted = new ArrayList<Pt>();
@@ -73,13 +67,6 @@ public class Graham {
     // Assign leftmost and rightmost point, and remove from list
     Pt left = sorted.remove(0);
     Pt right = sorted.remove(sorted.size() - 1);
-
-    if (debug) {
-      List<Pt> leftAndRight = new ArrayList<Pt>();
-      leftAndRight.add(left);
-      leftAndRight.add(right);
-      outputFile("gr-partition.data", leftAndRight);
-    }
 
     Pt pt;
     int partitionSide;
@@ -124,9 +111,6 @@ public class Graham {
         lower_hull.remove(lower_hull.size() - 2);
       }
     }
-    if (debug) {
-      outputFile("gr-lower-hull.data", lower_hull);
-    }
 
     //
     // Construct the upper hull
@@ -146,10 +130,6 @@ public class Graham {
       }
     }
 
-    if (debug) {
-      outputFile("gr-upper-hull.data", upper_hull);
-    }
-
     // Merge upper_hull and lower_hull to form hull
     List<Pt> hull = new ArrayList<Pt>();
     lower_hull.remove(lower_hull.size() - 1);
@@ -165,10 +145,6 @@ public class Graham {
     // adheres to the right-hand rule.
     if (lastThreeNotConvex(hull, Functions.PARTITION_LEFT, false)) {
       Collections.reverse(hull);
-    }
-
-    if (debug) {
-      outputFile("gr-hull.data", hull);
     }
 
     return hull;

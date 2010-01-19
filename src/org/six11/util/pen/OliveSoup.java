@@ -53,6 +53,10 @@ public class OliveSoup {
     }
   }
 
+  public List<Sequence> getSequences() {
+    return pastSequences;
+  }
+
   /**
    * Draws the portion of the current sequence that has not yet been drawn. The input parameter is
    * expected to contain variables that refer to 'Pt' instances. Each Pt instance has an x and y
@@ -106,21 +110,32 @@ public class OliveSoup {
   }
 
   public void addRawInputEnd() {
-    DrawingBuffer buf = new DrawingBuffer();
-    buf.setColor(DrawingBuffer.BASIC_PENCIL.color);
-    buf.setThickness(DrawingBuffer.BASIC_PENCIL.thickness);
-    buf.up();
-    buf.moveTo(seq.get(0).x, seq.get(0).y);
-    buf.down();
-    for (Pt pt : seq) {
-      buf.moveTo(pt.x, pt.y);
+    if (seq == null) {
+      return;
+    } else {
+      addFinishedSequence(seq);
+      seq = null;
+      lastCurrentSequenceIdx = 0;
+      gp = null;
+      fireChange();
     }
-    buf.up();
-    drawingBuffers.add(buf);
-    pastSequences.add(seq);
-    lastCurrentSequenceIdx = 0;
-    gp = null;
-    fireChange();
+  }
+
+  public void addFinishedSequence(Sequence s) {
+    if (s != null && s.size() > 1) {
+      DrawingBuffer buf = new DrawingBuffer();
+      buf.setColor(DrawingBuffer.BASIC_PENCIL.color);
+      buf.setThickness(DrawingBuffer.BASIC_PENCIL.thickness);
+      buf.up();
+      buf.moveTo(s.get(0).x, s.get(0).y);
+      buf.down();
+      for (Pt pt : s) {
+        buf.moveTo(pt.x, pt.y);
+      }
+      buf.up();
+      drawingBuffers.add(buf);
+      pastSequences.add(s);
+    }
   }
 
   public void clearDrawing() {
@@ -179,6 +194,10 @@ public class OliveSoup {
     private void bug(final String what) {
       Debug.out("OliveMouseThing", what);
     }
+  }
 
+  @SuppressWarnings("unused")
+  private void bug(String what) {
+    Debug.out("OliveSoup", what);
   }
 }

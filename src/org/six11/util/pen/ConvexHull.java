@@ -17,11 +17,7 @@ public class ConvexHull {
   protected double convexArea;
 
   public ConvexHull(List<Pt> input) {
-    this(input, false);
-  }
-
-  public ConvexHull(List<Pt> input, boolean debug) {
-    points = Functions.getConvexHull(input, debug);
+    points = Functions.getConvexHull(input);
     rotatedRect = null;
     rotatedRectArea = -1.0;
     convexCentroid = null;

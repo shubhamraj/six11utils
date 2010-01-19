@@ -11,13 +11,14 @@ import java.util.ArrayList;
 public class Antipodal2 {
 
   public static void main(String[] args) {
-    Sequence seq = Sequence.loadFromFile(args[0]);
-    if (seq.get(0).equals(seq.getLast())) {
-      seq.removeLast();
-    }
-    List<Pt> points = Graham.getConvexHull(seq.getPoints(), true);
-
-    new Antipodal2(points);
+//    Sequence seq = Sequence.loadFromFile(args[0]);
+//    if (seq.get(0).equals(seq.getLast())) {
+//      seq.removeLast();
+//    }
+//    List<Pt> points = Graham.getConvexHull(seq.getPoints());
+//
+//    new Antipodal2(points);
+    System.out.println("Broken until Sequence.loadFromFile() has a replacement");
   }
 
   List<Pt> mbr; // minimum bounding rectangle

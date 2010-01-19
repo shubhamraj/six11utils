@@ -4,11 +4,9 @@ package org.six11.util.pen;
 
 import java.util.NoSuchElementException;
 import java.awt.geom.FlatteningPathIterator;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 import java.awt.Color;
 import java.awt.BasicStroke;
 import java.awt.Rectangle;
@@ -20,12 +18,6 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 import org.six11.util.Debug;
-import org.six11.util.io.FileUtil;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.FileReader;
 
 /**
  * Implementation of a bi-directional linked list for Pt objects, which are just Point2D.Double
@@ -460,34 +452,34 @@ public class Sequence implements Shape, Iterable<Pt> {
     }
   }
 
-  public void writeToFile(String fileName) {
-    File outFile = new File(fileName);
-    StringBuilder buf = new StringBuilder();
-    buf.append("# Sequence.java: " + points.size() + " points; " + new Date().toString() + "\n");
-    for (Pt pt : points) {
-      buf.append(pt.x + "\t" + pt.y + "\n");
-    }
-    FileUtil.writeStringToFile(outFile, buf.toString(), false);
-  }
-
-  public static Sequence loadFromFile(String file) {
-    Sequence ret = new Sequence();
-    try {
-      BufferedReader in = new BufferedReader(new FileReader(file));
-      StringTokenizer tok;
-      String line;
-      while (in.ready()) {
-        line = in.readLine();
-        if (!line.trim().startsWith("#")) { // avoid comment lines.
-          tok = new StringTokenizer(line, "\t");
-          String x = tok.nextToken();
-          String y = tok.nextToken();
-          ret.add(new Pt(Double.valueOf(x), Double.valueOf(y)));
-        }
-      }
-    } catch (IOException ex) {
-      ex.printStackTrace();
-    }
-    return ret;
-  }
+//  public void writeToFile(String fileName) {
+//    File outFile = new File(fileName);
+//    StringBuilder buf = new StringBuilder();
+//    buf.append("# Sequence.java: " + points.size() + " points; " + new Date().toString() + "\n");
+//    for (Pt pt : points) {
+//      buf.append(pt.x + "\t" + pt.y + "\n");
+//    }
+//    FileUtil.writeStringToFile(outFile, buf.toString(), false);
+//  }
+//
+//  public static Sequence loadFromFile(String file) {
+//    Sequence ret = new Sequence();
+//    try {
+//      BufferedReader in = new BufferedReader(new FileReader(file));
+//      StringTokenizer tok;
+//      String line;
+//      while (in.ready()) {
+//        line = in.readLine();
+//        if (!line.trim().startsWith("#")) { // avoid comment lines.
+//          tok = new StringTokenizer(line, "\t");
+//          String x = tok.nextToken();
+//          String y = tok.nextToken();
+//          ret.add(new Pt(Double.valueOf(x), Double.valueOf(y)));
+//        }
+//      }
+//    } catch (IOException ex) {
+//      ex.printStackTrace();
+//    }
+//    return ret;
+//  }
 }

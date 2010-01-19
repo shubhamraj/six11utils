@@ -34,7 +34,7 @@ public class OliveDrawingSurface extends JComponent {
   private double borderPad;
   private boolean penEnabled = false;
   private OliveSoup soup;
- 
+
   /**
    * A simple main method that shows a drawing surface.
    */
@@ -48,7 +48,7 @@ public class OliveDrawingSurface extends JComponent {
     af.center();
     af.setVisible(true);
   }
-  
+
   /**
    * Make an Olive drawing surface, but do not show it.
    */
@@ -69,6 +69,10 @@ public class OliveDrawingSurface extends JComponent {
     soup.addChangeListener(cl);
   }
 
+  public OliveSoup getSoup() {
+    return soup;
+  }
+
   /**
    * Draws a border (the characteristic 'this is a sketching surface' visual), and the soup's
    * current sequence and all complete DrawingBuffers.
@@ -78,19 +82,29 @@ public class OliveDrawingSurface extends JComponent {
     AffineTransform before = new AffineTransform(g.getTransform());
     drawBorderAndBackground(g);
     if (soup != null) {
-      Shape currentSeq = soup.getCurrentSequence(); // the in-progress scribble
-      List<DrawingBuffer> buffers = soup.getDrawingBuffers(); // finished visual elements
+      paintContent(g, true);
+    }
+    g.setTransform(before);
+  }
+
+  public void paintContent(Graphics2D g, boolean useCachedImages) {
+    Shape currentSeq = soup.getCurrentSequence(); // the in-progress scribble
+    List<DrawingBuffer> buffers = soup.getDrawingBuffers(); // finished visual elements
+    if (useCachedImages) {
       for (DrawingBuffer buffer : buffers) {
         buffer.paste(g);
       }
-      if (currentSeq != null) {
-        Components.antialias(g);
-        g.setColor(DrawingBuffer.BASIC_PENCIL.color);
-        g.setStroke(Strokes.get((float) DrawingBuffer.BASIC_PENCIL.thickness));
-        g.draw(currentSeq);
+    } else {
+      for (DrawingBuffer buffer : buffers) {
+        buffer.drawToGraphics(g);
       }
     }
-    g.setTransform(before);
+    if (currentSeq != null) {
+      Components.antialias(g);
+      g.setColor(DrawingBuffer.BASIC_PENCIL.color);
+      g.setStroke(Strokes.get((float) DrawingBuffer.BASIC_PENCIL.thickness));
+      g.draw(currentSeq);
+    }
   }
 
   @SuppressWarnings("unused")
