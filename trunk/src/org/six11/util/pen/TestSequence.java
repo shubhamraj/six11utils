@@ -262,20 +262,20 @@ public class TestSequence extends TestCase {
     return new Pt(x, x * x);
   }
   
-  public void testReadWriteSequence() {
-    Sequence seq = makeSequence();
-    try {
-      String tmpFile = File.createTempFile("TestSequence", ".test").getAbsolutePath();
-      seq.writeToFile(tmpFile);
-      Sequence readFromDisk = Sequence.loadFromFile(tmpFile);
-      assertEquals(seq.size(), readFromDisk.size());
-      for (int i=0; i < seq.size(); i++) {
-        assertEquals(seq.getPoints().get(i), readFromDisk.getPoints().get(i));
-      }
-    } catch (IOException ex) {
-      ex.printStackTrace();
-    }
-  }
+//  public void testReadWriteSequence() {
+//    Sequence seq = makeSequence();
+//    try {
+//      String tmpFile = File.createTempFile("TestSequence", ".test").getAbsolutePath();
+//      seq.writeToFile(tmpFile);
+//      Sequence readFromDisk = Sequence.loadFromFile(tmpFile);
+//      assertEquals(seq.size(), readFromDisk.size());
+//      for (int i=0; i < seq.size(); i++) {
+//        assertEquals(seq.getPoints().get(i), readFromDisk.getPoints().get(i));
+//      }
+//    } catch (IOException ex) {
+//      ex.printStackTrace();
+//    }
+//  }
 
 //  private void bug(String what) {
 //    Debug.out("TestSequence", what);

@@ -564,11 +564,7 @@ public abstract class Functions {
   }
 
   public static List<Pt> getConvexHull(List<Pt> unsortedPoints) {
-    return getConvexHull(unsortedPoints, false);
-  }
-
-  public static List<Pt> getConvexHull(List<Pt> unsortedPoints, boolean debug) {
-    return Graham.getConvexHull(unsortedPoints, debug);
+    return Graham.getConvexHull(unsortedPoints);
   }
 
   // public static Sequence getDerivative(Sequence seq) {

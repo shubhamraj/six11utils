@@ -9,20 +9,19 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-//import java.io.OutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-//import com.lowagie.text.Document;
-//import com.lowagie.text.DocumentException;
-//import com.lowagie.text.FontFactory;
-//import com.lowagie.text.Rectangle;
-//import com.lowagie.text.pdf.DefaultFontMapper;
-//import com.lowagie.text.pdf.PdfContentByte;
-//import com.lowagie.text.pdf.PdfTemplate;
-//import com.lowagie.text.pdf.PdfWriter;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.DefaultFontMapper;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfTemplate;
+import com.lowagie.text.pdf.PdfWriter;
 
-//import org.six11.slippy.SlippyMachine;
 import org.six11.util.Debug;
 import org.six11.util.gui.BoundingBox;
 import org.six11.util.gui.Components;
@@ -49,7 +48,7 @@ public class DrawingBuffer {
     BASIC_PENCIL.setThickness(2.4f);
     BASIC_PENCIL.setDown(true);
   }
-  
+
   public DrawingBuffer() {
     img = new BufferedImage(defaultSize.width, defaultSize.height, BufferedImage.TYPE_INT_ARGB_PRE);
     this.turtles = new ArrayList<TurtleOp>();
@@ -66,6 +65,7 @@ public class DrawingBuffer {
    */
   public void update() {
     if (dirty) {
+      // The following block establishes the bounding box so the buffered image is sized correctly
       PenState pen = BASIC_PENCIL;
       bb = new BoundingBox();
       List<FilledRegion> regions = new ArrayList<FilledRegion>();
@@ -76,24 +76,35 @@ public class DrawingBuffer {
       }
       img = new BufferedImage(bb.getWidthInt(), bb.getHeightInt(), BufferedImage.TYPE_INT_ARGB_PRE);
       Graphics2D g = img.createGraphics();
-      Components.antialias(g);
       g.setTransform(AffineTransform.getTranslateInstance(-bb.getX(), -bb.getY()));
       g.setClip(bb.getRectangleLoose());
-      for (FilledRegion region : regions) {
-        g.setColor(region.getColor());
-        GeneralPath path = new GeneralPath();
-        path.append(region.getPathIterator(), true);
-        g.fill(path);
-      }
-      xform = new AffineTransform();
-      for (TurtleOp turtle : turtles) {
-        xform = turtle.go(xform, pen, bb, g, regions, points);
-      }
+      Components.antialias(g);
+      drawToGraphics(g);
       dirty = false;
     }
   }
 
-  @SuppressWarnings("unused")
+  public void drawToGraphics(Graphics2D g) {
+    PenState pen = BASIC_PENCIL;
+    List<FilledRegion> regions = new ArrayList<FilledRegion>();
+    AffineTransform xform = new AffineTransform();
+    List<Point2D> points = new ArrayList<Point2D>();
+    for (TurtleOp turtle : turtles) {
+      xform = turtle.go(xform, pen, bb, null, regions, points);
+    }
+    for (FilledRegion region : regions) {
+      g.setColor(region.getColor());
+      GeneralPath path = new GeneralPath();
+      path.append(region.getPathIterator(), true);
+      g.fill(path);
+    }
+    xform = new AffineTransform();
+    for (TurtleOp turtle : turtles) {
+      xform = turtle.go(xform, pen, bb, g, regions, points);
+    }
+  }
+
+//  @SuppressWarnings("unused")
   private static void bug(String what) {
     Debug.out("DrawingBuffer", what);
   }
@@ -149,7 +160,6 @@ public class DrawingBuffer {
     addOp(new TurtleOp(p));
   }
 
-
   public void setColor(Color color) {
     PenState p = new PenState();
     p.setColor(color);
@@ -174,40 +184,39 @@ public class DrawingBuffer {
     addOp(new TurtleOp(p));
   }
 
-//  public void generatePdf(OutputStream out) {
-//    if (bb == null) {
-//      update();
-//    }
-//    int w = bb.getWidthInt();
-//    int h = bb.getHeightInt();
-//    Rectangle size = new Rectangle(w, h);
-//    Document document = new Document(size, 0, 0, 0, 0);
-//
-//    try {
-//      PdfWriter writer = PdfWriter.getInstance(document, out);
-//      document.open();
-//
-//      DefaultFontMapper mapper = new DefaultFontMapper();
-//      FontFactory.registerDirectories();
-//
-//      PdfContentByte cb = writer.getDirectContent();
-//      PdfTemplate tp = cb.createTemplate(w, h);
-//      Graphics2D g2 = tp.createGraphics(w, h, mapper);
-//      tp.setWidth(w);
-//      tp.setHeight(h);
-//      paste(g2);
-//      g2.dispose();
-//      cb.addTemplate(tp, 0, 0);
-//    } catch (DocumentException ex) {
-//      SlippyMachine.outputStream.println(ex.getMessage());
-//    }
-//    document.close();
-//  }
+  public void generatePdf(OutputStream out) {
+    if (bb == null) {
+      update();
+    }
+    int w = bb.getWidthInt();
+    int h = bb.getHeightInt();
+    Rectangle size = new Rectangle(w, h);
+    Document document = new Document(size, 0, 0, 0, 0);
+
+    try {
+      PdfWriter writer = PdfWriter.getInstance(document, out);
+      document.open();
+
+      DefaultFontMapper mapper = new DefaultFontMapper();
+      FontFactory.registerDirectories();
+
+      PdfContentByte cb = writer.getDirectContent();
+      PdfTemplate tp = cb.createTemplate(w, h);
+      Graphics2D g2 = tp.createGraphics(w, h, mapper);
+      tp.setWidth(w);
+      tp.setHeight(h);
+      paste(g2);
+      g2.dispose();
+      cb.addTemplate(tp, 0, 0);
+    } catch (DocumentException ex) {
+      bug(ex.getMessage());
+    }
+    document.close();
+  }
 
   private static class TurtleOp {
 
     AffineTransform myTransform;
-//    AffineTransform resultingTransform;
     PenState myPenState;
     Point2D myMoveTo;
 
@@ -312,13 +321,8 @@ public class DrawingBuffer {
           }
         }
       }
-//      resultingTransform = change;
       return change;
     }
-
-//    public AffineTransform getResultingTransform() {
-//      return resultingTransform;
-//    }
 
     @SuppressWarnings("unused")
     private static void bug(String what) {
@@ -453,9 +457,5 @@ public class DrawingBuffer {
       }
       return pathIterator;
     }
-
-//    public List<Point2D> getPoints() {
-//      return points;
-//    }
   }
 }

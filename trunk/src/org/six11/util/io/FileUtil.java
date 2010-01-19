@@ -7,12 +7,11 @@ import org.six11.util.Debug;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 
 import javax.swing.JFileChooser;
-import java.io.*;
+//import java.io.*;
+import javax.swing.filechooser.FileFilter;
 
 /**
  * 
@@ -104,17 +103,28 @@ public abstract class FileUtil {
   public static JFileChooser makeFileChooser(File dir, String suffix, final String description) {
     JFileChooser ret = new JFileChooser(dir);
     final String suffixWithDot = suffix.startsWith(".") ? suffix : "." + suffix;
-    FileFilter filter = new FileFilter() {
+//    FileFilter filter = new FileFilter() {
+//      public boolean accept(File f) {
+//        return (f != null && (f.getName().endsWith(suffixWithDot) || f.isDirectory()));
+//      }
+//
+//      @SuppressWarnings("unused")
+//      public String getDescription() {
+//        return description;
+//      }
+//    };
+//    javax.swing.filechooser.FileFilter f = new javax.swing.filechooser.FileFilter();
+//    ret.setFileFilter((javax.swing.filechooser.FileFilter) filter);
+    
+    FileFilter f = new FileFilter() {
       public boolean accept(File f) {
         return (f != null && (f.getName().endsWith(suffixWithDot) || f.isDirectory()));
       }
-
-      @SuppressWarnings("unused")
       public String getDescription() {
         return description;
       }
     };
-    ret.setFileFilter((javax.swing.filechooser.FileFilter) filter);
+    ret.setFileFilter(f);
     return ret;
   }
 
@@ -251,6 +261,21 @@ public abstract class FileUtil {
   public static String getPath(String file) {
     String p = new File(file).getParentFile().getPath();
     return p;
+  }
+  
+  public static void createIfNecessary(File f) throws IOException {
+    if (!f.exists()) {
+      if (!f.getParentFile().exists()) {
+        boolean result = f.getParentFile().mkdirs();
+        if (!result) {
+          throw new IOException("Can't create parent directory: " + f.getParentFile().getAbsolutePath());
+        }
+      }
+      boolean result = f.createNewFile();
+      if (!result) {
+        throw new IOException("Can't create new file: " + f.getAbsolutePath());
+      }
+    }
   }
 
 }
