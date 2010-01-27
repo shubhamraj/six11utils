@@ -4,7 +4,11 @@ import java.awt.Shape;
 import java.awt.event.MouseEvent;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -17,18 +21,43 @@ public class OliveSoup {
   private List<Sequence> pastSequences;
   private List<DrawingBuffer> drawingBuffers;
   private MouseThing mouseThing;
+  private Map<Sequence, DrawingBuffer> seqToDrawBuf;
 
   // The currentSeq and last index are for managing the currently-in-progress ink stroke
   private GeneralPath gp;
   private int lastCurrentSequenceIdx;
 
+  // change listeners are interested in visual changes
   private List<ChangeListener> changeListeners;
+
+  // sequence listeners are interested in pen activity
+  private Set<SequenceListener> sequenceListeners;
 
   public OliveSoup() {
     drawingBuffers = new ArrayList<DrawingBuffer>();
     pastSequences = new ArrayList<Sequence>();
+    sequenceListeners = new HashSet<SequenceListener>();
+    seqToDrawBuf = new HashMap<Sequence, DrawingBuffer>();
   }
 
+  public void addSequenceListener(SequenceListener lis) {
+    sequenceListeners.add(lis);
+  }
+
+  public void removeSequenceListener(SequenceListener lis) {
+    sequenceListeners.remove(lis);
+  }
+
+  private void fireSequenceEvent(SequenceEvent ev) {
+    for (SequenceListener lis : sequenceListeners) {
+      lis.handleSequenceEvent(ev);
+    }
+  }
+
+  /**
+   * Registers a change listener, which is whacked every time some (potentially) visual aspect of
+   * the soup has changed.
+   */
   public void addChangeListener(ChangeListener lis) {
     if (changeListeners == null) {
       changeListeners = new ArrayList<ChangeListener>();
@@ -38,13 +67,19 @@ public class OliveSoup {
     }
   }
 
+  /**
+   * Removes a change listener previously added with addChangeListener.
+   */
   public void removeChangeListener(ChangeListener lis) {
     if (changeListeners != null) {
       changeListeners.remove(lis);
     }
   }
 
-  public void fireChange() {
+  /**
+   * Fires a simple event indicating some (potentially) visual aspect of the soup has changed.
+   */
+  private void fireChange() {
     if (changeListeners != null) {
       ChangeEvent ev = new ChangeEvent(this);
       for (ChangeListener cl : changeListeners) {
@@ -102,11 +137,19 @@ public class OliveSoup {
   public void addRawInputBegin(int x, int y, long t) {
     seq = new Sequence();
     addRawInputProgress(x, y, t);
+    SequenceEvent sev = new SequenceEvent(this, seq, SequenceEvent.Type.BEGIN);
+    fireSequenceEvent(sev);
   }
 
   public void addRawInputProgress(int x, int y, long t) {
-    seq.add(new Pt(x, y, t));
-    drawSequence();
+    // Avoid adding duplicate points to the end of the sequence.
+    Pt pt = new Pt(x, y, t);
+    if (seq.size() == 0 || !seq.getLast().isSameLocation(pt)) {
+      seq.add(pt);
+      SequenceEvent sev = new SequenceEvent(this, seq, SequenceEvent.Type.PROGRESS);
+      fireSequenceEvent(sev);
+      drawSequence();
+    }
   }
 
   public void addRawInputEnd() {
@@ -124,8 +167,9 @@ public class OliveSoup {
   public void addFinishedSequence(Sequence s) {
     if (s != null && s.size() > 1) {
       DrawingBuffer buf = new DrawingBuffer();
-      buf.setColor(DrawingBuffer.BASIC_PENCIL.color);
-      buf.setThickness(DrawingBuffer.BASIC_PENCIL.thickness);
+      seqToDrawBuf.put(s, buf);
+      buf.setColor(DrawingBuffer.getBasicPen().color);
+      buf.setThickness(DrawingBuffer.getBasicPen().thickness);
       buf.up();
       buf.moveTo(s.get(0).x, s.get(0).y);
       buf.down();
@@ -135,7 +179,13 @@ public class OliveSoup {
       buf.up();
       drawingBuffers.add(buf);
       pastSequences.add(s);
+      SequenceEvent sev = new SequenceEvent(this, s, SequenceEvent.Type.END);
+      fireSequenceEvent(sev);
     }
+  }
+
+  public DrawingBuffer getDrawingBufferForSequence(Sequence s) {
+    return seqToDrawBuf.get(s);
   }
 
   public void clearDrawing() {
@@ -147,7 +197,7 @@ public class OliveSoup {
   /**
    * Returns a reference to the currently in-progress scribble, suitable for efficient drawing.
    */
-  public Shape getCurrentSequence() {
+  public Shape getCurrentSequenceShape() {
     return gp;
   }
 

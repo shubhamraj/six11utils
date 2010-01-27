@@ -66,6 +66,30 @@ public class Colors {
     return def;
   }
 
+  /**
+   * Return a color based on c, with an alpha value of a.
+   * 
+   * @param c
+   *          a Color, maybe one of the Color.* constants.
+   * @param a
+   *          the alpha value in the range 0.0 (completely transparent) to 1.0 (completely opaque).
+   */
+  public static Color makeAlpha(Color c, float a) {
+    return makeAlpha(c, (int) (255.0 * a));
+  }
+
+  /**
+   * Return a color based on c, with an alpha value of a.
+   * 
+   * @param c
+   *          a Color, maybe one of the Color.* constants.
+   * @param a
+   *          the alpha value in the range 0 (completely transparent) to 255 (completely opaque).
+   */
+  public static Color makeAlpha(Color c, int a) {
+    return new Color(c.getRed(), c.getGreen(), c.getBlue(), a);
+  }
+
   public Colors copy() {
     Colors c = new Colors();
     c.vals.putAll(vals);
@@ -107,11 +131,13 @@ public class Colors {
       int len = in.length() / 3;
       int mult = 1; // for strings like "ff0000"
       if (len == 1) {
-        mult = 16;  // for strings like "f00"
+        mult = 16; // for strings like "f00"
       }
       int idx = 0;
-      r = mult * Integer.decode("0x" + in.substring(idx, idx + len)); idx = idx + len;
-      g = mult * Integer.decode("0x" + in.substring(idx, idx + len)); idx = idx + len;
+      r = mult * Integer.decode("0x" + in.substring(idx, idx + len));
+      idx = idx + len;
+      g = mult * Integer.decode("0x" + in.substring(idx, idx + len));
+      idx = idx + len;
       b = mult * Integer.decode("0x" + in.substring(idx, idx + len));
     } else {
       bug("Invalid hex triplet string: " + s);

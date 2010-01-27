@@ -156,7 +156,11 @@ public class Debug {
   }
 
   public static String num(double d) {
-    return df.format(d);
+    if (Double.isInfinite(d)) {
+      return "+inf";
+    } else {
+      return df.format(d);
+    }
   }
 
   public static String num(double d, int decimalPlaces) {

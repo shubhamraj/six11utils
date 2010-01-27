@@ -160,6 +160,14 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public void setAttribute(String name, Object value) {
     getAttribs().put(name, value);
   }
+  
+  public void setBoolean(String name, boolean value) {
+    getAttribs().put(name, value);
+  }
+  
+  public boolean getBoolean(String name) {
+    return (getAttribs().containsKey(name) && (Boolean) getAttribute(name));
+  }
 
   public void setDouble(String name, double value) {
     // if (name.equals("selection strength")) {

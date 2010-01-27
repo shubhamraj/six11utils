@@ -4,6 +4,8 @@ package org.six11.util.pen;
 
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.AffineTransform;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -566,6 +568,33 @@ public abstract class Functions {
   public static List<Pt> getConvexHull(List<Pt> unsortedPoints) {
     return Graham.getConvexHull(unsortedPoints);
   }
+  
+  public static List<Pt> sortPointListWithDouble(final String attribKey, final boolean ascending, List<Pt> list) {
+    List<Pt> input = new ArrayList<Pt>(list);
+    Comparator<Pt> sortationDevice = new Comparator<Pt>() {
+      public int compare(Pt o1, Pt o2) {
+        int ret = 0;
+        double v1 = o1.getDouble(attribKey);
+        double v2 = o2.getDouble(attribKey);
+        if (ascending) {
+          if (v1 < v2) {
+            ret = -1;
+          } else if (v1 > v2) {
+            ret = 1;
+          }
+        } else {
+          if (v1 < v2) {
+            ret = 1;
+          } else if (v1 > v2) {
+            ret = -1;
+          }
+        }
+        return ret;
+      }
+    };
+    Collections.sort(input, sortationDevice);
+    return input;
+  }
 
   // public static Sequence getDerivative(Sequence seq) {
   // Sequence ret = new Sequence();
@@ -597,10 +626,20 @@ public abstract class Functions {
     return 0.0;
   }
 
-  @SuppressWarnings("unused")
-  public static Pt[] getIntersectionsOfLineAndSequence(Line line, Sequence seq) {
-    // TODO implement me
-    return null;
+  public static List<Pt> getIntersectionsOfLineAndSequence(Line line, Sequence seq) {
+    List<Pt> ret = new ArrayList<Pt>();
+    Pt prev = null;
+    for (Pt pt : seq) {
+      if (prev != null) {
+        Line patch = new Line(prev, pt);
+        IntersectionData data = Functions.getIntersectionData(patch, line);
+        if (data.intersectsOnLineOne() && !ret.contains(data.getIntersection())) {
+          ret.add(data.getIntersection());
+        }
+      }
+      prev = pt;
+    }
+    return ret;
   }
 
   public static void getSplinePatch(double x0, double x1, double x2, double x3, double y0,
@@ -632,7 +671,6 @@ public abstract class Functions {
 
       seq.add(new Pt(x, y));
     }
-
   }
 
   public static int getSplinePatch(Pt a, Pt b, Pt c, Pt d, Sequence seq, int numSteps) {

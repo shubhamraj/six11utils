@@ -46,9 +46,9 @@ public class IntersectionData {
       r = -----------------------------  (eqn 1)
           (Bx-Ax)(Dy-Cy)-(By-Ay)(Dx-Cx)
 
-	  (Ay-Cy)(Bx-Ax)-(Ax-Cx)(By-Ay)
+	        (Ay-Cy)(Bx-Ax)-(Ax-Cx)(By-Ay)
       s = -----------------------------  (eqn 2)
-	  (Bx-Ax)(Dy-Cy)-(By-Ay)(Dx-Cx)
+	        (Bx-Ax)(Dy-Cy)-(By-Ay)(Dx-Cx)
 
     */
 
@@ -108,7 +108,16 @@ public class IntersectionData {
   public boolean intersectsInSegments() {
     return intersectInSegments;
   }
+  
+  public boolean intersectsOnLineOne() {
+    return (r >= 0 && r <= 1);
+  }
 
+  public boolean intersectsOnLineTwo() {
+    return (s >= 0 && s <= 1);
+  }
+
+  
   public Line getLineOne() {
     return one;
   }
