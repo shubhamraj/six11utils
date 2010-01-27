@@ -4,23 +4,24 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.io.OutputStream;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage; // import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.Rectangle;
-import com.lowagie.text.pdf.DefaultFontMapper;
-import com.lowagie.text.pdf.PdfContentByte;
-import com.lowagie.text.pdf.PdfTemplate;
-import com.lowagie.text.pdf.PdfWriter;
+// import com.lowagie.text.Document;
+// import com.lowagie.text.DocumentException;
+// import com.lowagie.text.FontFactory;
+// import com.lowagie.text.Rectangle;
+// import com.lowagie.text.pdf.DefaultFontMapper;
+// import com.lowagie.text.pdf.PdfContentByte;
+// import com.lowagie.text.pdf.PdfTemplate;
+// import com.lowagie.text.pdf.PdfWriter;
 
 import org.six11.util.Debug;
 import org.six11.util.gui.BoundingBox;
@@ -38,20 +39,44 @@ public class DrawingBuffer {
   private BufferedImage img;
   public Dimension defaultSize = new Dimension(400, 400);
   private boolean dirty;
+  private boolean visible;
 
   private List<TurtleOp> turtles;
   private BoundingBox bb;
 
-  static PenState BASIC_PENCIL = new PenState();
-  static {
+  public static PenState getBasicPen() {
+    PenState BASIC_PENCIL = new PenState();
     BASIC_PENCIL.setColor(Color.BLACK);
-    BASIC_PENCIL.setThickness(2.4f);
+    BASIC_PENCIL.setThickness(1.2f);
     BASIC_PENCIL.setDown(true);
+    return BASIC_PENCIL;
   }
 
+  /**
+   * Creates a new drawing buffer. By default a drawing buffer is visible.
+   */
   public DrawingBuffer() {
     img = new BufferedImage(defaultSize.width, defaultSize.height, BufferedImage.TYPE_INT_ARGB_PRE);
     this.turtles = new ArrayList<TurtleOp>();
+    visible = true;
+    dirty = true;
+  }
+
+  /**
+   * Sets visibility to the given value (and sets the dirty bit if this changes the value).
+   */
+  public void setVisible(boolean v) {
+    if (v != visible) {
+      visible = v;
+      dirty = true;
+    }
+  }
+
+  /**
+   * Tells you if this buffer is visible or not (by default it is).
+   */
+  public boolean isVisible() {
+    return visible;
   }
 
   protected void addOp(TurtleOp op) {
@@ -66,7 +91,7 @@ public class DrawingBuffer {
   public void update() {
     if (dirty) {
       // The following block establishes the bounding box so the buffered image is sized correctly
-      PenState pen = BASIC_PENCIL;
+      PenState pen = getBasicPen();
       bb = new BoundingBox();
       List<FilledRegion> regions = new ArrayList<FilledRegion>();
       AffineTransform xform = new AffineTransform();
@@ -85,11 +110,14 @@ public class DrawingBuffer {
   }
 
   public void drawToGraphics(Graphics2D g) {
-    PenState pen = BASIC_PENCIL;
+    PenState pen = getBasicPen();
     List<FilledRegion> regions = new ArrayList<FilledRegion>();
     AffineTransform xform = new AffineTransform();
     List<Point2D> points = new ArrayList<Point2D>();
-    for (TurtleOp turtle : turtles) {
+    if (bb == null) { // TODO: I think if bb is null, the turtle.go thing will reset it.
+      bb = new BoundingBox();
+    }
+    for (TurtleOp turtle : turtles) { // do a dry run to get the bounding box
       xform = turtle.go(xform, pen, bb, null, regions, points);
     }
     for (FilledRegion region : regions) {
@@ -104,7 +132,7 @@ public class DrawingBuffer {
     }
   }
 
-//  @SuppressWarnings("unused")
+  // @SuppressWarnings("unused")
   private static void bug(String what) {
     Debug.out("DrawingBuffer", what);
   }
@@ -142,6 +170,11 @@ public class DrawingBuffer {
     addOp(new TurtleOp(new Point2D.Double(x, y)));
   }
 
+  public void circleTo(double startX, double startY, double midX, double midY, double endX,
+      double endY) {
+    addOp(new TurtleOp(new Pt(startX, startY), new Pt(midX, midY), new Pt(endX, endY)));
+  }
+
   public void up() {
     PenState p = new PenState();
     p.setDown(false);
@@ -155,9 +188,7 @@ public class DrawingBuffer {
   }
 
   public void setColor(double r, double g, double b, double a) {
-    PenState p = new PenState();
-    p.setColor(new Color((float) r, (float) g, (float) b, (float) a));
-    addOp(new TurtleOp(p));
+    setColor(new Color((float) r, (float) g, (float) b, (float) a));
   }
 
   public void setColor(Color color) {
@@ -173,8 +204,12 @@ public class DrawingBuffer {
   }
 
   public void setFillColor(double r, double g, double b, double a) {
+    setFillColor(new Color((float) r, (float) g, (float) b, (float) a));
+  }
+
+  public void setFillColor(Color color) {
     PenState p = new PenState();
-    p.setFillColor(new Color((float) r, (float) g, (float) b, (float) a));
+    p.setFillColor(color);
     addOp(new TurtleOp(p));
   }
 
@@ -184,41 +219,42 @@ public class DrawingBuffer {
     addOp(new TurtleOp(p));
   }
 
-  public void generatePdf(OutputStream out) {
-    if (bb == null) {
-      update();
-    }
-    int w = bb.getWidthInt();
-    int h = bb.getHeightInt();
-    Rectangle size = new Rectangle(w, h);
-    Document document = new Document(size, 0, 0, 0, 0);
-
-    try {
-      PdfWriter writer = PdfWriter.getInstance(document, out);
-      document.open();
-
-      DefaultFontMapper mapper = new DefaultFontMapper();
-      FontFactory.registerDirectories();
-
-      PdfContentByte cb = writer.getDirectContent();
-      PdfTemplate tp = cb.createTemplate(w, h);
-      Graphics2D g2 = tp.createGraphics(w, h, mapper);
-      tp.setWidth(w);
-      tp.setHeight(h);
-      paste(g2);
-      g2.dispose();
-      cb.addTemplate(tp, 0, 0);
-    } catch (DocumentException ex) {
-      bug(ex.getMessage());
-    }
-    document.close();
-  }
+  // public void generatePdf(OutputStream out) {
+  // if (bb == null) {
+  // update();
+  // }
+  // int w = bb.getWidthInt();
+  // int h = bb.getHeightInt();
+  // Rectangle size = new Rectangle(w, h);
+  // Document document = new Document(size, 0, 0, 0, 0);
+  //
+  // try {
+  // PdfWriter writer = PdfWriter.getInstance(document, out);
+  // document.open();
+  //
+  // DefaultFontMapper mapper = new DefaultFontMapper();
+  // FontFactory.registerDirectories();
+  //
+  // PdfContentByte cb = writer.getDirectContent();
+  // PdfTemplate tp = cb.createTemplate(w, h);
+  // Graphics2D g2 = tp.createGraphics(w, h, mapper);
+  // tp.setWidth(w);
+  // tp.setHeight(h);
+  // paste(g2);
+  // g2.dispose();
+  // cb.addTemplate(tp, 0, 0);
+  // } catch (DocumentException ex) {
+  // bug(ex.getMessage());
+  // }
+  // document.close();
+  // }
 
   private static class TurtleOp {
 
     AffineTransform myTransform;
     PenState myPenState;
     Point2D myMoveTo;
+    Point2D circleStart, circleMid, circleEnd;
 
     public TurtleOp() {
     }
@@ -247,11 +283,19 @@ public class DrawingBuffer {
       this.myMoveTo = tx;
     }
 
+    public TurtleOp(Point2D start, Point2D mid, Point2D end) {
+      this();
+      this.circleStart = start;
+      this.circleMid = mid;
+      this.circleEnd = end;
+    }
+
     public AffineTransform go(AffineTransform xform, PenState pen, BoundingBox bb, Graphics2D g,
         List<FilledRegion> regions, List<Point2D> points) {
       AffineTransform change = xform;
+      boolean linearMovement = false;
+      boolean circularMovement = false;
 
-      boolean movement = false;
       if (myPenState != null) {
         if (myPenState.changeFilling) {
           // off -> on = add a new FilledRegion
@@ -284,13 +328,19 @@ public class DrawingBuffer {
       } else if (myTransform != null && !myTransform.isIdentity()) {
         change = new AffineTransform(myTransform);
         change.preConcatenate(xform);
-        movement = true;
+        linearMovement = true;
       } else if (myMoveTo != null) {
         change = AffineTransform.getTranslateInstance(myMoveTo.getX(), myMoveTo.getY());
-        movement = true;
+        linearMovement = true;
+      } else if (circleEnd != null && circleMid != null && circleStart != null) {
+        change = AffineTransform.getTranslateInstance(circleEnd.getX(), circleEnd.getY());
+        circularMovement = true;
       }
 
-      if (movement && pen.down) {
+      if (linearMovement && pen.down) {
+        // The important things done by this block:
+        // 1. Expand the bounding box to include the entire path. (use Arc2D.getBounds2D())
+        // 2. If filling, add points to the filled region.
         double x1, y1, x2, y2;
         x1 = xform.getTranslateX();
         y1 = xform.getTranslateY();
@@ -363,6 +413,11 @@ public class DrawingBuffer {
       }
       if (target.changeFillColor) {
         this.fillColor = target.fillColor;
+        if (filling) {
+          // this is an inventive way to 'fix' a bug.
+          System.out.println("Warning: setFillColor called while filling=true. This is not "
+              + "what you want. Use setFillColor *before* calling setFilling(true).");
+        }
       }
     }
 
@@ -402,14 +457,14 @@ public class DrawingBuffer {
   private static class FilledRegion {
 
     private Color color;
-    private List<Point2D> points;
+    private List<Object> points;
     private BoundingBox bb;
     private boolean dirty;
     private PathIterator pathIterator;
 
     public FilledRegion(Color c) {
       this.color = c;
-      this.points = new ArrayList<Point2D>();
+      this.points = new ArrayList<Object>(); // contains either Point2D or Shape objects
       bb = new BoundingBox();
     }
 
@@ -419,15 +474,25 @@ public class DrawingBuffer {
      */
     public void addPoint(double x, double y) {
       if (points.size() > 0) {
-        Point2D prev = points.get(points.size() - 1);
-        if (prev.getX() == x && prev.getY() == y) {
-          return;
+        // ensure we didn't just add this point.
+        if (points.get(points.size() - 1) instanceof Point2D) {
+          Point2D prev = (Point2D) points.get(points.size() - 1);
+          if (prev.getX() == x && prev.getY() == y) {
+            return;
+          }
         }
       }
       Point2D pt = new Point2D.Double(x, y);
       dirty = true;
       bb.add(pt);
       points.add(pt);
+    }
+    
+    public void addShape(Shape shape) {
+      Rectangle2D bounds = shape.getBounds2D();
+      bb.add(bounds);
+      points.add(shape);
+      dirty = true;
     }
 
     public Color getColor() {
@@ -441,18 +506,26 @@ public class DrawingBuffer {
 
     public PathIterator getPathIterator() {
       if (dirty || pathIterator == null) {
-        GenericPathIterator gpi = new GenericPathIterator();
-
-        Point2D first = null;
-        for (Point2D pt : points) {
-          if (first == null) {
-            gpi.add(PathIterator.SEG_MOVETO, pt);
-            first = pt;
-          } else {
-            gpi.add(PathIterator.SEG_LINETO, pt);
+        GeneralPath gpi = new GeneralPath();
+        boolean first = true;
+        for (Object obj : points) {
+          if (obj instanceof Point2D) {
+            Point2D pt = (Point2D) obj;
+            if (first) {
+              gpi.moveTo(pt.getX(), pt.getY());
+              first = false;
+            } else {
+              gpi.lineTo(pt.getX(), pt.getY());
+            }
+          } else if (obj instanceof Shape) {
+            Shape shape = (Shape) obj;
+            if (first) {
+              gpi.append(shape, true);
+            }
           }
         }
-        pathIterator = gpi;
+        bug("yes ");
+        pathIterator = gpi.getPathIterator(null);
         dirty = false;
       }
       return pathIterator;

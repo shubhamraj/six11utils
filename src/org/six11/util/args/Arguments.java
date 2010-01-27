@@ -151,6 +151,7 @@ public class Arguments {
     VALUE_OPTIONAL, VALUE_REQUIRED, VALUE_IGNORED
   }
 
+  private String[] originalArgs;
   private Set<String> shortArgs = new HashSet<String>();
   private Map<String, String> longArgs = new HashMap<String, String>();
   private List<String> positionalArgs = new ArrayList<String>();
@@ -444,12 +445,20 @@ public class Arguments {
    * Parses arguments. This is how the Arguments object is fed with user-data.
    */
   public void parseArguments(String[] args) {
+    this.originalArgs = args;
     for (int i = 0; i < args.length; i++) {
       int consumed = parse(i, args);
       i = i + consumed;
     }
   }
 
+  /**
+   * Supplies the string array provided from the command line.
+   */
+  public String[] getOriginalArgs() {
+    return originalArgs;
+  }
+  
   /**
    * Tells you if a given flag was provided.
    */

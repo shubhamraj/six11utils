@@ -82,27 +82,26 @@ public class OliveDrawingSurface extends JComponent {
     AffineTransform before = new AffineTransform(g.getTransform());
     drawBorderAndBackground(g);
     if (soup != null) {
-      paintContent(g, true);
+      g.setTransform(before);
+      paintContent(g, true); // TODO: should be true, change it back when done debugging
     }
     g.setTransform(before);
   }
 
   public void paintContent(Graphics2D g, boolean useCachedImages) {
-    Shape currentSeq = soup.getCurrentSequence(); // the in-progress scribble
+    Shape currentSeq = soup.getCurrentSequenceShape(); // the in-progress scribble
     List<DrawingBuffer> buffers = soup.getDrawingBuffers(); // finished visual elements
-    if (useCachedImages) {
-      for (DrawingBuffer buffer : buffers) {
+    for (DrawingBuffer buffer : buffers) {
+      if (buffer.isVisible() && useCachedImages) {
         buffer.paste(g);
-      }
-    } else {
-      for (DrawingBuffer buffer : buffers) {
+      } else if (buffer.isVisible()) {
         buffer.drawToGraphics(g);
       }
     }
     if (currentSeq != null) {
       Components.antialias(g);
-      g.setColor(DrawingBuffer.BASIC_PENCIL.color);
-      g.setStroke(Strokes.get((float) DrawingBuffer.BASIC_PENCIL.thickness));
+      g.setColor(DrawingBuffer.getBasicPen().color);
+      g.setStroke(Strokes.get((float) DrawingBuffer.getBasicPen().thickness));
       g.draw(currentSeq);
     }
   }

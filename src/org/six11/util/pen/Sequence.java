@@ -4,9 +4,11 @@ package org.six11.util.pen;
 
 import java.util.NoSuchElementException;
 import java.awt.geom.FlatteningPathIterator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.awt.Color;
 import java.awt.BasicStroke;
 import java.awt.Rectangle;
@@ -29,7 +31,8 @@ public class Sequence implements Shape, Iterable<Pt> {
 
   protected List<Pt> points;
   protected DrawFunction drawFunction;
-
+  protected Map<String, Object> attributes;
+  
   /**
    * True if this sequence represents the boundary of a 2D shape, false if it simply represents a
    * polyline.
@@ -39,7 +42,8 @@ public class Sequence implements Shape, Iterable<Pt> {
   public Sequence() {
     points = new ArrayList<Pt>();
     closedRegion = false;
-
+    attributes = new HashMap<String, Object>();
+    
     // the default draw function uses the color of each point, or if
     // no "color" attribute is set, uses black.
     drawFunction = new DrawFunction() {
@@ -60,6 +64,14 @@ public class Sequence implements Shape, Iterable<Pt> {
         }
       }
     };
+  }
+  
+  public Object getAttribute(String key) {
+    return attributes.get(key);
+  }
+  
+  public void setAttribute(String key, Object value) {
+    attributes.put(key, value);
   }
 
   /**
@@ -115,12 +127,76 @@ public class Sequence implements Shape, Iterable<Pt> {
     return ret;
   }
 
+  public Sequence getSubSequence(int beginInclusive, int endExclusive) {
+    Sequence ret = new Sequence();
+    for (int i = beginInclusive; i < endExclusive; i++) {
+      ret.add(get(i));
+    }
+    return ret;
+  }
+
+  public Sequence getSubSequence(Pt startInclusive, Pt endInclusive) {
+    int idxStart = indexOf(startInclusive);
+    int idxEnd = indexOf(endInclusive);
+    return getSubSequence(idxStart, idxEnd + 1);
+  }
+
+  /**
+   * Return a unit vector representing the direction that points from the begining index towards the
+   * end index.
+   */
+  public Vec getDirectionOfSubsequence(int beginInclusive, int endExclusive) {
+    Pt s = get(beginInclusive);
+    Pt e = get(endExclusive - 1);
+    return new Vec(s, e).getUnitVector();
+  }
+
+  /**
+   * Returns an interpolated point that falls on the sequence that is some curvilinear distance from
+   * a given index.
+   * 
+   * @param beginIdx
+   *          the index of the point to begin the search. Must be between 0 and size()-1.
+   * @param curvilinearDistance
+   *          the distance to travel from the starting point.
+   * @param dir
+   *          to move in the positive (larger index) direction, supply a positive number. To move in
+   *          the negative (lesser index) direction, supply a non-positive number.
+   */
+  public Pt getInterpolatedPoint(int beginIdx, double curvilinearDistance, int dir) {
+    int incr = (dir > 0 ? 1 : -1);
+    Pt prev = null;
+    Pt ret = null;
+    double prevDist = 0.0;
+    for (int i = beginIdx; i >= 0 && i <= size(); i += incr) {
+      if (prev != null) {
+        double chunkDist = getPathLength(Math.min(i, beginIdx), Math.max(i, beginIdx));
+        if (chunkDist > curvilinearDistance) {
+          // now we know that we've gone prevDist units to prev, and it it is a little too far when
+          // going to the current point at i, so simply interpolate the difference.
+          double diff = chunkDist - curvilinearDistance;
+          Vec lastPart = new Vec(prev, get(i)).getVectorOfMagnitude(diff);
+          ret = lastPart.add(prev);
+          break;
+        } else {
+          prevDist = chunkDist;
+        }
+      }
+      prev = get(i);
+    }
+    return ret;
+  }
+
   public int indexOf(Pt pt) {
     return points.indexOf(pt);
   }
 
   public Pt get(int idx) {
     return points.get(idx);
+  }
+
+  public Pt getFirst() {
+    return points.get(0);
   }
 
   public Pt getLast() {
@@ -168,6 +244,24 @@ public class Sequence implements Shape, Iterable<Pt> {
   }
 
   /**
+   * For each point in the sequence, calculate the curvilinear distance from the start point and
+   * stores it in each point's 'curvilinear-distance' property (double). This returns the total
+   * curvilinear length of the sequence.
+   */
+  public double calculateCurvilinearDistances() {
+    Pt prev = null;
+    double sum = 0.0;
+    for (Pt pt : this) {
+      if (prev != null) {
+        sum += prev.distance(pt);
+      }
+      pt.setDouble("curvilinear-distance", sum);
+      prev = pt;
+    }
+    return getLast().getDouble("curvilinear-distance");
+  }
+
+  /**
    * Returns the length of the line segment that directly connects the first and last points. If
    * there are not at least two points in the sequence this returns zero.
    */
@@ -209,6 +303,18 @@ public class Sequence implements Shape, Iterable<Pt> {
     return ret;
   }
 
+  /**
+   * Calculates the curvature for each point (using getCurvature()), and returns the sum of the
+   * ABSOLUTE VALUE of the curves.
+   */
+  public double calculateCurvature(int windowSize) {
+    double sum = 0.0;
+    for (int i = 0; i < size(); i++) {
+      sum += Math.abs(getCurvature(i, windowSize)); // sets the 'curvature' attribute in each point.
+    }
+    return sum;
+  }
+
   public double getCurvature(int idx, int windowSize) {
     double ret = 0.0;
     int lower = idx - windowSize;
@@ -220,14 +326,94 @@ public class Sequence implements Shape, Iterable<Pt> {
       double denom = getPathLength(lower, upper);
       ret = numer / denom;
     } else if (windowSize > 1) {
-      return getCurvature(idx, windowSize - 1);
+      ret = getCurvature(idx, windowSize - 1);
     }
+    points.get(idx).setDouble("angle", ret);
+    
+    new RuntimeException("getCurvature(int, int) is hosed --- need to compute curvature from angles.").printStackTrace();
+    return ret;
+  }
+
+  public double calculateCurvatureEuclideanWindowSize(double windowEuclideanSize) {
+//    double sum = 0.0;
+    List<Pt> front = new ArrayList<Pt>(); // place to cache the points at beginning
+    List<Pt> back = new ArrayList<Pt>();  // ... and the end. Need to assign angle value after.
+
+    double frontAngle = -1.0;
+    double backAngle = -1.0;
+    for (int i = 0; i < size(); i++) {
+//      sum += Math.abs(getAngleEuclideanWindowSize(i, windowEuclideanSize));
+      getAngleEuclideanWindowSize(i, windowEuclideanSize);
+      if (!points.get(i).hasAttribute("angle")) {
+        if (frontAngle >= 0.0) {
+          back.add(points.get(i));
+        } else {
+          front.add(points.get(i));
+        }
+      } else {
+        if (frontAngle < 0) {
+          frontAngle = points.get(i).getDouble("angle");
+        } else {
+          backAngle = points.get(i).getDouble("angle");
+        }
+      }
+    }
+    
+    // assign the front and back angles.
+    for (Pt pt : front) {
+      pt.setDouble("angle", frontAngle);
+    }
+    for (Pt pt : back) {
+      pt.setDouble("angle", backAngle);
+    }
+    
+    // Now that angle is set on every point, we can calculate curvature.
+    double ret = 0.0;
+    for (int i=0; i < size(); i++) {
+      Pt pt = points.get(i);
+      if (i == 0) {
+        pt.setDouble("curvature", 0.0);
+      } else if (i == size() - 1) {
+        pt.setDouble("curvature", 0.0);
+      } else {
+        double prev = points.get(i-1).getDouble("angle");
+        double next = points.get(i+1).getDouble("angle");
+        double curvature = next - prev;
+        if (curvature < -Math.PI) {
+          curvature = curvature + 2.0 * Math.PI;
+        } else if (curvature > Math.PI) {
+          curvature = curvature - 2.0 * Math.PI;
+        }
+        pt.setDouble("curvature", curvature);
+//        bug(i + " curvature: " + Debug.num(next) + "-" + Debug.num(prev) + " = " + Debug.num(pt.getDouble("curvature")));
+      }
+      ret += Math.abs(pt.getDouble("curvature"));
+    }
+    
+    return ret;
+  }
+
+  public double getAngleEuclideanWindowSize(int idx, double windowEuclideanSize) {
+    int k = 2;
+    double ret = 0;
+    while (idx - k >= 0 && idx + k < size()
+        && getPathLength(idx - k, idx + k) < windowEuclideanSize) {
+      k += 1;
+    }
+    if (idx - k >= 0 && idx + k < size()) {
+      double dx = points.get(idx + k).x - points.get(idx - k).x;
+      double dy = points.get(idx + k).y - points.get(idx - k).y;
+      double numer = Math.atan2(dy, dx);
+      ret = numer;
+      points.get(idx).setDouble("angle", ret);
+    } 
     return ret;
   }
 
   /**
    * Returns the absolue value of each point's "curvature" attribute. See getSignedCurvatureSum().
    */
+  @Deprecated
   public double getAbsoluteCurvatureSum() {
     double ret = 0.0;
     for (Pt pt : points) {
@@ -235,6 +421,25 @@ public class Sequence implements Shape, Iterable<Pt> {
         ret += Math.abs(pt.getDouble("curvature"));
       }
     }
+    return ret;
+  }
+
+  public double calculateSpeed() {
+    double sum = 0.0;
+    for (int i = 0; i < size(); i++) {
+      sum += getSpeed(i); // calculates speed and stores in "speed" attribute.
+    }
+    return sum;
+  }
+
+  public double getSpeed(int idx) {
+    double ret = 0.0;
+    if (idx > 0 && idx < (size() - 1)) {
+      double numer = getPathLength(idx - 1, idx + 1);
+      double denom = points.get(idx + 1).time - points.get(idx - 1).time;
+      ret = numer / denom;
+    }
+    points.get(idx).setDouble("speed", ret);
     return ret;
   }
 
@@ -349,13 +554,13 @@ public class Sequence implements Shape, Iterable<Pt> {
     return (count % 2) == 1; // true if count is odd
   }
 
-  public Sequence transform(SequenceFunction sf) {
-    Sequence ret = new Sequence();
-    for (Pt pt : this) {
-      ret.add(sf.transform(pt));
-    }
-    return ret;
-  }
+  // public Sequence transform(SequenceFunction sf) {
+  // Sequence ret = new Sequence();
+  // for (Pt pt : this) {
+  // ret.add(sf.transform(pt));
+  // }
+  // return ret;
+  // }
 
   public boolean containsVertex(Pt target) {
     boolean ret = false;
@@ -452,34 +657,38 @@ public class Sequence implements Shape, Iterable<Pt> {
     }
   }
 
-//  public void writeToFile(String fileName) {
-//    File outFile = new File(fileName);
-//    StringBuilder buf = new StringBuilder();
-//    buf.append("# Sequence.java: " + points.size() + " points; " + new Date().toString() + "\n");
-//    for (Pt pt : points) {
-//      buf.append(pt.x + "\t" + pt.y + "\n");
-//    }
-//    FileUtil.writeStringToFile(outFile, buf.toString(), false);
-//  }
-//
-//  public static Sequence loadFromFile(String file) {
-//    Sequence ret = new Sequence();
-//    try {
-//      BufferedReader in = new BufferedReader(new FileReader(file));
-//      StringTokenizer tok;
-//      String line;
-//      while (in.ready()) {
-//        line = in.readLine();
-//        if (!line.trim().startsWith("#")) { // avoid comment lines.
-//          tok = new StringTokenizer(line, "\t");
-//          String x = tok.nextToken();
-//          String y = tok.nextToken();
-//          ret.add(new Pt(Double.valueOf(x), Double.valueOf(y)));
-//        }
-//      }
-//    } catch (IOException ex) {
-//      ex.printStackTrace();
-//    }
-//    return ret;
-//  }
+  // public void writeToFile(String fileName) {
+  // File outFile = new File(fileName);
+  // StringBuilder buf = new StringBuilder();
+  // buf.append("# Sequence.java: " + points.size() + " points; " + new Date().toString() + "\n");
+  // for (Pt pt : points) {
+  // buf.append(pt.x + "\t" + pt.y + "\n");
+  // }
+  // FileUtil.writeStringToFile(outFile, buf.toString(), false);
+  // }
+  //
+  // public static Sequence loadFromFile(String file) {
+  // Sequence ret = new Sequence();
+  // try {
+  // BufferedReader in = new BufferedReader(new FileReader(file));
+  // StringTokenizer tok;
+  // String line;
+  // while (in.ready()) {
+  // line = in.readLine();
+  // if (!line.trim().startsWith("#")) { // avoid comment lines.
+  // tok = new StringTokenizer(line, "\t");
+  // String x = tok.nextToken();
+  // String y = tok.nextToken();
+  // ret.add(new Pt(Double.valueOf(x), Double.valueOf(y)));
+  // }
+  // }
+  // } catch (IOException ex) {
+  // ex.printStackTrace();
+  // }
+  // return ret;
+  // }
+
+  private static void bug(String what) {
+    Debug.out("Sequence", what);
+  }
 }

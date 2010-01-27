@@ -5,9 +5,8 @@ package org.six11.util.pen;
 import java.util.Comparator;
 
 /**
- * Represents a 2D vector from one point to another. This gives you
- * access to useful Vector stuff like magnitude, and via the Functions
- * class, other stuff like dot products.
+ * Represents a 2D vector from one point to another. This gives you access to useful Vector stuff
+ * like magnitude, and via the Functions class, other stuff like dot products.
  */
 public class Vec {
 
@@ -43,24 +42,23 @@ public class Vec {
   }
 
   /**
-   * Gives you a comparator to order vectors based on angle. A nonzero
-   * vector's angle can be compared to a 'true north'. This angle can
-   * then be used to order vectors. Note that two angles that are very
-   * close to one another but are on opposite sides of the true north
-   * will be treated as being far apart, for this comparison.
+   * Gives you a comparator to order vectors based on angle. A nonzero vector's angle can be
+   * compared to a 'true north'. This angle can then be used to order vectors. Note that two angles
+   * that are very close to one another but are on opposite sides of the true north will be treated
+   * as being far apart, for this comparison.
    */
   public static Comparator<Vec> sortByAngle(final Vec trueNorth) {
     return new Comparator<Vec>() {
       public int compare(Vec a, Vec b) {
-	int ret = 0;
-	double angleA = Functions.getAngleBetween(trueNorth, a);
-	double angleB = Functions.getAngleBetween(trueNorth, b);
-	if (angleA < angleB) {
-	  ret = -1;
-	} else if (angleA > angleB) {
-	  ret = 1;
-	}
-	return ret;
+        int ret = 0;
+        double angleA = Functions.getAngleBetween(trueNorth, a);
+        double angleB = Functions.getAngleBetween(trueNorth, b);
+        if (angleA < angleB) {
+          ret = -1;
+        } else if (angleA > angleB) {
+          ret = 1;
+        }
+        return ret;
       }
     };
   }
@@ -81,6 +79,9 @@ public class Vec {
     return (x * x) + (y * y);
   }
 
+  /**
+   * Returns the point that you get by moving away from 'pt' using this vector.
+   */
   public Pt add(Pt pt) {
     return Functions.getEndPoint(pt, this);
   }

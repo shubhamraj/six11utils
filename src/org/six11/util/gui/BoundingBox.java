@@ -44,14 +44,16 @@ public class BoundingBox {
    * probably has something to do with rounding error.
    */
   public int getWidthInt() {
-    return (int) Math.ceil(getWidth()) + 1;
+//    return (int) Math.ceil(getWidth()) + 1;
+    return (int) Math.ceil(getWidth());
   }
 
   /**
    * Like getWidthInt, but for height.
    */
   public int getHeightInt() {
-    return (int) Math.ceil(getHeight()) + 1;
+//    return (int) Math.ceil(getHeight()) + 1;    
+    return (int) Math.ceil(getHeight());
   }
 
   /**
