@@ -313,59 +313,59 @@ public abstract class Functions {
     return getAngleBetween(va, vb);
   }
 
-  public static double getAngleBetween(Vec a, Vec b) {    
+  public static double getAngleBetween(Vec a, Vec b) {
     double a1 = Math.atan2(b.getY(), b.getX());
     double a2 = Math.atan2(a.getY(), a.getX());
     double ret = a1 - a2;
     return ret;
   }
 
-//  public static double getAngleBetweenFullcircle(Vec a, Vec b) {
-//    double ret = 0.0;
-//    double numerator = Functions.getDotProduct(a, b);
-//    double denom = a.mag() * b.mag();
-//    if (denom != 0.0) {
-//      double cos = numerator / denom;
-//      double det = Functions.getDeterminant(a, b);
-//      double ang = Math.acos(cos);
-//      if (det > 0.0) {
-//        ang = Math.PI + ang;
-//      }
-//      ret = ang;
-//    }
-//    return ret;
-//  }
+  // public static double getAngleBetweenFullcircle(Vec a, Vec b) {
+  // double ret = 0.0;
+  // double numerator = Functions.getDotProduct(a, b);
+  // double denom = a.mag() * b.mag();
+  // if (denom != 0.0) {
+  // double cos = numerator / denom;
+  // double det = Functions.getDeterminant(a, b);
+  // double ang = Math.acos(cos);
+  // if (det > 0.0) {
+  // ang = Math.PI + ang;
+  // }
+  // ret = ang;
+  // }
+  // return ret;
+  // }
 
   public static double getDotProduct(Vec a, Vec b) {
     return a.getX() * b.getX() + a.getY() * b.getY();
   }
 
-//  @SuppressWarnings("unused")
-//  public static Vec getCrossProduct(Vec a, Vec b) {
-//    // TODO implement me NOTE: It seems that the cross product of two
-//    // 2D vectors yields a 'vector' with one component... a scalar.
-//
-//    // NOTE: if you are using this to get the signed angle between two
-//    // vectors, look at getAngleBetween()
-//    return null;
-//  }
+  // @SuppressWarnings("unused")
+  // public static Vec getCrossProduct(Vec a, Vec b) {
+  // // TODO implement me NOTE: It seems that the cross product of two
+  // // 2D vectors yields a 'vector' with one component... a scalar.
+  //
+  // // NOTE: if you are using this to get the signed angle between two
+  // // vectors, look at getAngleBetween()
+  // return null;
+  // }
 
   public static double getDeterminant(Vec a, Vec b) {
     // det(ab, cd) = a*d - b*c;
     return a.getX() * b.getY() - a.getY() * b.getX();
   }
 
-//  @SuppressWarnings("unused")
-//  public static double getVectorMagnitude(Vec vec) {
-//    // TODO implement me
-//    return 0.0;
-//  }
-//
-//  @SuppressWarnings("unused")
-//  public static Pt getLineMidpoint(Line line) {
-//    // TODO implement me
-//    return null;
-//  }
+  // @SuppressWarnings("unused")
+  // public static double getVectorMagnitude(Vec vec) {
+  // // TODO implement me
+  // return 0.0;
+  // }
+  //
+  // @SuppressWarnings("unused")
+  // public static Pt getLineMidpoint(Line line) {
+  // // TODO implement me
+  // return null;
+  // }
 
   // public static double getLineLength(Line line) {
 
@@ -568,8 +568,9 @@ public abstract class Functions {
   public static List<Pt> getConvexHull(List<Pt> unsortedPoints) {
     return Graham.getConvexHull(unsortedPoints);
   }
-  
-  public static List<Pt> sortPointListWithDouble(final String attribKey, final boolean ascending, List<Pt> list) {
+
+  public static List<Pt> sortPointListWithDouble(final String attribKey, final boolean ascending,
+      List<Pt> list) {
     List<Pt> input = new ArrayList<Pt>(list);
     Comparator<Pt> sortationDevice = new Comparator<Pt>() {
       public int compare(Pt o1, Pt o2) {
@@ -964,6 +965,76 @@ public abstract class Functions {
 
   private static boolean inRange(double val, double rangeA, double rangeB) {
     return ((val <= rangeA && val > rangeB) || (val >= rangeA && val < rangeB));
+  }
+
+  public static boolean isMonotonicDecreasing(double... values) {
+    boolean dec = true;
+    for (int i = 0; i < values.length; i++) {
+      if (i > 0 && values[i - 1] <= values[i]) {
+        dec = false;
+        break;
+      }
+    }
+    return dec;
+  }
+
+  public static boolean isMonotonicIncreasing(double... values) {
+    boolean inc = true;
+    for (int i = 0; i < values.length; i++) {
+      if (i > 0 && values[i - 1] >= values[i]) {
+        inc = false;
+        break;
+      }
+    }
+    return inc;
+  }
+
+  public static boolean isMonotonic(double... values) {
+    boolean inc = isMonotonicIncreasing(values);
+    boolean dec = isMonotonicDecreasing(values);
+    return inc || dec;
+  }
+
+  /**
+   * Gives a positive angle measured counter-clockwise from the x-positive axis. I need to work with
+   * angles that do not have discontinuities.
+   */
+  public static double makeAnglePositive(double angleDegrees) {
+    double ret = angleDegrees;
+    if (angleDegrees < 0) {
+      ret = 360 + angleDegrees;
+    }
+    return ret;
+  }
+
+  /**
+   * Returns an angle that is on the correct side of the limit. For example, if the limit angle is
+   * 90, source is 20, and dir is positive (meaning we want an angle bigger than 90), it will return
+   * 360+20, which is the first value that is angle-wise equivalent to 20.
+   * 
+   * @param limitDegrees
+   *          a threshold to go over (or under, depending on 'dir')
+   * @param sourceDegrees
+   *          an input value for which we would like a phase computed.
+   * @param dir
+   *          supply a positive value to recieve a number bigger than the limit, or negative to get
+   *          a number smaller than the limit.
+   * @return A phase of the sourceDegrees input value (e.g. the first value for which limit is less
+   *         than (or greater than) (sourceDegrees + n * 360) --- returns the parenthesized
+   *         portion).
+   */
+  public static double getNearestAnglePhase(double limitDegrees, double sourceDegrees, int dir) {
+    double value = sourceDegrees;
+    if (dir > 0) {
+      while (value < limitDegrees) {
+        value += 360.0;
+      }
+    } else if (dir < 0) {
+      while (value > limitDegrees) {
+        value -= 360.0;
+      }
+    }
+    return value;
   }
 
   public static void bug(String what) {

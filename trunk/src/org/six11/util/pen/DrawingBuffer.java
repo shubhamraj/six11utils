@@ -6,7 +6,9 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Arc2D;
 import java.awt.geom.GeneralPath;
+import java.awt.geom.Line2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -95,9 +97,9 @@ public class DrawingBuffer {
       bb = new BoundingBox();
       List<FilledRegion> regions = new ArrayList<FilledRegion>();
       AffineTransform xform = new AffineTransform();
-      List<Point2D> points = new ArrayList<Point2D>();
+      List<Object> pointsAndShapes = new ArrayList<Object>();
       for (TurtleOp turtle : turtles) {
-        xform = turtle.go(xform, pen, bb, null, regions, points);
+        xform = turtle.go(xform, pen, bb, null, regions, pointsAndShapes);
       }
       img = new BufferedImage(bb.getWidthInt(), bb.getHeightInt(), BufferedImage.TYPE_INT_ARGB_PRE);
       Graphics2D g = img.createGraphics();
@@ -113,12 +115,12 @@ public class DrawingBuffer {
     PenState pen = getBasicPen();
     List<FilledRegion> regions = new ArrayList<FilledRegion>();
     AffineTransform xform = new AffineTransform();
-    List<Point2D> points = new ArrayList<Point2D>();
+    List<Object> pointsAndShapes = new ArrayList<Object>();
     if (bb == null) { // TODO: I think if bb is null, the turtle.go thing will reset it.
       bb = new BoundingBox();
     }
     for (TurtleOp turtle : turtles) { // do a dry run to get the bounding box
-      xform = turtle.go(xform, pen, bb, null, regions, points);
+      xform = turtle.go(xform, pen, bb, null, regions, pointsAndShapes);
     }
     for (FilledRegion region : regions) {
       g.setColor(region.getColor());
@@ -128,7 +130,7 @@ public class DrawingBuffer {
     }
     xform = new AffineTransform();
     for (TurtleOp turtle : turtles) {
-      xform = turtle.go(xform, pen, bb, g, regions, points);
+      xform = turtle.go(xform, pen, bb, g, regions, pointsAndShapes);
     }
   }
 
@@ -291,7 +293,7 @@ public class DrawingBuffer {
     }
 
     public AffineTransform go(AffineTransform xform, PenState pen, BoundingBox bb, Graphics2D g,
-        List<FilledRegion> regions, List<Point2D> points) {
+        List<FilledRegion> regions, List<Object> pointsAndShapes) {
       AffineTransform change = xform;
       boolean linearMovement = false;
       boolean circularMovement = false;
@@ -305,19 +307,24 @@ public class DrawingBuffer {
         }
         if (myPenState.changeDown) {
           if (myPenState.down) {
-            points.clear();
+            pointsAndShapes.clear();
           } else { // pen lifted up
-            if (g != null && points.size() > 0) {
+            if (g != null && pointsAndShapes.size() > 0) {
               g.setColor(pen.color);
               g.setStroke(Strokes.get(pen.thickness));
               GeneralPath gp = new GeneralPath();
               boolean first = true;
-              for (Point2D pt : points) {
-                if (first) {
-                  gp.moveTo((float) pt.getX(), (float) pt.getY());
-                  first = false;
+              for (Object obj : pointsAndShapes) {
+                if (obj instanceof Shape) {
+                  gp.append((Shape) obj, true);
                 } else {
-                  gp.lineTo((float) pt.getX(), (float) pt.getY());
+                  Point2D pt = (Point2D.Double) obj;
+                  if (first) {
+                    gp.moveTo(pt.getX(), pt.getY());
+                    first = false;
+                  } else {
+                    gp.lineTo(pt.getX(), pt.getY());
+                  }
                 }
               }
               g.draw(gp);
@@ -339,8 +346,13 @@ public class DrawingBuffer {
 
       if (linearMovement && pen.down) {
         // The important things done by this block:
+
         // 1. Expand the bounding box to include the entire path. (use Arc2D.getBounds2D())
+
         // 2. If filling, add points to the filled region.
+
+        // 3. Add the new points to the pointsAndShapes list, which is used on pen-up events to
+        // .. actually draw.
         double x1, y1, x2, y2;
         x1 = xform.getTranslateX();
         y1 = xform.getTranslateY();
@@ -358,18 +370,78 @@ public class DrawingBuffer {
         if (g != null && ((Math.abs(x2 - x1) > 0.0) || (Math.abs(y2 - y1) > 0.0))) {
           Point2D pt1 = new Point2D.Double(x1, y1);
           Point2D pt2 = new Point2D.Double(x2, y2);
-          if (points.size() == 0) {
-            points.add(pt1);
-            points.add(pt2);
+          if (pointsAndShapes.size() == 0) {
+            pointsAndShapes.add(pt1);
+            pointsAndShapes.add(pt2);
           } else {
-            if (points.get(points.size() - 1).distance(pt1) > 0.0) {
-              points.add(pt1);
+            if (pointsAndShapes.get(pointsAndShapes.size() - 1) instanceof Point2D) {
+              Point2D prevPt = (Point2D) pointsAndShapes.get(pointsAndShapes.size() - 1);
+              if (prevPt.distance(pt1) > 0.0) {
+                pointsAndShapes.add(pt1);
+              }
             }
-            if (points.get(points.size() - 1).distance(pt2) > 0.0) {
-              points.add(pt2);
+            if (pointsAndShapes.get(pointsAndShapes.size() - 1) instanceof Point2D) {
+              Point2D prevPt = (Point2D) pointsAndShapes.get(pointsAndShapes.size() - 1);
+              if (prevPt.distance(pt2) > 0.0) {
+                pointsAndShapes.add(pt2);
+              }
             }
           }
         }
+      }
+      if (circularMovement && pen.down) {
+        // The important things done by this block:
+
+        // 1. Expand the bounding box to include the entire path. (use Arc2D.getBounds2D())
+
+        // 2. If filling, add points to the filled region.
+
+        // 3. Add the new points to the pointsAndShapes list, which is used on pen-up events to
+        // .. actually draw.
+        
+        Pt s = new Pt(circleStart, 0);
+        Pt mid = new Pt(circleMid, 0);
+        Pt e = new Pt(circleEnd, 0);
+        Pt c = Functions.getCircleCenter(s, mid, e);
+        double r = c.distance(e);
+        Rectangle2D rect = new Rectangle2D.Double(c.x - r, c.y-r, r*2, r*2);
+        
+//        Arc2D.Double arc = new Arc2D.Double(rect, startAngle, extentAngle, Arc2D.Double.OPEN);
+//        double x1, y1, x2, y2;
+//        x1 = xform.getTranslateX();
+//        y1 = xform.getTranslateY();
+//        bb.add(new Point2D.Double(x1, y1), (double) pen.thickness);
+//        if (pen.filling) {
+//          regions.get(regions.size() - 1).addPoint(x1, y1);
+//        }
+//        x2 = change.getTranslateX();
+//        y2 = change.getTranslateY();
+//        bb.add(new Point2D.Double(x2, y2), (double) pen.thickness);
+//        if (pen.filling) {
+//          regions.get(regions.size() - 1).addPoint(x2, y2);
+//        }
+//
+//        if (g != null && ((Math.abs(x2 - x1) > 0.0) || (Math.abs(y2 - y1) > 0.0))) {
+//          Point2D pt1 = new Point2D.Double(x1, y1);
+//          Point2D pt2 = new Point2D.Double(x2, y2);
+//          if (pointsAndShapes.size() == 0) {
+//            pointsAndShapes.add(pt1);
+//            pointsAndShapes.add(pt2);
+//          } else {
+//            if (pointsAndShapes.get(pointsAndShapes.size() - 1) instanceof Point2D) {
+//              Point2D prevPt = (Point2D) pointsAndShapes.get(pointsAndShapes.size() - 1);
+//              if (prevPt.distance(pt1) > 0.0) {
+//                pointsAndShapes.add(pt1);
+//              }
+//            }
+//            if (pointsAndShapes.get(pointsAndShapes.size() - 1) instanceof Point2D) {
+//              Point2D prevPt = (Point2D) pointsAndShapes.get(pointsAndShapes.size() - 1);
+//              if (prevPt.distance(pt2) > 0.0) {
+//                pointsAndShapes.add(pt2);
+//              }
+//            }
+//          }
+//        }
       }
       return change;
     }
@@ -487,7 +559,7 @@ public class DrawingBuffer {
       bb.add(pt);
       points.add(pt);
     }
-    
+
     public void addShape(Shape shape) {
       Rectangle2D bounds = shape.getBounds2D();
       bb.add(bounds);
@@ -524,7 +596,6 @@ public class DrawingBuffer {
             }
           }
         }
-        bug("yes ");
         pathIterator = gpi.getPathIterator(null);
         dirty = false;
       }
