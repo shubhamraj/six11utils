@@ -30,6 +30,7 @@ import org.six11.util.gui.BoundingBox;
 import org.six11.util.gui.Components;
 import org.six11.util.gui.GenericPathIterator;
 import org.six11.util.gui.Strokes;
+import org.six11.util.gui.shape.ShapeFactory;
 
 /**
  * 
@@ -342,6 +343,7 @@ public class DrawingBuffer {
       } else if (circleEnd != null && circleMid != null && circleStart != null) {
         change = AffineTransform.getTranslateInstance(circleEnd.getX(), circleEnd.getY());
         circularMovement = true;
+        bug("Huzzah! Circular movement!");
       }
 
       if (linearMovement && pen.down) {
@@ -390,6 +392,7 @@ public class DrawingBuffer {
         }
       }
       if (circularMovement && pen.down) {
+        bug("Attempting to add the circular portion...");
         // The important things done by this block:
 
         // 1. Expand the bounding box to include the entire path. (use Arc2D.getBounds2D())
@@ -402,46 +405,17 @@ public class DrawingBuffer {
         Pt s = new Pt(circleStart, 0);
         Pt mid = new Pt(circleMid, 0);
         Pt e = new Pt(circleEnd, 0);
-        Pt c = Functions.getCircleCenter(s, mid, e);
-        double r = c.distance(e);
-        Rectangle2D rect = new Rectangle2D.Double(c.x - r, c.y-r, r*2, r*2);
         
-//        Arc2D.Double arc = new Arc2D.Double(rect, startAngle, extentAngle, Arc2D.Double.OPEN);
-//        double x1, y1, x2, y2;
-//        x1 = xform.getTranslateX();
-//        y1 = xform.getTranslateY();
-//        bb.add(new Point2D.Double(x1, y1), (double) pen.thickness);
-//        if (pen.filling) {
-//          regions.get(regions.size() - 1).addPoint(x1, y1);
-//        }
-//        x2 = change.getTranslateX();
-//        y2 = change.getTranslateY();
-//        bb.add(new Point2D.Double(x2, y2), (double) pen.thickness);
-//        if (pen.filling) {
-//          regions.get(regions.size() - 1).addPoint(x2, y2);
-//        }
-//
-//        if (g != null && ((Math.abs(x2 - x1) > 0.0) || (Math.abs(y2 - y1) > 0.0))) {
-//          Point2D pt1 = new Point2D.Double(x1, y1);
-//          Point2D pt2 = new Point2D.Double(x2, y2);
-//          if (pointsAndShapes.size() == 0) {
-//            pointsAndShapes.add(pt1);
-//            pointsAndShapes.add(pt2);
-//          } else {
-//            if (pointsAndShapes.get(pointsAndShapes.size() - 1) instanceof Point2D) {
-//              Point2D prevPt = (Point2D) pointsAndShapes.get(pointsAndShapes.size() - 1);
-//              if (prevPt.distance(pt1) > 0.0) {
-//                pointsAndShapes.add(pt1);
-//              }
-//            }
-//            if (pointsAndShapes.get(pointsAndShapes.size() - 1) instanceof Point2D) {
-//              Point2D prevPt = (Point2D) pointsAndShapes.get(pointsAndShapes.size() - 1);
-//              if (prevPt.distance(pt2) > 0.0) {
-//                pointsAndShapes.add(pt2);
-//              }
-//            }
-//          }
-//        }
+        Arc2D arc = ShapeFactory.makeArc(s, mid, e);
+        bb.add(arc.getBounds2D(), (double) pen.thickness);
+        if (pen.filling) {
+          regions.get(regions.size() - 1).addShape(arc);
+        }
+        if (g != null) {
+          pointsAndShapes.add(arc);
+        }
+      } else if (circularMovement) {
+        bug("I can't add the circular region! Pen is up?");
       }
       return change;
     }

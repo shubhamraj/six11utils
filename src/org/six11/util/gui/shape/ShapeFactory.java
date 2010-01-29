@@ -2,6 +2,7 @@ package org.six11.util.gui.shape;
 
 import java.awt.geom.Arc2D;
 
+import org.six11.util.Debug;
 import org.six11.util.pen.Functions;
 import org.six11.util.pen.Pt;
 
@@ -45,8 +46,12 @@ public abstract class ShapeFactory {
     } else {
       extent = endIncreasing - startAngle;
     }
-
+    bug("Made an arc from " + Debug.num(s) + " "+ Debug.num(mid) + " "+ Debug.num(e) + " ");
     return new Arc2D.Double(c.x - radius, c.y - radius, radius * 2, radius * 2, startAngle, extent,
         Arc2D.OPEN);
+  }
+  
+  private static void bug(String what) {
+    Debug.out("ShapeFactory", what);
   }
 }

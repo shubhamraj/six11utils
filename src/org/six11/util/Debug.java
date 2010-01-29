@@ -56,6 +56,7 @@ public class Debug {
 
   public static boolean useColor = true;
   public static boolean useTime = true;
+  public static boolean enabled = true;
 
   public static PrintStream outputStream = System.out;
   private static final Map<String, String> colorbag = new HashMap<String, String>();
@@ -325,32 +326,34 @@ public class Debug {
   }
 
   public static void out(String who, String what) {
-    if (who.length() > largestWho) {
-      largestWho = who.length();
-    }
-    buf = new StringBuffer();
-
-    int divider = (largestWho - who.length());
-    for (int i = 0; i < largestWho; i++) {
-      if (i < divider) {
-        buf.append(" ");
-      } else {
-        buf.append(who.charAt(i - divider));
+    if (enabled) {
+      if (who.length() > largestWho) {
+        largestWho = who.length();
       }
-    }
+      buf = new StringBuffer();
 
-    String spaces = buf.toString();
-    String colorStart = "";
-    String colorEnd = "";
-    String time = "";
-    if (useColor) {
-      colorStart = getColor(who);
-      colorEnd = NEUTRAL;
+      int divider = (largestWho - who.length());
+      for (int i = 0; i < largestWho; i++) {
+        if (i < divider) {
+          buf.append(" ");
+        } else {
+          buf.append(who.charAt(i - divider));
+        }
+      }
+
+      String spaces = buf.toString();
+      String colorStart = "";
+      String colorEnd = "";
+      String time = "";
+      if (useColor) {
+        colorStart = getColor(who);
+        colorEnd = NEUTRAL;
+      }
+      if (useTime) {
+        time = " (" + now() + ") ";
+      }
+      outputStream.println(colorStart + spaces + ": " + colorEnd + time + what);
     }
-    if (useTime) {
-      time = " (" + now() + ") ";
-    }
-    outputStream.println(colorStart + spaces + ": " + colorEnd + time + what);
   }
 
   /**
