@@ -44,7 +44,7 @@ public class BoundingBox {
    * probably has something to do with rounding error.
    */
   public int getWidthInt() {
-//    return (int) Math.ceil(getWidth()) + 1;
+    // return (int) Math.ceil(getWidth()) + 1;
     return (int) Math.ceil(getWidth());
   }
 
@@ -52,7 +52,7 @@ public class BoundingBox {
    * Like getWidthInt, but for height.
    */
   public int getHeightInt() {
-//    return (int) Math.ceil(getHeight()) + 1;    
+    // return (int) Math.ceil(getHeight()) + 1;
     return (int) Math.ceil(getHeight());
   }
 
@@ -92,8 +92,12 @@ public class BoundingBox {
    * Forces the bounding box to include the extents of the given rectangle.
    */
   public void add(Rectangle2D rec) {
-    add(new Point2D.Double(rec.getX(), rec.getY()));
-    add(new Point2D.Double(rec.getX() + rec.getWidth(), rec.getY() + rec.getHeight()));
+    add(rec, 0);
+  }
+
+  public void add(Rectangle2D rec, double padding) {
+    add(new Point2D.Double(rec.getX(), rec.getY()), padding);
+    add(new Point2D.Double(rec.getX() + rec.getWidth(), rec.getY() + rec.getHeight()), padding);
   }
 
   /**
