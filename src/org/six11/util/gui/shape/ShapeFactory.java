@@ -46,7 +46,6 @@ public abstract class ShapeFactory {
     } else {
       extent = endIncreasing - startAngle;
     }
-    bug("Made an arc from " + Debug.num(s) + " "+ Debug.num(mid) + " "+ Debug.num(e) + " ");
     return new Arc2D.Double(c.x - radius, c.y - radius, radius * 2, radius * 2, startAngle, extent,
         Arc2D.OPEN);
   }

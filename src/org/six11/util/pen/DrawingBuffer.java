@@ -135,7 +135,7 @@ public class DrawingBuffer {
     }
   }
 
-  // @SuppressWarnings("unused")
+  @SuppressWarnings("unused")
   private static void bug(String what) {
     Debug.out("DrawingBuffer", what);
   }
@@ -176,6 +176,10 @@ public class DrawingBuffer {
   public void circleTo(double startX, double startY, double midX, double midY, double endX,
       double endY) {
     addOp(new TurtleOp(new Pt(startX, startY), new Pt(midX, midY), new Pt(endX, endY)));
+  }
+
+  public void addShape(Shape arbitraryShape) {
+    addOp(new TurtleOp(arbitraryShape));
   }
 
   public void up() {
@@ -258,6 +262,7 @@ public class DrawingBuffer {
     PenState myPenState;
     Point2D myMoveTo;
     Point2D circleStart, circleMid, circleEnd;
+    Shape arbitraryShape;
 
     public TurtleOp() {
     }
@@ -293,11 +298,17 @@ public class DrawingBuffer {
       this.circleEnd = end;
     }
 
+    public TurtleOp(Shape s) {
+      this();
+      this.arbitraryShape = s;
+    }
+
     public AffineTransform go(AffineTransform xform, PenState pen, BoundingBox bb, Graphics2D g,
         List<FilledRegion> regions, List<Object> pointsAndShapes) {
       AffineTransform change = xform;
       boolean linearMovement = false;
       boolean circularMovement = false;
+      boolean shapeMovement = false;
 
       if (myPenState != null) {
         if (myPenState.changeFilling) {
@@ -343,7 +354,9 @@ public class DrawingBuffer {
       } else if (circleEnd != null && circleMid != null && circleStart != null) {
         change = AffineTransform.getTranslateInstance(circleEnd.getX(), circleEnd.getY());
         circularMovement = true;
-        bug("Huzzah! Circular movement!");
+      } else if (arbitraryShape != null) {
+        change = new AffineTransform();
+        shapeMovement = true;
       }
 
       if (linearMovement && pen.down) {
@@ -391,8 +404,7 @@ public class DrawingBuffer {
           }
         }
       }
-      if (circularMovement && pen.down) {
-        bug("Attempting to add the circular portion...");
+      if ((circularMovement || shapeMovement) && pen.down) {
         // The important things done by this block:
 
         // 1. Expand the bounding box to include the entire path. (use Arc2D.getBounds2D())
@@ -401,22 +413,34 @@ public class DrawingBuffer {
 
         // 3. Add the new points to the pointsAndShapes list, which is used on pen-up events to
         // .. actually draw.
-        
-        Pt s = new Pt(circleStart, 0);
-        Pt mid = new Pt(circleMid, 0);
-        Pt e = new Pt(circleEnd, 0);
-        
-        Arc2D arc = ShapeFactory.makeArc(s, mid, e);
-        bb.add(arc.getBounds2D(), (double) pen.thickness);
+        Shape shape = null;
+        if (circularMovement) {
+          Pt s = new Pt(circleStart, 0);
+          Pt mid = new Pt(circleMid, 0);
+          Pt e = new Pt(circleEnd, 0);
+          shape = ShapeFactory.makeArc(s, mid, e);
+        } else { // shapeMovement!
+          shape = arbitraryShape;
+        }
+
+        bb.add(shape.getBounds2D(), (double) pen.thickness);
         if (pen.filling) {
-          regions.get(regions.size() - 1).addShape(arc);
+          regions.get(regions.size() - 1).addShape(shape);
         }
         if (g != null) {
-          pointsAndShapes.add(arc);
+          pointsAndShapes.add(shape);
         }
-      } else if (circularMovement) {
-        bug("I can't add the circular region! Pen is up?");
       }
+      // if (shapeMovement && pen.down) {
+      // bug("Shape movement!");
+      // bb.add(arbitraryShape.getBounds2D(), pen.thickness);
+      // if (pen.filling) {
+      // regions.get(regions.size() - 1).addShape(arbitraryShape);
+      // }
+      // if (g != null) {
+      // pointsAndShapes.add(arbitraryShape);
+      // }
+      // }
       return change;
     }
 
