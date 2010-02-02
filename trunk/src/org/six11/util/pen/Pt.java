@@ -192,6 +192,14 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
     getAttribs().remove(name);
   }
 
+  public Vec getVec(String name) {
+    return (Vec) getAttribute(name);
+  }
+  
+  public void setVec(String name, Vec value) {
+    setAttribute(name, value);
+  }
+  
   public double getDouble(String name) {
     Object shouldBeDouble = getAttribute(name);
     return ((java.lang.Double) shouldBeDouble).doubleValue();

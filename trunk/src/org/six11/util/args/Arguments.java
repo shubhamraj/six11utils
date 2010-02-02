@@ -451,6 +451,10 @@ public class Arguments {
       i = i + consumed;
     }
   }
+  
+  public void parseArguments(Arguments original) {
+    parseArguments(original.getOriginalArgs());
+  }
 
   /**
    * Supplies the string array provided from the command line.
