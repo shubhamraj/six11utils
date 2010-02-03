@@ -6,29 +6,17 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Arc2D;
 import java.awt.geom.GeneralPath;
-import java.awt.geom.Line2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage; // import java.io.OutputStream;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-
-// import com.lowagie.text.Document;
-// import com.lowagie.text.DocumentException;
-// import com.lowagie.text.FontFactory;
-// import com.lowagie.text.Rectangle;
-// import com.lowagie.text.pdf.DefaultFontMapper;
-// import com.lowagie.text.pdf.PdfContentByte;
-// import com.lowagie.text.pdf.PdfTemplate;
-// import com.lowagie.text.pdf.PdfWriter;
 
 import org.six11.util.Debug;
 import org.six11.util.gui.BoundingBox;
 import org.six11.util.gui.Components;
-import org.six11.util.gui.GenericPathIterator;
 import org.six11.util.gui.Strokes;
 import org.six11.util.gui.shape.ShapeFactory;
 
@@ -89,7 +77,8 @@ public class DrawingBuffer {
   }
 
   /**
-   * This completely resets the graphics buffer and draws the entire turtle sequence.
+   * If the 'dirty' flag is set, this completely resets the graphics buffer and draws the entire
+   * turtle sequence. If the dirty flag isn't set, this does nothing of interest.
    */
   public void update() {
     if (dirty) {
@@ -112,12 +101,16 @@ public class DrawingBuffer {
     }
   }
 
+  /**
+   * Sets the bounding box, and if the provided graphics object is not null, it draws the turtle
+   * sequence and filled regions to the given graphics object.
+   */
   public void drawToGraphics(Graphics2D g) {
     PenState pen = getBasicPen();
     List<FilledRegion> regions = new ArrayList<FilledRegion>();
     AffineTransform xform = new AffineTransform();
     List<Object> pointsAndShapes = new ArrayList<Object>();
-    if (bb == null) { // TODO: I think if bb is null, the turtle.go thing will reset it.
+    if (bb == null) {
       bb = new BoundingBox();
     }
     for (TurtleOp turtle : turtles) { // do a dry run to get the bounding box
@@ -140,6 +133,10 @@ public class DrawingBuffer {
     Debug.out("DrawingBuffer", what);
   }
 
+  /**
+   * Returns a cached Image object of this buffer so you don't have to re-draw everything all the
+   * time. It will create an Image if necessary.
+   */
   public Image getImage() {
     if (turtles.size() > 0 && dirty) {
       update();
@@ -147,10 +144,18 @@ public class DrawingBuffer {
     return img;
   }
 
+  /**
+   * Gives the cached BoundingBox, but it doesn't check to ensure this value has been initialized.
+   * To be safe, call drawToGraphics() once with a null input. That will initialize the bounding
+   * box.
+   */
   public BoundingBox getBoundingBox() {
     return bb;
   }
 
+  /**
+   * Pastes this buffer's image to the provided graphics context in the correct location.
+   */
   public void paste(Graphics2D g) {
     AffineTransform before = new AffineTransform(g.getTransform());
     if (bb == null) {
@@ -220,41 +225,15 @@ public class DrawingBuffer {
     addOp(new TurtleOp(p));
   }
 
+  /**
+   * Adds a turtle op that starts a filling operation. Make sure to call setFillColor BEFORE calling
+   * this, because the setFillColor will be ignored otherwise.
+   */
   public void setFilling(boolean f) {
     PenState p = new PenState();
     p.setFilling(f);
     addOp(new TurtleOp(p));
   }
-
-  // public void generatePdf(OutputStream out) {
-  // if (bb == null) {
-  // update();
-  // }
-  // int w = bb.getWidthInt();
-  // int h = bb.getHeightInt();
-  // Rectangle size = new Rectangle(w, h);
-  // Document document = new Document(size, 0, 0, 0, 0);
-  //
-  // try {
-  // PdfWriter writer = PdfWriter.getInstance(document, out);
-  // document.open();
-  //
-  // DefaultFontMapper mapper = new DefaultFontMapper();
-  // FontFactory.registerDirectories();
-  //
-  // PdfContentByte cb = writer.getDirectContent();
-  // PdfTemplate tp = cb.createTemplate(w, h);
-  // Graphics2D g2 = tp.createGraphics(w, h, mapper);
-  // tp.setWidth(w);
-  // tp.setHeight(h);
-  // paste(g2);
-  // g2.dispose();
-  // cb.addTemplate(tp, 0, 0);
-  // } catch (DocumentException ex) {
-  // bug(ex.getMessage());
-  // }
-  // document.close();
-  // }
 
   private static class TurtleOp {
 
@@ -360,14 +339,6 @@ public class DrawingBuffer {
       }
 
       if (linearMovement && pen.down) {
-        // The important things done by this block:
-
-        // 1. Expand the bounding box to include the entire path. (use Arc2D.getBounds2D())
-
-        // 2. If filling, add points to the filled region.
-
-        // 3. Add the new points to the pointsAndShapes list, which is used on pen-up events to
-        // .. actually draw.
         double x1, y1, x2, y2;
         x1 = xform.getTranslateX();
         y1 = xform.getTranslateY();
@@ -405,14 +376,6 @@ public class DrawingBuffer {
         }
       }
       if ((circularMovement || shapeMovement) && pen.down) {
-        // The important things done by this block:
-
-        // 1. Expand the bounding box to include the entire path. (use Arc2D.getBounds2D())
-
-        // 2. If filling, add points to the filled region.
-
-        // 3. Add the new points to the pointsAndShapes list, which is used on pen-up events to
-        // .. actually draw.
         Shape shape = null;
         if (circularMovement) {
           Pt s = new Pt(circleStart, 0);
@@ -431,16 +394,6 @@ public class DrawingBuffer {
           pointsAndShapes.add(shape);
         }
       }
-      // if (shapeMovement && pen.down) {
-      // bug("Shape movement!");
-      // bb.add(arbitraryShape.getBounds2D(), pen.thickness);
-      // if (pen.filling) {
-      // regions.get(regions.size() - 1).addShape(arbitraryShape);
-      // }
-      // if (g != null) {
-      // pointsAndShapes.add(arbitraryShape);
-      // }
-      // }
       return change;
     }
 

@@ -167,7 +167,6 @@ public class Sequence implements Shape, Iterable<Pt> {
     int incr = (dir > 0 ? 1 : -1);
     Pt prev = null;
     Pt ret = null;
-    double prevDist = 0.0;
     for (int i = beginIdx; i >= 0 && i <= size(); i += incr) {
       if (prev != null) {
         double chunkDist = getPathLength(Math.min(i, beginIdx), Math.max(i, beginIdx));
@@ -178,8 +177,6 @@ public class Sequence implements Shape, Iterable<Pt> {
           Vec lastPart = new Vec(prev, get(i)).getVectorOfMagnitude(diff);
           ret = lastPart.add(prev);
           break;
-        } else {
-          prevDist = chunkDist;
         }
       }
       prev = get(i);
@@ -657,37 +654,7 @@ public class Sequence implements Shape, Iterable<Pt> {
     }
   }
 
-  // public void writeToFile(String fileName) {
-  // File outFile = new File(fileName);
-  // StringBuilder buf = new StringBuilder();
-  // buf.append("# Sequence.java: " + points.size() + " points; " + new Date().toString() + "\n");
-  // for (Pt pt : points) {
-  // buf.append(pt.x + "\t" + pt.y + "\n");
-  // }
-  // FileUtil.writeStringToFile(outFile, buf.toString(), false);
-  // }
-  //
-  // public static Sequence loadFromFile(String file) {
-  // Sequence ret = new Sequence();
-  // try {
-  // BufferedReader in = new BufferedReader(new FileReader(file));
-  // StringTokenizer tok;
-  // String line;
-  // while (in.ready()) {
-  // line = in.readLine();
-  // if (!line.trim().startsWith("#")) { // avoid comment lines.
-  // tok = new StringTokenizer(line, "\t");
-  // String x = tok.nextToken();
-  // String y = tok.nextToken();
-  // ret.add(new Pt(Double.valueOf(x), Double.valueOf(y)));
-  // }
-  // }
-  // } catch (IOException ex) {
-  // ex.printStackTrace();
-  // }
-  // return ret;
-  // }
-
+  @SuppressWarnings("unused")
   private static void bug(String what) {
     Debug.out("Sequence", what);
   }
