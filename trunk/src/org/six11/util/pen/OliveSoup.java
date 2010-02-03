@@ -33,13 +33,58 @@ public class OliveSoup {
   // sequence listeners are interested in pen activity
   private Set<SequenceListener> sequenceListeners;
 
+  // olive soup listeners are interested in hearing about recognition or any other analysis. There
+  // are many types of listeners, so in order to make routing faster, each listener must say which
+  // specific event(s) they are interested in.
+  private Map<String, List<OliveSoupListener>> allSoupListeners;
+  
+  private Map<String, List<Object>> soupData;
+
   public OliveSoup() {
     drawingBuffers = new ArrayList<DrawingBuffer>();
     pastSequences = new ArrayList<Sequence>();
     sequenceListeners = new HashSet<SequenceListener>();
+    allSoupListeners = new HashMap<String, List<OliveSoupListener>>();
+    soupData = new HashMap<String, List<Object>>();
     seqToDrawBuf = new HashMap<Sequence, DrawingBuffer>();
   }
 
+  public void addSoupListener(String type, OliveSoupListener lis) {
+    if (!getSoupListeners(type).contains(lis)) {
+      getSoupListeners(type).add(lis);
+    }
+  }
+
+  public List<OliveSoupListener> getSoupListeners(String type) {
+    if (!allSoupListeners.containsKey(type)) {
+      allSoupListeners.put(type, new ArrayList<OliveSoupListener>());
+    }
+    return allSoupListeners.get(type);
+  }
+
+  public void removeSoupListener(String type, OliveSoupListener lis) {
+    getSoupListeners(type).remove(lis);
+  }
+
+  private void fireOliveSoupEvent(OliveSoupEvent ev) {
+    for (OliveSoupListener lis : getSoupListeners(ev.type)) {
+      lis.handleSoupEvent(ev);
+    }
+  }
+  
+  public void addSoupData(String key, Object data) {
+    getData(key).add(data);
+    OliveSoupEvent ev = new OliveSoupEvent(this, key, data);
+    fireOliveSoupEvent(ev);
+  }
+
+  public List<Object> getData(String key) {
+    if (!soupData.containsKey(key)) {
+      soupData.put(key, new ArrayList<Object>());
+    }
+    return soupData.get(key);
+  }
+  
   public void addSequenceListener(SequenceListener lis) {
     sequenceListeners.add(lis);
   }
@@ -56,7 +101,7 @@ public class OliveSoup {
 
   /**
    * Registers a change listener, which is whacked every time some (potentially) visual aspect of
-   * the soup has changed.
+   * the soup has changed and the GUI should be repainted.
    */
   public void addChangeListener(ChangeListener lis) {
     if (changeListeners == null) {

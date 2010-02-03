@@ -2,9 +2,6 @@
 
 package org.six11.util.pen;
 
-import java.io.File;
-import java.io.IOException;
-
 import junit.framework.TestCase;
 
 import org.six11.util.Debug;
