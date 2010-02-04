@@ -102,7 +102,7 @@ public class CardinalSpline {
     Vec m0 = a.getVec("slope");
     Vec m1 = b.getVec("slope");
     if (m0 != null && m1 != null) {
-      for (int i = 0; i < 20; i++) {
+      for (int i = 0; i <= 20; i++) {
         double t = (double) i / 20.0;
         double x = a.x * h1(t) + m0.getX() * h2(t) + b.x * h3(t) + m1.getX() * h4(t);
         double y = a.y * h1(t) + m0.getY() * h2(t) + b.y * h3(t) + m1.getY() * h4(t);

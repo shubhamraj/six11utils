@@ -158,10 +158,45 @@ public abstract class Functions {
     return new Vec(aveX, aveY);
   }
 
+  /**
+   * This interprets the line segment as a finite length, and returns the minimum distance between
+   * the input point and any point on the segment.
+   */
+  public static double getDistanceBetweenPointAndSegment(Pt pt, Line seg) {
+    double ret = 0;
+    Pt a = seg.getStart();
+    Pt b = seg.getEnd();
+    Vec ab = new Vec(a, b);
+    Vec ac = new Vec(a, pt);
+    double mag = ab.mag();
+    double r = Functions.getDotProduct(ac, ab) / (mag * mag);
+    if (r < 0) {
+      ret = pt.distance(a);
+    } else if (r > 1) {
+      ret = pt.distance(b);
+    } else {
+      ret = getDistanceBetweenPointAndLine(pt, seg);
+    }
+    return ret;
+  }
+
   public static double getDistanceBetweenPointAndLine(Pt pt, Line line) {
     return line.ptLineDist(pt);
   }
 
+  public static Pt getNearestPoint(Pt pt, Sequence seq) {
+    double dist = Double.MAX_VALUE;
+    Pt nearest = null;
+    for (Pt s : seq) {
+      double thisDist = s.distance(pt);
+      if (thisDist < dist) {
+        nearest = s;
+        dist = thisDist;
+      }
+    }
+    return nearest;
+  }
+  
   public static double getSignedDistanceBetweenPointAndLine(Pt pt, Line line) {
     double dist = getDistanceBetweenPointAndLine(pt, line);
     Vec lineVec = new Vec(line);
@@ -196,9 +231,9 @@ public abstract class Functions {
     // Assuming line is AB and the provided point is C, the nearest
     // point on the line P is found with a parameter r:
     //
-    // AC dot AB
+    // @@@@ AC dot AB
     // r = -----------
-    // mag(AB)
+    // @@@@ mag(AB)
     // 
     // if r == 0, then P == A
     // if r == 1, then P == B
