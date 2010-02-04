@@ -2,9 +2,12 @@ package org.six11.util.pen;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Shape;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
@@ -117,10 +120,12 @@ public class DrawingBuffer {
       xform = turtle.go(xform, pen, bb, null, regions, pointsAndShapes);
     }
     for (FilledRegion region : regions) {
-      g.setColor(region.getColor());
       GeneralPath path = new GeneralPath();
       path.append(region.getPathIterator(), true);
-      g.fill(path);
+      if (g != null) {
+        g.setColor(region.getColor());
+        g.fill(path);
+      }
     }
     xform = new AffineTransform();
     for (TurtleOp turtle : turtles) {
@@ -187,6 +192,13 @@ public class DrawingBuffer {
     addOp(new TurtleOp(arbitraryShape));
   }
 
+  public void addText(String what, Color color) {
+    setFillColor(color);
+    setFilling(true);
+    addOp(new TurtleOp(what));
+    setFilling(false);
+  }
+
   public void up() {
     PenState p = new PenState();
     p.setDown(false);
@@ -242,6 +254,7 @@ public class DrawingBuffer {
     Point2D myMoveTo;
     Point2D circleStart, circleMid, circleEnd;
     Shape arbitraryShape;
+    String text;
 
     public TurtleOp() {
     }
@@ -280,6 +293,11 @@ public class DrawingBuffer {
     public TurtleOp(Shape s) {
       this();
       this.arbitraryShape = s;
+    }
+
+    public TurtleOp(String s) {
+      this();
+      this.text = s;
     }
 
     public AffineTransform go(AffineTransform xform, PenState pen, BoundingBox bb, Graphics2D g,
@@ -336,6 +354,17 @@ public class DrawingBuffer {
       } else if (arbitraryShape != null) {
         change = new AffineTransform();
         shapeMovement = true;
+      } else if (text != null) {
+        change = new AffineTransform();
+        Graphics2D playground = g;
+        if (playground == null) {
+          BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
+          playground = (Graphics2D) image.getGraphics();
+        }
+        FontRenderContext frc = playground.getFontRenderContext();
+        TextLayout tl = new TextLayout(text, new Font("Monospaced", Font.PLAIN, 9), frc);
+        arbitraryShape = xform.createTransformedShape(tl.getOutline(null));
+        shapeMovement = true;
       }
 
       if (linearMovement && pen.down) {
@@ -390,7 +419,7 @@ public class DrawingBuffer {
         if (pen.filling) {
           regions.get(regions.size() - 1).addShape(shape);
         }
-        if (g != null) {
+        if (g != null && text == null) {
           pointsAndShapes.add(shape);
         }
       }
