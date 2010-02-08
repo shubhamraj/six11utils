@@ -329,10 +329,10 @@ public class DrawingBuffer {
                 } else {
                   Point2D pt = (Point2D.Double) obj;
                   if (first) {
-                    gp.moveTo(pt.getX(), pt.getY());
+                    gp.moveTo((float) pt.getX(), (float) pt.getY());
                     first = false;
                   } else {
-                    gp.lineTo(pt.getX(), pt.getY());
+                    gp.lineTo((float) pt.getX(), (float) pt.getY());
                   }
                 }
               }
@@ -564,10 +564,10 @@ public class DrawingBuffer {
           if (obj instanceof Point2D) {
             Point2D pt = (Point2D) obj;
             if (first) {
-              gpi.moveTo(pt.getX(), pt.getY());
+              gpi.moveTo((float) pt.getX(), (float) pt.getY());
               first = false;
             } else {
-              gpi.lineTo(pt.getX(), pt.getY());
+              gpi.lineTo((float) pt.getX(), (float) pt.getY());
             }
           } else if (obj instanceof Shape) {
             Shape shape = (Shape) obj;
