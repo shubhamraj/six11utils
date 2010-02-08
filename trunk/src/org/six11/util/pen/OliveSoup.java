@@ -150,9 +150,9 @@ public class OliveSoup {
         Pt pt = seq.get(i);
         if (i == 0) {
           gp = new GeneralPath();
-          gp.moveTo(pt.x, pt.y);
+          gp.moveTo((float)pt.x,(float) pt.y);
         } else {
-          gp.lineTo(pt.x, pt.y);
+          gp.lineTo((float)pt.x, (float)pt.y);
         }
         lastCurrentSequenceIdx = i;
       }
