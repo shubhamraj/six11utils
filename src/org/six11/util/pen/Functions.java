@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.six11.util.Debug;
+import org.six11.util.data.Statistics;
 
 /**
  * This is a whole slew of static methods that operate on points, lines, vectors, and point
@@ -499,6 +500,18 @@ public abstract class Functions {
       }
     }
     return nearest;
+  }
+  
+  public static Statistics getClosenessStatistics(List<Pt> listA, List<Pt> listB) {
+    Statistics stats = new Statistics();
+    for (Pt ptA : listA) {
+      double closest = Double.MAX_VALUE;
+      for (Pt ptB : listB) {
+        closest = Math.min(ptA.distance(ptB), closest);
+      }
+      stats.addData(closest);
+    }
+    return stats;
   }
 
   public static double getMinDistBetweenPointsOnSequence(Sequence seq, Pt a, Pt b) {
