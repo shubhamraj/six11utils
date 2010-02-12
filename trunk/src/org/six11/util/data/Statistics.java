@@ -27,6 +27,11 @@ public class Statistics {
   public Statistics() {
     data = new ArrayList<Double>();
   }
+  
+  public Statistics(List<Double> source) {
+    data = new ArrayList<Double>(source);
+    dirty = true;
+  }
 
   public void addData(double d) {
     data.add(d);
