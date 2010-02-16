@@ -142,7 +142,7 @@ public class DrawingBuffer {
    * Returns a cached Image object of this buffer so you don't have to re-draw everything all the
    * time. It will create an Image if necessary.
    */
-  public Image getImage() {
+  public BufferedImage getImage() {
     if (turtles.size() > 0 && dirty) {
       update();
     }
