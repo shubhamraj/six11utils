@@ -32,7 +32,7 @@ public class Sequence implements Shape, Iterable<Pt> {
   protected List<Pt> points;
   protected DrawFunction drawFunction;
   protected Map<String, Object> attributes;
-  
+
   /**
    * True if this sequence represents the boundary of a 2D shape, false if it simply represents a
    * polyline.
@@ -43,7 +43,7 @@ public class Sequence implements Shape, Iterable<Pt> {
     points = new ArrayList<Pt>();
     closedRegion = false;
     attributes = new HashMap<String, Object>();
-    
+
     // the default draw function uses the color of each point, or if
     // no "color" attribute is set, uses black.
     drawFunction = new DrawFunction() {
@@ -65,11 +65,11 @@ public class Sequence implements Shape, Iterable<Pt> {
       }
     };
   }
-  
+
   public Object getAttribute(String key) {
     return attributes.get(key);
   }
-  
+
   public void setAttribute(String key, Object value) {
     attributes.put(key, value);
   }
@@ -326,20 +326,27 @@ public class Sequence implements Shape, Iterable<Pt> {
       ret = getCurvature(idx, windowSize - 1);
     }
     points.get(idx).setDouble("angle", ret);
-    
-    new RuntimeException("getCurvature(int, int) is hosed --- need to compute curvature from angles.").printStackTrace();
+
+    new RuntimeException(
+        "getCurvature(int, int) is hosed --- need to compute curvature from angles.")
+        .printStackTrace();
     return ret;
   }
 
+  /**
+   * This calculates the direction (the double "angle" in radians) and the signed curvature (the
+   * "curvature" double value) for each point in the sequence. Curvature is simply the change in
+   * angle from the preceding point to the next. For those points that are close to the edges of the
+   * sequence, the nearest valid value is used. Curvature at the endpoints is defined to be zero.
+   */
   public double calculateCurvatureEuclideanWindowSize(double windowEuclideanSize) {
-//    double sum = 0.0;
+    // double sum = 0.0;
     List<Pt> front = new ArrayList<Pt>(); // place to cache the points at beginning
-    List<Pt> back = new ArrayList<Pt>();  // ... and the end. Need to assign angle value after.
+    List<Pt> back = new ArrayList<Pt>(); // ... and the end. Need to assign angle value after.
 
     double frontAngle = -1.0;
     double backAngle = -1.0;
     for (int i = 0; i < size(); i++) {
-//      sum += Math.abs(getAngleEuclideanWindowSize(i, windowEuclideanSize));
       getAngleEuclideanWindowSize(i, windowEuclideanSize);
       if (!points.get(i).hasAttribute("angle")) {
         if (frontAngle >= 0.0) {
@@ -355,7 +362,7 @@ public class Sequence implements Shape, Iterable<Pt> {
         }
       }
     }
-    
+
     // assign the front and back angles.
     for (Pt pt : front) {
       pt.setDouble("angle", frontAngle);
@@ -363,18 +370,18 @@ public class Sequence implements Shape, Iterable<Pt> {
     for (Pt pt : back) {
       pt.setDouble("angle", backAngle);
     }
-    
+
     // Now that angle is set on every point, we can calculate curvature.
     double ret = 0.0;
-    for (int i=0; i < size(); i++) {
+    for (int i = 0; i < size(); i++) {
       Pt pt = points.get(i);
       if (i == 0) {
         pt.setDouble("curvature", 0.0);
       } else if (i == size() - 1) {
         pt.setDouble("curvature", 0.0);
       } else {
-        double prev = points.get(i-1).getDouble("angle");
-        double next = points.get(i+1).getDouble("angle");
+        double prev = points.get(i - 1).getDouble("angle");
+        double next = points.get(i + 1).getDouble("angle");
         double curvature = next - prev;
         if (curvature < -Math.PI) {
           curvature = curvature + 2.0 * Math.PI;
@@ -382,14 +389,19 @@ public class Sequence implements Shape, Iterable<Pt> {
           curvature = curvature - 2.0 * Math.PI;
         }
         pt.setDouble("curvature", curvature);
-//        bug(i + " curvature: " + Debug.num(next) + "-" + Debug.num(prev) + " = " + Debug.num(pt.getDouble("curvature")));
+        // bug(i + " curvature: " + Debug.num(next) + "-" + Debug.num(prev) + " = " +
+        // Debug.num(pt.getDouble("curvature")));
       }
       ret += Math.abs(pt.getDouble("curvature"));
     }
-    
+
     return ret;
   }
 
+  /**
+   * This installs the "angle" property as a double for the given point using the provided EUCLIDEAN
+   * window size. If there is not enough room it will use a smaller window.
+   */
   public double getAngleEuclideanWindowSize(int idx, double windowEuclideanSize) {
     int k = 2;
     double ret = 0;
@@ -403,7 +415,7 @@ public class Sequence implements Shape, Iterable<Pt> {
       double numer = Math.atan2(dy, dx);
       ret = numer;
       points.get(idx).setDouble("angle", ret);
-    } 
+    }
     return ret;
   }
 
