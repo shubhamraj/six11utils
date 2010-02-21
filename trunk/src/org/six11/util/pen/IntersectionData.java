@@ -117,6 +117,9 @@ public class IntersectionData {
     return (s >= 0 && s <= 1);
   }
 
+  public boolean intersectsStrictlyInsideSegments() {
+    return (r > 0 && r < 1) && (s > 0 && s < 1);
+  }
   
   public Line getLineOne() {
     return one;
