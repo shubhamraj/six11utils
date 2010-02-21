@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Comparator;
 
+import org.six11.util.Debug;
+
 /**
  * My own special point object that does magic tricks, especially when paired with other Pt objects
  * in a Sequence. It helps me do calculations and provides a cleaner syntax than it's parent class.
@@ -49,6 +51,8 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public Pt(double x, double y, long time) {
     super(x, y);
     this.time = time;
+    Debug.detectNaN(x);
+    Debug.detectNaN(y); // TODO: remove these when done debugging. Feb 20 2010
     // attribs = new HashMap<String, Object>();
   }
 
@@ -135,7 +139,12 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
     boolean advanced = basic ? getAttribs().equals(other.getAttribs()) : false;
 
     return basic && advanced;
-
+  }
+  
+  public int hashCode() {
+    // this is totally a guess
+    int hash = super.hashCode() ^ ((Long) time).hashCode() ^ getAttribs().hashCode();
+    return hash;
   }
 
   @SuppressWarnings("unchecked")

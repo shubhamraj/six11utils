@@ -94,12 +94,17 @@ public class DrawingBuffer {
       for (TurtleOp turtle : turtles) {
         xform = turtle.go(xform, pen, bb, null, regions, pointsAndShapes);
       }
-      img = new BufferedImage(bb.getWidthInt(), bb.getHeightInt(), BufferedImage.TYPE_INT_ARGB_PRE);
-      Graphics2D g = img.createGraphics();
-      g.setTransform(AffineTransform.getTranslateInstance(-bb.getX(), -bb.getY()));
-      g.setClip(bb.getRectangleLoose());
-      Components.antialias(g);
-      drawToGraphics(g);
+      if (bb.getWidthInt() * bb.getHeightInt() == 0) {
+        bug("Not drawing buffer with zero size... check for NaNs");
+      } else {
+        img = new BufferedImage(bb.getWidthInt(), bb.getHeightInt(),
+            BufferedImage.TYPE_INT_ARGB_PRE);
+        Graphics2D g = img.createGraphics();
+        g.setTransform(AffineTransform.getTranslateInstance(-bb.getX(), -bb.getY()));
+        g.setClip(bb.getRectangleLoose());
+        Components.antialias(g);
+        drawToGraphics(g);
+      }
       dirty = false;
     }
   }
@@ -255,13 +260,16 @@ public class DrawingBuffer {
     Point2D circleStart, circleMid, circleEnd;
     Shape arbitraryShape;
     String text;
+    String bugString = "unknown";
 
     public TurtleOp() {
+      bugString = "nothing in particular";
     }
 
     public TurtleOp(AffineTransform mine) {
       this();
       this.myTransform = mine;
+      bugString = "transform";
     }
 
     /**
@@ -270,6 +278,7 @@ public class DrawingBuffer {
     public TurtleOp(PenState penState) {
       this();
       this.myPenState = penState;
+      bugString = "pen state";
     }
 
     /**
@@ -281,6 +290,7 @@ public class DrawingBuffer {
     public TurtleOp(Point2D tx) {
       this();
       this.myMoveTo = tx;
+      bugString = "move to " + tx.toString();
     }
 
     public TurtleOp(Point2D start, Point2D mid, Point2D end) {
@@ -288,18 +298,25 @@ public class DrawingBuffer {
       this.circleStart = start;
       this.circleMid = mid;
       this.circleEnd = end;
+      bugString = "circle: " + Debug.num(start) + ", " + Debug.num(mid) + ", " + Debug.num(end);
     }
 
     public TurtleOp(Shape s) {
       this();
       this.arbitraryShape = s;
+      bugString = "shape";
     }
 
     public TurtleOp(String s) {
       this();
       this.text = s;
+      bugString = "text: " + s;
     }
 
+    public String toString() {
+      return bugString;
+    }
+    
     public AffineTransform go(AffineTransform xform, PenState pen, BoundingBox bb, Graphics2D g,
         List<FilledRegion> regions, List<Object> pointsAndShapes) {
       AffineTransform change = xform;

@@ -197,7 +197,7 @@ public abstract class Functions {
     }
     return nearest;
   }
-  
+
   public static double getSignedDistanceBetweenPointAndLine(Pt pt, Line line) {
     double dist = getDistanceBetweenPointAndLine(pt, line);
     Vec lineVec = new Vec(line);
@@ -421,6 +421,118 @@ public abstract class Functions {
     return new IntersectionData(a, b);
   }
 
+  public static Pt getIntersectionPoint(CircleArc arc0, CircleArc arc1) {
+    Pt ret = null;
+    Pt[] ix = getIntersectionPoints(arc0, arc1);
+    if (ix != null) {
+      double dist0 = Math.min(ix[0].distance(arc0.start), ix[1].distance(arc0.end));
+      double dist1 = Math.min(ix[0].distance(arc1.start), ix[1].distance(arc1.end));
+      ret = dist0 < dist1 ? ix[0] : ix[1];
+    }
+    return ret;
+  }
+
+  public static Pt[] getIntersectionPoints(CircleArc arc0, CircleArc arc1) {
+    // This code was taken from http://local.wasp.uwa.edu.au/~pbourke/geometry/2circle/tvoght.c
+    // Modified to use Java syntax, comments reformatted. Original C code by Tim Voght.
+    Pt[] ret = null;
+    double x0 = arc0.getCenter().x;
+    double y0 = arc0.getCenter().y;
+    double r0 = arc0.getRadius();
+    double x1 = arc1.getCenter().x;
+    double y1 = arc1.getCenter().y;
+    double r1 = arc1.getRadius();
+    double a, dx, dy, d, h, rx, ry;
+    double x2, y2;
+
+    dx = x1 - x0; // dx and dy are the vertical and horizontal
+    dy = y1 - y0; // distances between the circle centers.
+
+    d = Math.hypot(dx, dy); // Determine the straight-line distance between the centers
+
+    if (d > (r0 + r1)) { // Check for solvability.
+      // no solution. circles do not intersect.
+    } else if (d < Math.abs(r0 - r1)) {
+      // no solution. one circle is contained in the other
+    }
+
+    // 'point 2' is the point where the line through the circle intersection
+    // points crosses the line between the circle centers.
+
+    // Determine the distance from point 0 to point 2.
+    a = ((r0 * r0) - (r1 * r1) + (d * d)) / (2.0 * d);
+
+    x2 = x0 + (dx * a / d); // Determine the coordinates of point 2.
+    y2 = y0 + (dy * a / d);
+
+    // Determine the distance from point 2 to either of the intersection points.
+    h = Math.sqrt((r0 * r0) - (a * a));
+
+    // Now determine the offsets of the intersection points from point 2.
+    rx = -dy * (h / d);
+    ry = dx * (h / d);
+
+    Pt p3 = new Pt(x2 + rx, y2 + ry); // Determine the absolute intersection points p3 and p4.
+    Pt p4 = new Pt(x2 - rx, y2 - ry);
+    ret = new Pt[] {
+        p3, p4
+    };
+    return ret;
+  }
+
+  public static Pt getIntersectionPoint(CircleArc arc, Line line) {
+    Pt ret = null;
+    Pt[] points = getIntersectionPoints(arc, line);
+    if (points != null) {
+      double distA = Math.min(points[0].distance(line.getP1()), points[0].distance(line.getP2()));
+      double distB = Math.min(points[1].distance(line.getP1()), points[1].distance(line.getP2()));
+      ret = distA < distB ? points[0] : points[1];
+    }
+    return ret;
+  }
+
+  public static Pt[] getIntersectionPoints(CircleArc arc, Line line) {
+    Pt[] ret = null;
+    double x1, y1, x2, y2, r, r2, dx, dy, dr, dr2, det, disc, sign, radical, absdy;
+    // translate the circle center to the origin, and everything else by the same amount.
+    double tx = arc.getCenter().x;
+    double ty = arc.getCenter().y;
+    x1 = line.x1 - tx;
+    y1 = line.y1 - ty;
+    x2 = line.x2 - tx;
+    y2 = line.y2 - ty;
+    dx = x2 - x1;
+    dy = y2 - y1;
+    dr = Math.sqrt(dx * dx + dy * dy);
+    dr2 = dr * dr;
+    det = x1 * y2 - x2 * y1;
+    r = arc.radius;
+    r2 = r * r;
+    disc = r2 * dr2 - (det * det);
+    sign = dy < 0 ? -1 : 1;
+    radical = Math.sqrt(r2 * dr2 - (det * det));
+    absdy = Math.abs(dy);
+    if (disc < 0) {
+      bug("Discriminant is less than zero, indicating there is no intersection.");
+      bug(" ... arc : " + arc);
+      bug(" ... line:" + line);
+    } else {
+      // one or two intersections (just see if the resulting points differ).
+      double ax = ((det * dy) + (sign * dx * radical)) / dr2;
+      double bx = ((det * dy) - (sign * dx * radical)) / dr2;
+      double ay = ((-det * dx) + (absdy * radical)) / dr2;
+      double by = ((-det * dx) - (absdy * radical)) / dr2;
+
+      // get translated points a and b, and pick the one that is closer to line's endpoint.
+      Pt a = new Pt(ax + tx, ay + ty);
+      Pt b = new Pt(bx + tx, by + ty);
+      ret = new Pt[2];
+      ret[0] = a;
+      ret[1] = b;
+    }
+    return ret;
+  }
+
   /**
    * Returns the intersection point of the two given lines. If they are colinear or parallel this
    * will return null.
@@ -457,7 +569,7 @@ public abstract class Functions {
     Pt prev = points.get(0);
     for (Pt n : points) {
       if (n.equals(points.get(0))) {
-        continue;
+        ret.add(n.copy());
       }
       bigVec = new Vec(prev, n);
       while (bigVec.mag() > d) {
@@ -473,7 +585,30 @@ public abstract class Functions {
         bigVec = new Vec(prev, n);
       }
     }
+    ret.add(points.get(points.size() - 1));
 
+    return ret;
+  }
+
+  /**
+   * Returns a list of samples from the provided list that are separated by at least 'time'
+   * milliseconds. It doesn't interpolate, so the actual time distances will be slightly longer than
+   * the duration given.
+   */
+  public static List<Pt> getTimeNormalizedSequence(List<Pt> points, long time) {
+    List<Pt> ret = new ArrayList<Pt>();
+    long accrued = time;
+    for (int i = 0; i < points.size() - 1; i++) {
+      long delta = points.get(i + 1).time - points.get(i).time;
+      accrued = accrued + delta;
+      if (accrued > time) {
+        ret.add(points.get(i));
+        accrued = accrued - time;
+      }
+    }
+    if (ret.get(ret.size() - 1) != points.get(points.size() - 1)) {
+      ret.add(points.get(points.size() - 1));
+    }
     return ret;
   }
 
@@ -501,7 +636,7 @@ public abstract class Functions {
     }
     return nearest;
   }
-  
+
   public static Statistics getClosenessStatistics(List<Pt> listA, List<Pt> listB) {
     Statistics stats = new Statistics();
     for (Pt ptA : listA) {

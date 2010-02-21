@@ -10,36 +10,25 @@ import java.util.ArrayList;
  **/
 public class Antipodal2 {
 
-  public static void main(String[] args) {
-//    Sequence seq = Sequence.loadFromFile(args[0]);
-//    if (seq.get(0).equals(seq.getLast())) {
-//      seq.removeLast();
-//    }
-//    List<Pt> points = Graham.getConvexHull(seq.getPoints());
-//
-//    new Antipodal2(points);
-    System.out.println("Broken until Sequence.loadFromFile() has a replacement");
-  }
-
   List<Pt> mbr; // minimum bounding rectangle
 
   public Antipodal2(List<Pt> convexHull) {
-    int bestIdx = -1;
+//    int bestIdx = -1;
     double bestArea = Double.MAX_VALUE;
     double d;
     List<Pt> r;
     for (int i = 0; i < convexHull.size(); i++) {
-      r = findBox(i, convexHull, false);
+      r = findBox(i, convexHull);
       d = area(r);
       if (d < bestArea) {
         bestArea = d;
-        bestIdx = i;
+//        bestIdx = i;
         mbr = r;
       }
     }
 
     // just debug the best one
-    findBox(bestIdx, convexHull, true);
+    // findBox(bestIdx, convexHull); // necessary?
   }
 
   private static double area(List<Pt> rect) {
@@ -48,7 +37,7 @@ public class Antipodal2 {
     return distA * distB;
   }
 
-  private List<Pt> findBox(int i, List<Pt> convexHull, boolean debug) {
+  private List<Pt> findBox(int i, List<Pt> convexHull) {
     // algorithm is on page 161
     convexHull.size();
     Line a = lineAt(i, convexHull);
@@ -69,24 +58,7 @@ public class Antipodal2 {
     ix.add(Functions.getIntersectionPoint(b, d));
     ix.add(Functions.getIntersectionPoint(b, e));
     List<Pt> ret = Graham.getConvexHull(ix);
-    if (debug) {
-      Graham.outputFile("ap-input.data", convexHull);
-      Graham.outputFile("ap-a.data", Graham.makeList(makeLongLine(a, 100)));
-      Graham.outputFile("ap-b.data", Graham.makeList(makeLongLine(b, 100)));
-      Graham.outputFile("ap-c.data", Graham.makeList(makeLongLine(c, 100)));
-      Graham.outputFile("ap-d.data", Graham.makeList(makeLongLine(d, 100)));
-      Graham.outputFile("ap-e.data", Graham.makeList(makeLongLine(e, 100)));
-      Graham.outputFile("ap-bounds.data", ret);
-    }
     return ret;
-  }
-
-  private Line makeLongLine(Line in, double len) {
-    Vec dirA = new Vec(in).getVectorOfMagnitude(len / 2.0);
-    Vec dirB = dirA.getFlip();
-    Pt newA = Functions.getEndPoint(in.getStart(), dirA);
-    Pt newB = Functions.getEndPoint(in.getStart(), dirB);
-    return new Line(newA, newB);
   }
 
   private Extreme findExtremePoints(Line line, List<Pt> convexHull) {

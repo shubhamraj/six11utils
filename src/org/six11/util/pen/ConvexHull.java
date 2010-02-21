@@ -11,6 +11,7 @@ import java.util.ArrayList;
 public class ConvexHull {
 
   protected List<Pt> points;
+  protected List<Pt> pointsClosed;
   protected List<Pt> rotatedRect;
   protected double rotatedRectArea;
   protected Pt convexCentroid;
@@ -26,6 +27,18 @@ public class ConvexHull {
 
   public List<Pt> getHull() {
     return points;
+  }
+
+  /**
+   * Returns the convex hull with the first and last points doubled up, to facilitate easier
+   * drawing.
+   */
+  public List<Pt> getHullClosed() {
+    if (pointsClosed == null) {
+      pointsClosed = new ArrayList<Pt>(points);
+      pointsClosed.add(points.get(0));
+    }
+    return pointsClosed;
   }
 
   public List<Pt> getRotatedRect() {
