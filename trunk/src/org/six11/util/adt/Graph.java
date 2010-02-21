@@ -9,18 +9,16 @@ import java.util.HashMap;
 import java.util.ArrayList;
 
 /**
- * An extendable Graph datastructure. This provides a starting point
- * for a host of graph datastructure applications, such as scheduling
- * algorithms, decision trees, resource conflict resolution, etc. It
- * also may make you better looking.
- *
- * The code here is a translation of the algorithms described in
- * "Introduction to Algorithms" by Cormen, Leiserson, and Rivest (aka
- * "Big Red"). I've also added my own special sauce--callbacks (a la
- * Runnables) that you can use to follow the state of progress.
+ * An extendable Graph datastructure. This provides a starting point for a host of graph
+ * datastructure applications, such as scheduling algorithms, decision trees, resource conflict
+ * resolution, etc. It also may make you better looking.
+ * 
+ * The code here is a translation of the algorithms described in "Introduction to Algorithms" by
+ * Cormen, Leiserson, and Rivest (aka "Big Red"). I've also added my own special sauce--callbacks (a
+ * la Runnables) that you can use to follow the state of progress.
  **/
 public class Graph {
-  
+
   public final static int STATE_NONE = 0;
   public final static int STATE_BFS = 1;
   public final static int STATE_DFS = 2;
@@ -51,7 +49,7 @@ public class Graph {
   transient protected List<Edge> cross;
   transient protected boolean forward;
   transient protected boolean tree;
-  
+
   // this tells us if the value of the above edge data vars can be
   // trusted. if not, we have to directly look at the set of nodes.
   transient protected boolean edgeDataValid;
@@ -78,7 +76,7 @@ public class Graph {
   public static class Node {
     public Object data;
 
-    private int state = WHITE; 
+    private int state = WHITE;
 
     private int d = 0;
     private int f = 0;
@@ -94,26 +92,24 @@ public class Graph {
       this.actions = new HashMap<Integer, NodeCallback>();
     }
 
-    protected boolean isVisited() { 
+    protected boolean isVisited() {
       return state > WHITE;
     }
 
     protected void setState(int state) {
-      if (this.state == state || 
-	  state < WHITE || 
-	  state > BLACK) {
-	return;
-      } 
+      if (this.state == state || state < WHITE || state > BLACK) {
+        return;
+      }
       this.state = state;
-      //      Debug.out("Graph", "Changed state of " + this + "#" + hashCode() + " to " + getStateStr());
+      // Debug.out("Graph", "Changed state of " + this + "#" + hashCode() + " to " + getStateStr());
       if (state == WHITE) {
-	d = 0;
-	f = 0;
-	p = null;
-	child = false;
+        d = 0;
+        f = 0;
+        p = null;
+        child = false;
       }
       if (actions.get(state) != null) {
-	actions.get(state).run(Node.this);
+        actions.get(state).run(Node.this);
       }
     }
 
@@ -124,9 +120,15 @@ public class Graph {
     public String getStateStr() {
       String ret = "UNKNOWN";
       switch (state) {
-      case WHITE: ret = "White"; break;
-      case GRAY: ret = "Gray"; break;
-      case BLACK: ret = "Black"; break;
+        case WHITE:
+          ret = "White";
+          break;
+        case GRAY:
+          ret = "Gray";
+          break;
+        case BLACK:
+          ret = "Black";
+          break;
       }
       return ret;
     }
@@ -161,7 +163,7 @@ public class Graph {
 
     protected void setPredecessor(Node p) {
       this.p = p;
-      //      Debug.out("Graph", "Changed parent of " + this + "#" + hashCode() + " to " + p);
+      // Debug.out("Graph", "Changed parent of " + this + "#" + hashCode() + " to " + p);
     }
 
     protected void setChild() {
@@ -175,7 +177,7 @@ public class Graph {
     protected boolean isAncestor(Node a) {
       boolean ret = false;
       if (a != null && p != null) {
-	ret = a.equals(p) || p.isAncestor(a);
+        ret = a.equals(p) || p.isAncestor(a);
       }
       return ret;
     }
@@ -187,11 +189,11 @@ public class Graph {
     public boolean equals(Object other) {
       boolean ret = false;
       if (other instanceof Node) {
-	Node n = (Node) other;
-	ret = (/*state == n.state &&*/ // TODO: It is possible that
-				       // commenting this out will
-				       // screw things up
-	       data.equals(n.data));
+        Node n = (Node) other;
+        ret = (/* state == n.state && */// TODO: It is possible that
+        // commenting this out will
+        // screw things up
+        data.equals(n.data));
       }
       return ret;
     }
@@ -208,7 +210,7 @@ public class Graph {
   public static class Edge {
     public Node a;
     public Node b;
-    
+
     public Object data;
     private int mode;
     private Map<Integer, EdgeCallback> actions;
@@ -227,20 +229,18 @@ public class Graph {
     public boolean equals(Object other) {
       boolean ret = false;
       if (other instanceof Edge) {
-	Edge e = (Edge) other;
-	ret = (a.equals(e.a) &&
-	       b.equals(e.b) &&
-	       data.equals(e.data));
+        Edge e = (Edge) other;
+        ret = (a.equals(e.a) && b.equals(e.b) && data.equals(e.data));
       }
       return ret;
     }
 
     protected void setMode(int mode) {
       if (this.mode != mode) {
-	this.mode = mode;
-	if (actions.get(mode) != null) {
-	  actions.get(mode).run(Edge.this);
-	}
+        this.mode = mode;
+        if (actions.get(mode) != null) {
+          actions.get(mode).run(Edge.this);
+        }
       }
     }
 
@@ -251,20 +251,42 @@ public class Graph {
     public String getModeStr() {
       String ret = "UNKNOWN";
       switch (mode) {
-      case FORWARD: ret = "Forward"; break;
-      case TREE: ret = "Tree"; break;
-      case BACK: ret = "Back"; break;
-      case CROSS: ret = "Cross"; break;
+        case FORWARD:
+          ret = "Forward";
+          break;
+        case TREE:
+          ret = "Tree";
+          break;
+        case BACK:
+          ret = "Back";
+          break;
+        case CROSS:
+          ret = "Cross";
+          break;
 
       }
       return ret;
     }
 
-    public boolean isKnown() { return mode != UNKNOWN; }
-    public boolean isTree() { return mode == TREE; }
-    public boolean isBack() { return mode == BACK; }
-    public boolean isForward() { return mode == FORWARD; }
-    public boolean isCross() { return mode == CROSS; }
+    public boolean isKnown() {
+      return mode != UNKNOWN;
+    }
+
+    public boolean isTree() {
+      return mode == TREE;
+    }
+
+    public boolean isBack() {
+      return mode == BACK;
+    }
+
+    public boolean isForward() {
+      return mode == FORWARD;
+    }
+
+    public boolean isCross() {
+      return mode == CROSS;
+    }
 
     public String toString() {
       String ns = a + "->" + b + " ";
@@ -287,8 +309,8 @@ public class Graph {
   }
 
   /**
-   * Tells you if this graph contains a node whose state and data are
-   * both equal (== or equals(..)) to the given Node.
+   * Tells you if this graph contains a node whose state and data are both equal (== or equals(..))
+   * to the given Node.
    */
   public boolean containsNode(Node n) {
     return nodes.contains(n);
@@ -301,10 +323,9 @@ public class Graph {
   public boolean containsEdge(Node a, Node b) {
     boolean ret = false;
     for (Edge e : edges) {
-      if (e.a.equals(a) && e.b.equals(b)
-	  || (!directed && e.b.equals(a) && e.a.equals(b))) {
-	ret = true;
-	break;
+      if (e.a.equals(a) && e.b.equals(b) || (!directed && e.b.equals(a) && e.a.equals(b))) {
+        ret = true;
+        break;
       }
     }
     return ret;
@@ -346,20 +367,20 @@ public class Graph {
       Node n = q.remove();
       List<Node> out = findNextNodes(n);
       for (Node m : out) {
-	Edge e = findEdge(n, m);
-	if (e != null) {
-	  if (m.getState() == WHITE) {
-	    e.setMode(TREE);
-	  } else if (m.getState() == GRAY) {
-	    e.setMode(BACK);
-	  }
-	}
-	if (!m.isVisited()) {
-	  m.setDistance(n.getDistance() + 1);
-	  m.setPredecessor(n);
-	  m.setState(GRAY);
-	  q.offer(m);
-	}
+        Edge e = findEdge(n, m);
+        if (e != null) {
+          if (m.getState() == WHITE) {
+            e.setMode(TREE);
+          } else if (m.getState() == GRAY) {
+            e.setMode(BACK);
+          }
+        }
+        if (!m.isVisited()) {
+          m.setDistance(n.getDistance() + 1);
+          m.setPredecessor(n);
+          m.setState(GRAY);
+          q.offer(m);
+        }
       }
       n.setState(BLACK);
     }
@@ -377,7 +398,7 @@ public class Graph {
     }
     int time = 0;
     time = dfs(null, these, time);
-    searchState = STATE_DFS;    
+    searchState = STATE_DFS;
   }
 
   public void dfs() {
@@ -388,28 +409,28 @@ public class Graph {
     for (Node n : out) {
       Edge e = findEdge(p, n);
       if (e != null) {
-	n.setChild();
+        n.setChild();
       }
       if (n.getState() == WHITE) {
-	if (e != null) {
-	  e.setMode(1);
-	}
-	n.setPredecessor(p);
-	time = dfsVisit(n, ++time);
+        if (e != null) {
+          e.setMode(1);
+        }
+        n.setPredecessor(p);
+        time = dfsVisit(n, ++time);
       } else if (p != null && n.getState() == GRAY && e != null) {
-	e.setMode(2);
+        e.setMode(2);
       } else if (p != null && e != null) {
-	if (n.isAncestor(p)) {
-	  e.setMode(3);
-	} else {
-	  e.setMode(4);
-	}
+        if (n.isAncestor(p)) {
+          e.setMode(3);
+        } else {
+          e.setMode(4);
+        }
       } else if (e != null && e.getMode() == 0) {
-	System.out.println(" --- ERROR  ===========---------");
-	System.out.println(" - n.state: " + n.getState());
-	System.out.println(" - e: " + e);
-	System.out.println(" - p: " + p);
-	System.out.println(" ----------============---------");
+        System.out.println(" --- ERROR  ===========---------");
+        System.out.println(" - n.state: " + n.getState());
+        System.out.println(" - e: " + e);
+        System.out.println(" - p: " + p);
+        System.out.println(" ----------============---------");
       }
     }
     return time;
@@ -429,10 +450,10 @@ public class Graph {
     List<Node> ret = new ArrayList<Node>();
     for (Edge e : edges) {
       if (e.a.equals(n)) {
-	ret.add(e.b);
+        ret.add(e.b);
       }
       if (!directed && e.b.equals(n)) {
-	ret.add(e.a);
+        ret.add(e.a);
       }
     }
     return ret;
@@ -442,13 +463,13 @@ public class Graph {
     Edge ret = null;
     if (a != null && b != null) {
       for (Edge e : edges) {
-	if (e.a.equals(a) && e.b.equals(b)) {
-	  ret = e;
-	  break;
-	} else if (!directed && e.a.equals(b) && e.b.equals(a)) {
-	  ret = e;
-	  break;
-	}
+        if (e.a.equals(a) && e.b.equals(b)) {
+          ret = e;
+          break;
+        } else if (!directed && e.a.equals(b) && e.b.equals(a)) {
+          ret = e;
+          break;
+        }
       }
     }
     return ret;
@@ -458,21 +479,21 @@ public class Graph {
     List<Edge> ret = new ArrayList<Edge>();
     for (Edge e : edges) {
       if (e.b.equals(n)) {
-	ret.add(e);
+        ret.add(e);
       }
     }
     return ret;
   }
-  
+
   public List<Node> getNodes() {
     return nodes;
   }
-  
+
   public List<Node> getNodes(Object data) {
     List<Node> ret = new ArrayList<Node>();
     for (Node n : nodes) {
-      if (n.data.equals(data)) { 
-	ret.add(n);
+      if (n.data.equals(data)) {
+        ret.add(n);
       }
     }
     return ret;
@@ -494,12 +515,12 @@ public class Graph {
       ret = findStartNodes();
     } else {
       if (startNodes == null) {
-	startNodes = new ArrayList<Node>();
-	for (Node n : nodes) {
-	  if (!n.isChild()) {
-	    startNodes.add(n);
-	  }
-	}
+        startNodes = new ArrayList<Node>();
+        for (Node n : nodes) {
+          if (!n.isChild()) {
+            startNodes.add(n);
+          }
+        }
       }
       ret = startNodes;
     }
@@ -530,21 +551,22 @@ public class Graph {
     if (searchState != STATE_DFS) {
       dfs();
     }
-    if (edgeDataValid) return;
+    if (edgeDataValid)
+      return;
     cycles = tree = forward = false;
     cross = new ArrayList<Edge>();
     for (Edge e : edges) {
       if (e.isBack()) {
-	cycles = true;
+        cycles = true;
       }
       if (e.isTree()) {
-	tree = true;
+        tree = true;
       }
       if (e.isForward()) {
-	forward = true;
+        forward = true;
       }
       if (e.isCross()) {
-	cross.add(e);
+        cross.add(e);
       }
     }
     edgeDataValid = true;
