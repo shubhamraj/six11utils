@@ -159,6 +159,10 @@ public class Debug {
   public static String num(double d) {
     if (Double.isInfinite(d)) {
       return "+inf";
+    } else if (d == Double.MAX_VALUE) {
+      return "+inf";
+    } else if (Double.isNaN(d)) {
+      return "NaN";
     } else {
       return df.format(d);
     }
@@ -362,5 +366,15 @@ public class Debug {
   public static void dumpStack(String who, String msg) {
     out(who, "Intentional stacktrace output below:");
     new RuntimeException(msg).printStackTrace();
+  }
+
+  public static void detectNaN(double v) {
+    detectNaN(v, "Discovered NaN value");
+  }
+
+  public static void detectNaN(double v, String msg) {
+    if (Double.isNaN(v)) {
+      new RuntimeException(msg).printStackTrace();
+    }
   }
 }

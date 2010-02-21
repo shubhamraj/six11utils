@@ -40,8 +40,7 @@ public class BoundingBox {
   }
 
   /**
-   * Returns the integer form of the width, plus one. I am not sure why the +1 is necessary, but it
-   * probably has something to do with rounding error.
+   * Returns the integer form of the width, plus one.
    */
   public int getWidthInt() {
     // return (int) Math.ceil(getWidth()) + 1;
