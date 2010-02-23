@@ -273,8 +273,8 @@ public class Sequence implements Shape, Iterable<Pt> {
   }
 
   /**
-   * Simply returns the total arc length devided by the endpoint distance. This checks for division
-   * by zero, in which case Double.MAX_VALUE is returned.
+   * Simply returns the total arc length devided by the distance between endpoints. This checks for
+   * division by zero, in which case Double.MAX_VALUE is returned.
    */
   public double getRoundaboutness() {
     double num = length();
@@ -558,7 +558,7 @@ public class Sequence implements Shape, Iterable<Pt> {
   public boolean contains(double x, double y) {
     int count = 0;
     if (closedRegion) {
-      count = Functions.getCrossingNumber(new Pt(x, y), this);
+      count = Functions.getCrossingNumber(new Pt(x, y), this.getPoints());
     }
     return (count % 2) == 1; // true if count is odd
   }

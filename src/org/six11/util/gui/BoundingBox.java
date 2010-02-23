@@ -149,6 +149,19 @@ public class BoundingBox {
     return new Rectangle2D.Double(Math.floor(getX()), Math.floor(getY()), getWidthInt(),
         getHeightInt());
   }
+  
+  public void grow(double scaleFactor) {
+    double w = getWidth();
+    double newW = w * scaleFactor;
+    double h = getHeight();
+    double newH = h * scaleFactor;
+    double dw = (newW - w) / 2;
+    double dh = (newH - h) / 2;
+    minX -= dw;
+    maxX += dw;
+    minY -= dh;
+    maxY += dh;
+  }
 
   public void bug(String what) {
     Debug.out("BoundingBox", what);

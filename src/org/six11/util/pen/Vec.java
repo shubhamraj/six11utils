@@ -107,4 +107,7 @@ public class Vec {
     return new Vec(-x, -y);
   }
 
+  public double dot(Vec other) {
+    return getX() * other.getX() + getY() * other.getY();
+  }
 }

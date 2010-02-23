@@ -131,7 +131,7 @@ public abstract class MovableShape implements Shape {
   }
 
   public boolean contains(double x, double y) {
-    int numCrossings = Functions.getCrossingNumber(new Pt(x, y), getGeometry());
+    int numCrossings = Functions.getCrossingNumberSequences(new Pt(x, y), getGeometry());
     return ((numCrossings % 2) == 1);
   }
 
