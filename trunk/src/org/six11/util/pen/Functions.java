@@ -391,6 +391,33 @@ public abstract class Functions {
     return a.getX() * b.getY() - a.getY() * b.getX();
   }
 
+  public static double getDeterminant(Pt ptA, Pt ptB, Pt ptC, Pt ptD) {
+    // Forms a determinant from the matrix:
+    // [ Ax Ay (Ax^2 + Ay^2) 1 ]
+    // [ Bx By (Bx^2 + By^2) 1 ]
+    // [ Cx Cy (Cx^2 + Cy^2) 1 ]
+    // [ Dx Dy (Dx^2 + Dy^2) 1 ]
+    double dx2 = ptD.x * ptD.x;
+    double dy2 = ptD.y * ptD.y;
+    double a = ptA.x - ptD.x;
+    double b = ptA.y - ptD.y;
+    double c = ((ptA.x * ptA.x - dx2) + (ptA.y * ptA.y - dy2));
+    double d = ptB.x - ptD.x;
+    double e = ptB.y - ptD.y;
+    double f = ((ptB.x * ptB.x - dx2) + (ptB.y * ptB.y - dy2));
+    double g = ptC.x - ptD.x;
+    double h = ptC.y - ptD.y;
+    double i = ((ptC.x * ptC.x - dx2) + (ptC.y * ptC.y - dy2));
+    double term1 = a * e * i;
+    double term2 = a * f * h;
+    double term3 = b * f * g;
+    double term4 = b * d * i;
+    double term5 = c * d * h;
+    double term6 = c * e * g;
+    double ret = term1 - term2 + term3 - term4 + term5 - term6;
+    return ret;
+  }
+
   // @SuppressWarnings("unused")
   // public static double getVectorMagnitude(Vec vec) {
   // // TODO implement me
@@ -1061,35 +1088,38 @@ public abstract class Functions {
     double d = getFraction(a, b, c);
     return Math.max(0.0, Math.min(1.0, d));
   }
+  
+  public static boolean isPointInRegion(Pt where, List<Pt> region) {
+    int crossings = getCrossingNumber(where, region);
+    return (crossings % 2 == 1);
+  }
 
-  public static int getCrossingNumber(Pt inputPt, Sequence seq) {
+  public static int getCrossingNumber(Pt inputPt, List<Pt> points) {
     int ret = 0;
-    if (seq.isClosedRegion()) {
-      Line line = new Line();
-      List<Pt> points = seq.getPoints();
-      for (Pt pt : points) {
-        line.push(pt);
-        if (line.isValid()) {
-          if (Functions.getWindingIntersect(inputPt, line)) {
-            ret++;
-          }
-        }
-      }
-      if (points.size() > 2) {
-        line.push(points.get(points.size() - 1));
-        line.push(points.get(0));
+    Line line = new Line();
+    for (Pt pt : points) {
+      line.push(pt);
+      if (line.isValid()) {
         if (Functions.getWindingIntersect(inputPt, line)) {
           ret++;
         }
       }
     }
+    // check the line formed by the first and last points
+    if (points.size() > 2 && points.get(points.size() - 1) != points.get(0)) {
+      line.push(points.get(points.size() - 1));
+      line.push(points.get(0));
+      if (Functions.getWindingIntersect(inputPt, line)) {
+        ret++;
+      }
+    }
     return ret;
   }
 
-  public static int getCrossingNumber(Pt pt, List<Sequence> sequences) {
+  public static int getCrossingNumberSequences(Pt pt, List<Sequence> sequences) {
     int count = 0;
     for (Sequence seq : sequences) {
-      count = count + getCrossingNumber(pt, seq);
+      count = count + getCrossingNumber(pt, seq.getPoints());
     }
     return count;
   }
