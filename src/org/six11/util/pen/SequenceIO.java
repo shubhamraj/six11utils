@@ -52,11 +52,9 @@ public abstract class SequenceIO {
   }
 
   public static void writeAll(List<Sequence> sequences, Writer out) throws IOException {
-    bug("Writing " + sequences.size() + " sequences...");
     for (Sequence seq : sequences) {
       write(seq, out);
     }
-    bug("Wrote " + sequences.size() + " sequences.");
   }
   
   public static List<Sequence> readAll(BufferedReader in) throws IOException {

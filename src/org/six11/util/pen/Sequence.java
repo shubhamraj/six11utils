@@ -29,9 +29,11 @@ import org.six11.util.Debug;
  **/
 public class Sequence implements Shape, Iterable<Pt> {
 
+  private static int ID_COUNTER = 1;
   protected List<Pt> points;
   protected DrawFunction drawFunction;
   protected Map<String, Object> attributes;
+  protected int id;
 
   /**
    * True if this sequence represents the boundary of a 2D shape, false if it simply represents a
@@ -40,10 +42,11 @@ public class Sequence implements Shape, Iterable<Pt> {
   protected boolean closedRegion;
 
   public Sequence() {
+    id = ID_COUNTER++;
     points = new ArrayList<Pt>();
     closedRegion = false;
     attributes = new HashMap<String, Object>();
-
+    
     // the default draw function uses the color of each point, or if
     // no "color" attribute is set, uses black.
     drawFunction = new DrawFunction() {
@@ -66,6 +69,10 @@ public class Sequence implements Shape, Iterable<Pt> {
     };
   }
 
+  public int getId() {
+    return id;
+  }
+  
   public Object getAttribute(String key) {
     return attributes.get(key);
   }
