@@ -1,4 +1,4 @@
-// $Id$
+// $Id: Antipodal2.java 55 2010-02-21 00:31:17Z gabe.johnson@gmail.com $
 
 package org.six11.util.pen;
 
@@ -8,12 +8,11 @@ import java.util.ArrayList;
 /**
  * 
  **/
-public class Antipodal2 {
+public class Antipodal {
 
   List<Pt> mbr; // minimum bounding rectangle
 
-  public Antipodal2(List<Pt> convexHull) {
-//    int bestIdx = -1;
+  public Antipodal(List<Pt> convexHull) {
     double bestArea = Double.MAX_VALUE;
     double d;
     List<Pt> r;
@@ -22,7 +21,6 @@ public class Antipodal2 {
       d = area(r);
       if (d < bestArea) {
         bestArea = d;
-//        bestIdx = i;
         mbr = r;
       }
     }
