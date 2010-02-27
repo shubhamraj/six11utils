@@ -16,15 +16,34 @@ public class Antipodal {
     double bestArea = Double.MAX_VALUE;
     double d;
     List<Pt> r;
-    for (int i = 0; i < convexHull.size(); i++) {
-      r = findBox(i, convexHull);
-      d = area(r);
-      if (d < bestArea) {
-        bestArea = d;
-        mbr = r;
+    if (convexHull.size() == 1) {
+      // convex hull is a degenerate case (point): make a one-pixel box.
+      mbr = new ArrayList<Pt>();
+      Pt p = convexHull.get(0);
+      mbr.add(new Pt(p.x - 0.5, p.y - 0.5));
+      mbr.add(new Pt(p.x - 0.5, p.y + 0.5));
+      mbr.add(new Pt(p.x + 0.5, p.y + 0.5));
+      mbr.add(new Pt(p.x + 0.5, p.y - 0.5));
+    } else if (convexHull.size() == 2) {
+      // convex hull is a degenerate case (line): make it one pixel wide.
+      mbr = new ArrayList<Pt>();
+      Vec primeDir = new Vec(convexHull.get(0), convexHull.get(1));
+      Vec offsetDir = primeDir.getNormal().getVectorOfMagnitude(0.5);
+      mbr.add(offsetDir.add(convexHull.get(0)));
+      mbr.add(offsetDir.add(convexHull.get(1)));
+      offsetDir = offsetDir.getFlip();
+      mbr.add(offsetDir.add(convexHull.get(1)));
+      mbr.add(offsetDir.add(convexHull.get(0)));
+    } else {
+      for (int i = 0; i < convexHull.size(); i++) {
+        r = findBox(i, convexHull);
+        d = area(r);
+        if (d < bestArea) {
+          bestArea = d;
+          mbr = r;
+        }
       }
     }
-
     // just debug the best one
     // findBox(bestIdx, convexHull); // necessary?
   }
@@ -98,7 +117,43 @@ public class Antipodal {
   }
 
   public List<Pt> getMinimumBoundingRect() {
-    return mbr;
+    return new ArrayList<Pt>(mbr);
+  }
+
+  public double getLongDimensionLength() {
+    double d1 = mbr.get(0).distance(mbr.get(1));
+    double d2 = mbr.get(1).distance(mbr.get(2));
+    return Math.max(d1, d2);
+  }
+
+  public double getShortDimensionLength() {
+    double d1 = mbr.get(0).distance(mbr.get(1));
+    double d2 = mbr.get(1).distance(mbr.get(2));
+    return Math.min(d1, d2);
+  }
+
+  /**
+   * Returns the short dimension divided by the long dimension. This will give a value in the
+   * range (0, 1].
+   */
+  public double getAspectRatio() {
+    return getShortDimensionLength() / getLongDimensionLength();
+  }
+
+  public double getArea() {
+    double d1 = mbr.get(0).distance(mbr.get(1));
+    double d2 = mbr.get(1).distance(mbr.get(2));
+    return d1 * d2;
+  }
+  
+  public Pt getCentroid() {
+    double sumX = 0;
+    double sumY = 0;
+    for (Pt pt : mbr) {
+      sumX += pt.x;
+      sumY += pt.y;
+    }
+    return new Pt(sumX / mbr.size(), sumY / mbr.size());
   }
 
   private static Line lineAt(int i, List<Pt> points) {

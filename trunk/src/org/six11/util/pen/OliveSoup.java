@@ -19,7 +19,14 @@ public class OliveSoup {
 
   private Sequence seq;
   private List<Sequence> pastSequences;
+
+  /**
+   * combinedBuffers is ONLY to be used in getDrawingBuffers(). It is nulled out whenever
+   * drawingBuffers or namedBuffers changes.
+   **/
+  private List<DrawingBuffer> combinedBuffers;
   private List<DrawingBuffer> drawingBuffers;
+  private Map<String, DrawingBuffer> namedBuffers;
   private MouseThing mouseThing;
   private Map<Sequence, DrawingBuffer> seqToDrawBuf;
 
@@ -37,11 +44,12 @@ public class OliveSoup {
   // are many types of listeners, so in order to make routing faster, each listener must say which
   // specific event(s) they are interested in.
   private Map<String, List<OliveSoupListener>> allSoupListeners;
-  
+
   private Map<String, List<Object>> soupData;
 
   public OliveSoup() {
     drawingBuffers = new ArrayList<DrawingBuffer>();
+    namedBuffers = new HashMap<String, DrawingBuffer>();
     pastSequences = new ArrayList<Sequence>();
     sequenceListeners = new HashSet<SequenceListener>();
     allSoupListeners = new HashMap<String, List<OliveSoupListener>>();
@@ -71,7 +79,7 @@ public class OliveSoup {
       lis.handleSoupEvent(ev);
     }
   }
-  
+
   public void addSoupData(String key, Object data) {
     getData(key).add(data);
     OliveSoupEvent ev = new OliveSoupEvent(this, key, data);
@@ -84,7 +92,7 @@ public class OliveSoup {
     }
     return soupData.get(key);
   }
-  
+
   public void addSequenceListener(SequenceListener lis) {
     sequenceListeners.add(lis);
   }
@@ -138,11 +146,7 @@ public class OliveSoup {
   }
 
   /**
-   * Draws the portion of the current sequence that has not yet been drawn. The input parameter is
-   * expected to contain variables that refer to 'Pt' instances. Each Pt instance has an x and y
-   * member that can be resolved to an integer. This is an efficient implementation minimizes the
-   * amount of time spent in the drawing routine. It does this by caching the index of the last
-   * drawn Pt object. To reset this cache use the forgetCurrentSequence() method.
+   * Draws the portion of the current sequence that has not yet been drawn.
    */
   protected void drawSequence() {
     if (seq != null) {
@@ -150,9 +154,9 @@ public class OliveSoup {
         Pt pt = seq.get(i);
         if (i == 0) {
           gp = new GeneralPath();
-          gp.moveTo((float)pt.x,(float) pt.y);
+          gp.moveTo((float) pt.x, (float) pt.y);
         } else {
-          gp.lineTo((float)pt.x, (float)pt.y);
+          gp.lineTo((float) pt.x, (float) pt.y);
         }
         lastCurrentSequenceIdx = i;
       }
@@ -167,8 +171,27 @@ public class OliveSoup {
   public void addBuffer(DrawingBuffer buf) {
     if (!drawingBuffers.contains(buf)) {
       drawingBuffers.add(buf);
+      combinedBuffers = null;
     }
     fireChange();
+  }
+
+  public void addBuffer(String name, DrawingBuffer buf) {
+    namedBuffers.put(name, buf);
+    combinedBuffers = null;
+    fireChange();
+  }
+
+  public void removeBuffer(String name) {
+    if (namedBuffers.containsKey(name)) {
+      namedBuffers.remove(name);
+      combinedBuffers = null;
+      fireChange();
+    }
+  }
+
+  public DrawingBuffer getBuffer(String name) {
+    return namedBuffers.get(name);
   }
 
   /**
@@ -176,6 +199,8 @@ public class OliveSoup {
    */
   public void clearBuffers() {
     drawingBuffers.clear();
+    namedBuffers.clear();
+    combinedBuffers = null;
     fireChange();
   }
 
@@ -223,6 +248,7 @@ public class OliveSoup {
       }
       buf.up();
       drawingBuffers.add(buf);
+      combinedBuffers = null;
       pastSequences.add(s);
       SequenceEvent sev = new SequenceEvent(this, s, SequenceEvent.Type.END);
       fireSequenceEvent(sev);
@@ -236,6 +262,7 @@ public class OliveSoup {
   public void clearDrawing() {
     seq = null;
     drawingBuffers = new ArrayList<DrawingBuffer>();
+    combinedBuffers = null;
     fireChange();
   }
 
@@ -250,7 +277,12 @@ public class OliveSoup {
    * Returns a list of all cached drawing buffers.
    */
   public List<DrawingBuffer> getDrawingBuffers() {
-    return drawingBuffers;
+    if (combinedBuffers == null) {
+      combinedBuffers = new ArrayList<DrawingBuffer>();
+      combinedBuffers.addAll(drawingBuffers);
+      combinedBuffers.addAll(namedBuffers.values());
+    }
+    return combinedBuffers;
   }
 
   public MouseThing getMouseThing() {

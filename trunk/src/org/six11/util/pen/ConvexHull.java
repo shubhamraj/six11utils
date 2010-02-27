@@ -44,7 +44,7 @@ public class ConvexHull {
   public List<Pt> getRotatedRect() {
     if (rotatedRect == null) {
       // Antipodal anti = new Antipodal(points);
-      Antipodal2 anti = new Antipodal2(points);
+      Antipodal anti = new Antipodal(points);
       rotatedRect = anti.getMinimumBoundingRect();
     }
     return rotatedRect;
