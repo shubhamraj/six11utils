@@ -133,8 +133,20 @@ public class Antipodal {
   }
 
   /**
-   * Returns the short dimension divided by the long dimension. This will give a value in the
-   * range (0, 1].
+   * This is the distance along the 'first' side of the bounding box, which is relevant if you are
+   * forming an ellipse.
+   */
+  public double getFirstDimension() {
+    return mbr.get(0).distance(mbr.get(1));
+  }
+  
+  public double getSecondDimension() {
+    return mbr.get(1).distance(mbr.get(2));
+  }
+
+  /**
+   * Returns the short dimension divided by the long dimension. This will give a value in the range
+   * (0, 1].
    */
   public double getAspectRatio() {
     return getShortDimensionLength() / getLongDimensionLength();
@@ -145,7 +157,7 @@ public class Antipodal {
     double d2 = mbr.get(1).distance(mbr.get(2));
     return d1 * d2;
   }
-  
+
   public Pt getCentroid() {
     double sumX = 0;
     double sumY = 0;
@@ -154,6 +166,12 @@ public class Antipodal {
       sumY += pt.y;
     }
     return new Pt(sumX / mbr.size(), sumY / mbr.size());
+  }
+
+  public double getAngle() {
+    double dx = mbr.get(1).x - mbr.get(0).x;
+    double dy = mbr.get(1).y - mbr.get(0).y;
+    return -Math.atan2(dy, dx);
   }
 
   private static Line lineAt(int i, List<Pt> points) {
