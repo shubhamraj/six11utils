@@ -79,6 +79,10 @@ public class Debug {
     return ret;
   }
 
+  public static void setDecimalOutputFormat(String formatString) {
+    df = new DecimalFormat(formatString);
+  }
+  
   public static void stacktrace(String message, int levelsIn) {
     stacktraceIf(null, message, levelsIn);
   }
