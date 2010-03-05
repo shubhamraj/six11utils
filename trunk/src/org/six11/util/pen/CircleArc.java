@@ -42,6 +42,10 @@ public class CircleArc implements Comparable<CircleArc> {
       this.radius = mid.distance(center);
     }
   }
+  
+  public boolean isValid() {
+    return center != null;
+  }
 
   public int compareTo(CircleArc o) {
     int ret = 0;
@@ -64,8 +68,6 @@ public class CircleArc implements Comparable<CircleArc> {
   public double getArcLength() {
     ArcData data = new ArcData(start, mid, end);
     double ret = (2 * Math.PI) / Math.toRadians(Math.abs(data.extent));
-    bug("Arc extent is " + Debug.num(data.extent) + " degrees, radius is: "
-        + Debug.num(data.radius) + ", so arc length is " + Debug.num(ret));
     return ret;
   }
 
