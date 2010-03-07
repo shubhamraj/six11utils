@@ -256,6 +256,17 @@ public class Debug {
     }
     return buf.toString();
   }
+  
+  public static String num(Object[] objects, String separator) {
+    boolean first = true;
+    StringBuffer buf= new StringBuffer();
+    for (Object o : objects) {
+      buf.append(!first ? separator : "");
+      first = false;
+      buf.append(o.toString());
+    }
+    return buf.toString();
+  }
 
   public static String num(FloatBuffer fbuf, int size) {
     StringBuffer buf = new StringBuffer("[");
