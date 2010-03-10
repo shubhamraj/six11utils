@@ -233,5 +233,13 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public List<?> getList(String name) {
     return (List<?>) getAttribute(name);
   }
+  
+  public void setSequence(String name, Sequence seq) {
+    getAttribs().put(name, seq);
+  }
+  
+  public Sequence getSequence(String name) {
+    return (Sequence) getAttribute(name);
+  }
 
 }
