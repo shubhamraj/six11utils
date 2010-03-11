@@ -95,31 +95,67 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
         .abs(getY() - other.getY()) < Functions.EQ_TOL));
   }
 
-  public static Comparator<Pt> sortByX() {
-    return new Comparator<Pt>() {
-      public int compare(Pt a, Pt b) {
-        int ret = 0;
-        if (a.getX() < b.getX()) {
-          ret = -1;
-        } else if (a.getX() > b.getX()) {
+  public static Comparator<Pt> sortByX = new Comparator<Pt>() {
+    public int compare(Pt a, Pt b) {
+      int ret = 0;
+      if (a.getX() < b.getX()) {
+        ret = -1;
+      } else if (a.getX() > b.getX()) {
+        ret = 1;
+      } else {
+        // x values are the same. to ensure consistent ordering defer to the y value.
+        if (a.getY() > b.getY()) {
           ret = 1;
         } else {
-          // x values are the same. to ensure consistent ordering defer to the y value.
-          if (a.getY() > b.getY()) {
-            ret = 1;
-          } else {
-            ret = -1;
-          }
+          ret = -1;
         }
-        return ret;
       }
+      return ret;
+    }
 
-      public boolean equals(Object obj) {
-        return false;
+//    public boolean equals(Object obj) {
+//      return false;
+//    }
+  };
+  
+  public static Comparator<Pt> sortByY = new Comparator<Pt>() {
+    public int compare(Pt a, Pt b) {
+      int ret = 0;
+      if (a.getY() < b.getY()) {
+        ret = -1;
+      } else if (a.getY() > b.getY()) {
+        ret = 1;
+      } else {
+        // y values are the same. to ensure consistent ordering defer to the x value.
+        if (a.getX() > b.getX()) {
+          ret = 1;
+        } else {
+          ret = -1;
+        }
       }
-    };
-  }
+      return ret;
+    }
+  };
+  
+  public static Comparator<Pt> sortById = new Comparator<Pt>() {
+    public int compare (Pt a, Pt b) {
+      return (((Integer) a.getID()).compareTo(b.getID()));
+    }
+  };
 
+  
+  public static Comparator<Pt> sortByT = new Comparator<Pt>() {
+    public int compare(Pt a, Pt b) {
+      int ret = 0;
+      if (a.getTime() < b.getTime()) {
+        ret = -1;
+      } else if (a.getTime() > b.getTime()) {
+        ret = 1;
+      } 
+      return ret;
+    }
+  };
+  
   public int ix() {
     return (int) getX();
   }
@@ -129,18 +165,17 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   }
 
   public boolean equals(Pt other) {
-    // I go through some pain to ensure that 'attribs' is not
-    // initialized if it doesn't absolutely need to be.
-    boolean basic = (other.compareTo(this) == 0 &&
-    /*
-     * it used to be this: other.getX() == getX() && other.getY() == getY()
-     */
-    Functions.eq(this, other, Functions.EQ_TOL));
-    boolean advanced = basic ? getAttribs().equals(other.getAttribs()) : false;
-
-    return basic && advanced;
+//    boolean basic = (other.compareTo(this) == 0 &&
+//    /*
+//     * it used to be this: other.getX() == getX() && other.getY() == getY()
+//     */
+//    Functions.eq(this, other, Functions.EQ_TOL));
+//    boolean advanced = basic ? getAttribs().equals(other.getAttribs()) : false;
+//
+//    return basic && advanced;
+    return this == other;
   }
-  
+
   public int hashCode() {
     // this is totally a guess
     int hash = super.hashCode() ^ ((Long) time).hashCode() ^ getAttribs().hashCode();
@@ -169,11 +204,11 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public void setAttribute(String name, Object value) {
     getAttribs().put(name, value);
   }
-  
+
   public void setBoolean(String name, boolean value) {
     getAttribs().put(name, value);
   }
-  
+
   public boolean getBoolean(String name) {
     return (getAttribs().containsKey(name) && (Boolean) getAttribute(name));
   }
@@ -204,11 +239,11 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public Vec getVec(String name) {
     return (Vec) getAttribute(name);
   }
-  
+
   public void setVec(String name, Vec value) {
     setAttribute(name, value);
   }
-  
+
   public double getDouble(String name) {
     Object shouldBeDouble = getAttribute(name);
     return ((java.lang.Double) shouldBeDouble).doubleValue();
@@ -218,12 +253,12 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
     return (String) getAttribute(name);
   }
 
-  public void setMap(String name, Map<?,?> value) {
+  public void setMap(String name, Map<?, ?> value) {
     getAttribs().put(name, value);
   }
 
-  public Map<?,?> getMap(String name) {
-    return (Map<?,?>) getAttribute(name);
+  public Map<?, ?> getMap(String name) {
+    return (Map<?, ?>) getAttribute(name);
   }
 
   public void setList(String name, List<?> value) {
@@ -233,11 +268,11 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public List<?> getList(String name) {
     return (List<?>) getAttribute(name);
   }
-  
+
   public void setSequence(String name, Sequence seq) {
     getAttribs().put(name, seq);
   }
-  
+
   public Sequence getSequence(String name) {
     return (Sequence) getAttribute(name);
   }

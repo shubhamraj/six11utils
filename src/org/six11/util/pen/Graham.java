@@ -62,7 +62,7 @@ public class Graham {
     // Sort all points in 'unsorted' using their x coordinates
     List<Pt> sorted = new ArrayList<Pt>();
     sorted.addAll(unsorted);
-    Collections.sort(sorted, Pt.sortByX());
+    Collections.sort(sorted, Pt.sortByX);
 
     // Assign leftmost and rightmost point, and remove from list
     Pt left = sorted.remove(0);
