@@ -81,6 +81,10 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public Pt getScaled(double amt) {
     return new Pt(getX() * amt, getY() * amt);
   }
+  
+  public Pt getTranslated(double x, double y) {
+    return new Pt(getX() + x, getY() + y);
+  }
 
   public int compareTo(Pt other) {
     if (getTime() < other.getTime())
