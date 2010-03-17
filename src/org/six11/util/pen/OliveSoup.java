@@ -284,6 +284,10 @@ public class OliveSoup {
     }
     return combinedBuffers;
   }
+  
+  public List<DrawingBuffer> getAnonymousDrawingBuffers() {
+    return drawingBuffers;
+  }
 
   public MouseThing getMouseThing() {
     if (mouseThing == null) {
