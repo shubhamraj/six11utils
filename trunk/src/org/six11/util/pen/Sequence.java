@@ -73,6 +73,18 @@ public class Sequence implements Shape, Iterable<Pt> {
     return id;
   }
   
+  public int getNamedPointIndex(String key) {
+    return (Integer) getAttribute(key);
+  }
+  
+  public void setNamedPoint(String key, Pt pt) {
+    setAttribute(key, indexOf(pt));
+  }
+  
+  public void clearNamedPoint(String key) {
+    setAttribute(key, null);
+  }
+  
   public Object getAttribute(String key) {
     return attributes.get(key);
   }
