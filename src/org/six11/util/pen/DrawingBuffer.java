@@ -1,5 +1,6 @@
 package org.six11.util.pen;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -103,6 +104,9 @@ public class DrawingBuffer {
         g.setTransform(AffineTransform.getTranslateInstance(-bb.getX(), -bb.getY()));
         g.setClip(bb.getRectangleLoose());
         Components.antialias(g);
+        AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.DST_OVER);        
+        g.setComposite(alphaComposite);
+
         drawToGraphics(g);
       }
       dirty = false;

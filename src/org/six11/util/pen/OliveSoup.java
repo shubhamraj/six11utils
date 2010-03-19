@@ -206,7 +206,9 @@ public class OliveSoup {
 
   public void addRawInputBegin(int x, int y, long t) {
     seq = new Sequence();
-    addRawInputProgress(x, y, t);
+    Pt pt = new Pt(x, y, t);
+    seq.add(pt);
+    // addRawInputProgress(x, y, t);
     SequenceEvent sev = new SequenceEvent(this, seq, SequenceEvent.Type.BEGIN);
     fireSequenceEvent(sev);
   }
@@ -250,6 +252,9 @@ public class OliveSoup {
       drawingBuffers.add(buf);
       combinedBuffers = null;
       pastSequences.add(s);
+    }
+
+    if (s != null) {
       SequenceEvent sev = new SequenceEvent(this, s, SequenceEvent.Type.END);
       fireSequenceEvent(sev);
     }
@@ -284,7 +289,7 @@ public class OliveSoup {
     }
     return combinedBuffers;
   }
-  
+
   public List<DrawingBuffer> getAnonymousDrawingBuffers() {
     return drawingBuffers;
   }
