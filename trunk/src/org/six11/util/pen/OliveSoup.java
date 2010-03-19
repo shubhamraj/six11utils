@@ -32,6 +32,7 @@ public class OliveSoup {
 
   // The currentSeq and last index are for managing the currently-in-progress ink stroke
   private GeneralPath gp;
+  private boolean gpVisible;
   private int lastCurrentSequenceIdx;
 
   // change listeners are interested in visual changes
@@ -208,6 +209,7 @@ public class OliveSoup {
     seq = new Sequence();
     Pt pt = new Pt(x, y, t);
     seq.add(pt);
+    gpVisible = true;
     // addRawInputProgress(x, y, t);
     SequenceEvent sev = new SequenceEvent(this, seq, SequenceEvent.Type.BEGIN);
     fireSequenceEvent(sev);
@@ -232,12 +234,13 @@ public class OliveSoup {
       seq = null;
       lastCurrentSequenceIdx = 0;
       gp = null;
+      gpVisible = false;
       fireChange();
     }
   }
 
   public void addFinishedSequence(Sequence s) {
-    if (s != null && s.size() > 1) {
+    if (s != null && s.size() > 1 && gpVisible) {
       DrawingBuffer buf = new DrawingBuffer();
       seqToDrawBuf.put(s, buf);
       buf.setColor(DrawingBuffer.getBasicPen().color);
@@ -276,6 +279,14 @@ public class OliveSoup {
    */
   public Shape getCurrentSequenceShape() {
     return gp;
+  }
+  
+  public boolean isCurrentSequenceShapeVisible() {
+    return gpVisible;
+  }
+  
+  public void setCurrentSequenceShapeVisible(boolean vis) {
+    gpVisible = vis;
   }
 
   /**

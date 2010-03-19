@@ -78,12 +78,13 @@ public class OliveDrawingSurface extends JComponent {
    * current sequence and all complete DrawingBuffers.
    */
   public void paintComponent(Graphics g1) {
+    
     Graphics2D g = (Graphics2D) g1;
     AffineTransform before = new AffineTransform(g.getTransform());
     drawBorderAndBackground(g);
     if (soup != null) {
       g.setTransform(before);
-      paintContent(g, true); // TODO: should be true, change it back when done debugging
+      paintContent(g, true);
     }
     g.setTransform(before);
   }
@@ -98,7 +99,7 @@ public class OliveDrawingSurface extends JComponent {
         buffer.drawToGraphics(g);
       }
     }
-    if (currentSeq != null) {
+    if (currentSeq != null && soup.isCurrentSequenceShapeVisible()) {
       Components.antialias(g);
       g.setColor(DrawingBuffer.getBasicPen().color);
       g.setStroke(Strokes.get((float) DrawingBuffer.getBasicPen().thickness));
