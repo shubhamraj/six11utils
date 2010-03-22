@@ -103,19 +103,6 @@ public abstract class FileUtil {
   public static JFileChooser makeFileChooser(File dir, String suffix, final String description) {
     JFileChooser ret = new JFileChooser(dir);
     final String suffixWithDot = suffix.startsWith(".") ? suffix : "." + suffix;
-//    FileFilter filter = new FileFilter() {
-//      public boolean accept(File f) {
-//        return (f != null && (f.getName().endsWith(suffixWithDot) || f.isDirectory()));
-//      }
-//
-//      @SuppressWarnings("unused")
-//      public String getDescription() {
-//        return description;
-//      }
-//    };
-//    javax.swing.filechooser.FileFilter f = new javax.swing.filechooser.FileFilter();
-//    ret.setFileFilter((javax.swing.filechooser.FileFilter) filter);
-    
     FileFilter f = new FileFilter() {
       public boolean accept(File f) {
         return (f != null && (f.getName().endsWith(suffixWithDot) || f.isDirectory()));

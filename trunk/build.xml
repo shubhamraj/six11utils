@@ -72,6 +72,28 @@
 		</genjar>
 	</target>
 
+	<target name="jar-sketchreader" depends="compile">
+		<echo message="Using directory: ${compile.output.dir}" />
+		<genjar jarfile="${build.dir}/sketch-reader.jar">
+			<class name="org.six11.util.pen.SketchReader" />
+			<classpath>
+				<fileset dir="lib">
+					<include name="*.jar" />
+				</fileset>
+				<pathelement path="${compile.output.dir}" />
+			</classpath>
+			<manifest>
+				<attribute name="Main-Class" value="org/six11/util/pen/SketchReader" />
+			</manifest>
+
+			<classfilter>
+				<!-- iText demands bouncycastle, but apparently I can get away without it -->
+				<exclude name="org.bouncycastle." />
+			</classfilter>
+
+		</genjar>
+	</target>
+
 	<!-- ==================== Compile Target ================================== -->
 
 	<target name="compile" depends="prepare" description="Compile Java sources">
