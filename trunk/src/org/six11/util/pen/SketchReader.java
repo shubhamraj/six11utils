@@ -183,7 +183,12 @@ public class SketchReader extends JPanel implements DropTargetListener {
         y = Math.max(y, pt.getY());
       }
     }
-    String fileNamePrefix = fileName.substring(0, fileName.indexOf(".sketch"));
+    String fileNamePrefix = fileName;
+    if (fileName.indexOf(".sketch") > 0) {
+      fileNamePrefix = fileName.substring(0, fileName.indexOf(".sketch"));
+    } else if (fileName.indexOf(".log") > 0) {
+      fileNamePrefix = fileName.substring(0, fileName.indexOf(".log"));
+    }
     if (pdfCb.isSelected()) {
       File pdfFile = new File(outDir, fileNamePrefix + ".pdf");
       bug("Making a pdf: " + pdfFile.getAbsolutePath());
@@ -192,7 +197,7 @@ public class SketchReader extends JPanel implements DropTargetListener {
     if (pngCb.isSelected()) {
       File pngFile = new File(outDir, fileNamePrefix + ".png");
       bug("Making a png: " + pngFile.getAbsolutePath());
-      savePng(pngFile, (int) (x+10), (int) (y + 10));
+      savePng(pngFile, (int) (x + 10), (int) (y + 10));
     }
   }
 
@@ -280,7 +285,7 @@ public class SketchReader extends JPanel implements DropTargetListener {
             bug(list.get(j).getAbsolutePath());
             writeSketch(list.get(j));
           }
-          
+
           Desktop.getDesktop().open(outDir);
           // If we made it this far, everything worked.
           dtde.dropComplete(true);
