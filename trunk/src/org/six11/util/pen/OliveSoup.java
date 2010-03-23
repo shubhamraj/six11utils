@@ -262,6 +262,36 @@ public class OliveSoup {
       fireSequenceEvent(sev);
     }
   }
+  
+  public void removeFinishedSequence(Sequence s) {
+    if (s != null) {
+      drawingBuffers.remove(s);
+      pastSequences.remove(s);
+      combinedBuffers = null;
+    }
+  }
+  
+  public void updateFinishedSequence(Sequence s) {
+    getDrawingBufferForSequence(s).setVisible(false);
+    removeFinishedSequence(s);
+    
+    if (s != null && s.size() > 1) {
+      DrawingBuffer buf = new DrawingBuffer();
+      seqToDrawBuf.put(s, buf);
+      buf.setColor(DrawingBuffer.getBasicPen().color);
+      buf.setThickness(DrawingBuffer.getBasicPen().thickness);
+      buf.up();
+      buf.moveTo(s.get(0).x, s.get(0).y);
+      buf.down();
+      for (Pt pt : s) {
+        buf.moveTo(pt.x, pt.y);
+      }
+      buf.up();
+      drawingBuffers.add(buf);
+      combinedBuffers = null;
+      pastSequences.add(s);
+    }
+  }
 
   public DrawingBuffer getDrawingBufferForSequence(Sequence s) {
     return seqToDrawBuf.get(s);

@@ -81,7 +81,7 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public Pt getScaled(double amt) {
     return new Pt(getX() * amt, getY() * amt);
   }
-  
+
   public Pt getTranslated(double x, double y) {
     return new Pt(getX() + x, getY() + y);
   }
@@ -117,11 +117,11 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
       return ret;
     }
 
-//    public boolean equals(Object obj) {
-//      return false;
-//    }
+    // public boolean equals(Object obj) {
+    // return false;
+    // }
   };
-  
+
   public static Comparator<Pt> sortByY = new Comparator<Pt>() {
     public int compare(Pt a, Pt b) {
       int ret = 0;
@@ -140,14 +140,13 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
       return ret;
     }
   };
-  
+
   public static Comparator<Pt> sortById = new Comparator<Pt>() {
-    public int compare (Pt a, Pt b) {
+    public int compare(Pt a, Pt b) {
       return (((Integer) a.getID()).compareTo(b.getID()));
     }
   };
 
-  
   public static Comparator<Pt> sortByT = new Comparator<Pt>() {
     public int compare(Pt a, Pt b) {
       int ret = 0;
@@ -155,11 +154,11 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
         ret = -1;
       } else if (a.getTime() > b.getTime()) {
         ret = 1;
-      } 
+      }
       return ret;
     }
   };
-  
+
   public int ix() {
     return (int) getX();
   }
@@ -169,14 +168,14 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   }
 
   public boolean equals(Pt other) {
-//    boolean basic = (other.compareTo(this) == 0 &&
-//    /*
-//     * it used to be this: other.getX() == getX() && other.getY() == getY()
-//     */
-//    Functions.eq(this, other, Functions.EQ_TOL));
-//    boolean advanced = basic ? getAttribs().equals(other.getAttribs()) : false;
-//
-//    return basic && advanced;
+    // boolean basic = (other.compareTo(this) == 0 &&
+    // /*
+    // * it used to be this: other.getX() == getX() && other.getY() == getY()
+    // */
+    // Functions.eq(this, other, Functions.EQ_TOL));
+    // boolean advanced = basic ? getAttribs().equals(other.getAttribs()) : false;
+    //
+    // return basic && advanced;
     return this == other;
   }
 
@@ -251,6 +250,15 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public double getDouble(String name) {
     Object shouldBeDouble = getAttribute(name);
     return ((java.lang.Double) shouldBeDouble).doubleValue();
+  }
+
+  public double getDouble(String name, double defaultValue) {
+    double ret = defaultValue;
+    Object shouldBeDouble = getAttribute(name);
+    if (shouldBeDouble != null) {
+      ret = ((java.lang.Double) shouldBeDouble).doubleValue();
+    }
+    return ret;
   }
 
   public String getString(String name) {

@@ -104,13 +104,21 @@ public class DrawingBuffer {
         g.setTransform(AffineTransform.getTranslateInstance(-bb.getX(), -bb.getY()));
         g.setClip(bb.getRectangleLoose());
         Components.antialias(g);
-        AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.DST_OVER);        
+        AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.DST_OVER);
         g.setComposite(alphaComposite);
 
         drawToGraphics(g);
       }
       dirty = false;
     }
+  }
+
+  /**
+   * If you change the coordinates of points or other graphic elements, mark the buffer as dirty.
+   * This should prevent users of this buffer from using a cached image of it.
+   */
+  public void setDirty() {
+    dirty = true;
   }
 
   /**
@@ -172,7 +180,7 @@ public class DrawingBuffer {
    */
   public void paste(Graphics2D g) {
     AffineTransform before = new AffineTransform(g.getTransform());
-    if (bb == null) {
+    if (bb == null || dirty) {
       update();
     }
     g.translate(bb.getX(), bb.getY());
@@ -320,7 +328,7 @@ public class DrawingBuffer {
     public String toString() {
       return bugString;
     }
-    
+
     public AffineTransform go(AffineTransform xform, PenState pen, BoundingBox bb, Graphics2D g,
         List<FilledRegion> regions, List<Object> pointsAndShapes) {
       AffineTransform change = xform;
