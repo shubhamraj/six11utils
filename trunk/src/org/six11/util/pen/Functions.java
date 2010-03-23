@@ -93,7 +93,7 @@ public abstract class Functions {
     return ret;
   }
 
-  private static AffineTransform getRotationInstance(Pt pivot, double radians) {
+  public static AffineTransform getRotationInstance(Pt pivot, double radians) {
     // note that this is equivalent to the function
     // AffineTransform.getRotateInstance(angle, x, y). Seeing this in
     // action is instructive.
