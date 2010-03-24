@@ -19,6 +19,7 @@ import org.six11.util.gui.ApplicationFrame;
 import org.six11.util.gui.Colors;
 import org.six11.util.gui.Components;
 import org.six11.util.gui.Strokes;
+import org.six11.util.pen.DrawingBuffer.PenState;
 
 /**
  * This is the primary sketching input/output component. It does not collect mouse/pen data on its
@@ -34,6 +35,7 @@ public class OliveDrawingSurface extends JComponent {
   private double borderPad;
   private boolean penEnabled = false;
   private OliveSoup soup;
+  private Color penColor;
 
   /**
    * A simple main method that shows a drawing surface.
@@ -73,6 +75,10 @@ public class OliveDrawingSurface extends JComponent {
     return soup;
   }
 
+  public void setPenColor(Color pc) {
+    penColor = pc;
+  }
+
   /**
    * Draws a border (the characteristic 'this is a sketching surface' visual), and the soup's
    * current sequence and all complete DrawingBuffers.
@@ -100,8 +106,13 @@ public class OliveDrawingSurface extends JComponent {
     }
     if (currentSeq != null && soup.isCurrentSequenceShapeVisible()) {
       Components.antialias(g);
-      g.setColor(DrawingBuffer.getBasicPen().color);
+      if (penColor != null) {
+        g.setColor(penColor);
+      } else {
+        g.setColor(DrawingBuffer.getBasicPen().color);
+      }
       g.setStroke(Strokes.get((float) DrawingBuffer.getBasicPen().thickness));
+
       g.draw(currentSeq);
     }
   }
