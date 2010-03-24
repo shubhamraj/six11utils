@@ -258,20 +258,20 @@ public class SketchReader extends JPanel implements DropTargetListener {
   }
 
   public void dragEnter(DropTargetDragEvent dtde) {
-    bug("drag enter");
+    
   }
 
   public void dragExit(DropTargetEvent dte) {
-    bug("drag exit");
+    
   }
 
   public void dragOver(DropTargetDragEvent dtde) {
-    bug("drag over");
+    
   }
 
   @SuppressWarnings("unchecked")
   public void drop(DropTargetDropEvent dtde) {
-    bug("drop");
+    
     try {
       // Ok, get the dropped object and try to figure out what it is
       Transferable tr = dtde.getTransferable();
@@ -299,6 +299,6 @@ public class SketchReader extends JPanel implements DropTargetListener {
   }
 
   public void dropActionChanged(DropTargetDragEvent dtde) {
-    bug("drag action changed");
+    
   }
 }

@@ -76,6 +76,7 @@
 		<echo message="Using directory: ${compile.output.dir}" />
 		<genjar jarfile="${build.dir}/sketch-reader.jar">
 			<class name="org.six11.util.pen.SketchReader" />
+			<library jar="lib/iText-2.1.4.jar" />
 			<classpath>
 				<fileset dir="lib">
 					<include name="*.jar" />
