@@ -21,9 +21,6 @@ public class Vec {
   public Vec(double xComponent, double yComponent) {
     this.x = xComponent;
     this.y = yComponent;
-    // TODO: remove these when done debugging. feb 20 2010
-    Debug.detectNaN(x, "x");
-    Debug.detectNaN(y, "y");
   }
 
   /**
@@ -97,6 +94,10 @@ public class Vec {
 
   public Vec getUnitVector() {
     return getVectorOfMagnitude(1d);
+  }
+  
+  public Vec getScaled(double scale) {
+    return new Vec(x * scale, y * scale);
   }
 
   public Vec getNormal() {
