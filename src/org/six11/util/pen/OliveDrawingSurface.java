@@ -35,7 +35,7 @@ public class OliveDrawingSurface extends JComponent {
   private double borderPad;
   private boolean penEnabled = false;
   private OliveSoup soup;
-  private Color penColor;
+
 
   /**
    * A simple main method that shows a drawing surface.
@@ -75,9 +75,6 @@ public class OliveDrawingSurface extends JComponent {
     return soup;
   }
 
-  public void setPenColor(Color pc) {
-    penColor = pc;
-  }
 
   /**
    * Draws a border (the characteristic 'this is a sketching surface' visual), and the soup's
@@ -106,8 +103,8 @@ public class OliveDrawingSurface extends JComponent {
     }
     if (currentSeq != null && soup.isCurrentSequenceShapeVisible()) {
       Components.antialias(g);
-      if (penColor != null) {
-        g.setColor(penColor);
+      if (soup.getPenColor() != null) {
+        g.setColor(soup.getPenColor());
       } else {
         g.setColor(DrawingBuffer.getBasicPen().color);
       }

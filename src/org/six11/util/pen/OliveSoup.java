@@ -1,5 +1,6 @@
 package org.six11.util.pen;
 
+import java.awt.Color;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
 import java.awt.geom.GeneralPath;
@@ -48,6 +49,8 @@ public class OliveSoup {
 
   private Map<String, List<Object>> soupData;
 
+  private Color penColor;
+
   public OliveSoup() {
     drawingBuffers = new ArrayList<DrawingBuffer>();
     namedBuffers = new HashMap<String, DrawingBuffer>();
@@ -79,6 +82,10 @@ public class OliveSoup {
     for (OliveSoupListener lis : getSoupListeners(ev.type)) {
       lis.handleSoupEvent(ev);
     }
+  }
+
+  public void setPenColor(Color pc) {
+    penColor = pc;
   }
 
   public void addSoupData(String key, Object data) {
@@ -207,8 +214,12 @@ public class OliveSoup {
 
   public void addRawInputBegin(int x, int y, long t) {
     seq = new Sequence();
+    if (penColor != null) {
+      seq.setAttribute("pen color", penColor);
+    }
     Pt pt = new Pt(x, y, t);
     seq.add(pt);
+
     gpVisible = true;
     // addRawInputProgress(x, y, t);
     SequenceEvent sev = new SequenceEvent(this, seq, SequenceEvent.Type.BEGIN);
@@ -243,7 +254,11 @@ public class OliveSoup {
     if (s != null && s.size() > 1 && gpVisible) {
       DrawingBuffer buf = new DrawingBuffer();
       seqToDrawBuf.put(s, buf);
-      buf.setColor(DrawingBuffer.getBasicPen().color);
+      if (s.getAttribute("pen color") != null) {
+        buf.setColor((Color) s.getAttribute("pen color"));
+      } else {
+        buf.setColor(DrawingBuffer.getBasicPen().color);
+      }
       buf.setThickness(DrawingBuffer.getBasicPen().thickness);
       buf.up();
       buf.moveTo(s.get(0).x, s.get(0).y);
@@ -262,7 +277,7 @@ public class OliveSoup {
       fireSequenceEvent(sev);
     }
   }
-  
+
   public void removeFinishedSequence(Sequence s) {
     if (s != null) {
       drawingBuffers.remove(s);
@@ -270,15 +285,19 @@ public class OliveSoup {
       combinedBuffers = null;
     }
   }
-  
+
   public void updateFinishedSequence(Sequence s) {
     getDrawingBufferForSequence(s).setVisible(false);
     removeFinishedSequence(s);
-    
+
     if (s != null && s.size() > 1) {
       DrawingBuffer buf = new DrawingBuffer();
       seqToDrawBuf.put(s, buf);
-      buf.setColor(DrawingBuffer.getBasicPen().color);
+      if (s.getAttribute("pen color") != null) {
+        buf.setColor((Color) s.getAttribute("pen color"));
+      } else {
+        buf.setColor(DrawingBuffer.getBasicPen().color);
+      }
       buf.setThickness(DrawingBuffer.getBasicPen().thickness);
       buf.up();
       buf.moveTo(s.get(0).x, s.get(0).y);
@@ -310,11 +329,11 @@ public class OliveSoup {
   public Shape getCurrentSequenceShape() {
     return gp;
   }
-  
+
   public boolean isCurrentSequenceShapeVisible() {
     return gpVisible;
   }
-  
+
   public void setCurrentSequenceShapeVisible(boolean vis) {
     gpVisible = vis;
   }
@@ -376,5 +395,9 @@ public class OliveSoup {
   @SuppressWarnings("unused")
   private void bug(String what) {
     Debug.out("OliveSoup", what);
+  }
+
+  public Color getPenColor() {
+    return penColor;
   }
 }
