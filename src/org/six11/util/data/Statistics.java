@@ -2,7 +2,6 @@
 
 package org.six11.util.data;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
@@ -24,17 +23,30 @@ public class Statistics {
   private double max;
   private double median;
 
+  private int maximumN = Integer.MAX_VALUE;
+
   public Statistics() {
     data = new ArrayList<Double>();
   }
-  
+
   public Statistics(List<Double> source) {
     data = new ArrayList<Double>(source);
     dirty = true;
   }
 
+  /**
+   * Set the maximum number of values this statistics instance will retain. This is useful, for
+   * example, if you are interested in statistics on the recent portion of a data stream.
+   */
+  public void setMaximumN(int maxN) {
+    maximumN = maxN;
+  }
+
   public void addData(double d) {
     data.add(d);
+    if (data.size() > maximumN) {
+      data.remove(0);
+    }
     dirty = true;
   }
 
@@ -71,7 +83,7 @@ public class Statistics {
     calc();
     return variance;
   }
-  
+
   public double getMedian() {
     calc();
     return median;
@@ -85,6 +97,18 @@ public class Statistics {
   public double getStdDevDistance(double x) {
     calc();
     return (x - getMean()) / getStdDev();
+  }
+  
+  public int countOutliersStdDev(double outlierThreshold) {
+    int ret = 0;
+    calc();
+    for (double d : data) {
+      double dist = getStdDevDistance(d);
+      if (dist > outlierThreshold) {
+        ret++;
+      }
+    }
+    return ret;
   }
 
   public void calc() {
@@ -104,7 +128,7 @@ public class Statistics {
         variation += Math.pow(d - average, 2.0);
       }
       variance = variation / n;
-      
+
       // calculate median
       List<Double> copy = new ArrayList<Double>(data);
       Collections.sort(copy);
@@ -114,9 +138,19 @@ public class Statistics {
         double v1 = copy.get(copy.size() / 2);
         double v2 = copy.get((copy.size() / 2) + 1);
         median = (v1 + v2) / 2.0;
-      } 
+      }
     }
     dirty = false;
+  }
+
+  public List<Double> getDataListSorted() {
+    List<Double> copy = getDataList();
+    Collections.sort(copy);
+    return copy;
+  }
+
+  public List<Double> getDataList() {
+    return new ArrayList<Double>(data);
   }
 
   @SuppressWarnings("unused")

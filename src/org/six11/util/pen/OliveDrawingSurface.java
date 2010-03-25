@@ -109,7 +109,6 @@ public class OliveDrawingSurface extends JComponent {
         g.setColor(DrawingBuffer.getBasicPen().color);
       }
       g.setStroke(Strokes.get((float) DrawingBuffer.getBasicPen().thickness));
-
       g.draw(currentSeq);
     }
   }
