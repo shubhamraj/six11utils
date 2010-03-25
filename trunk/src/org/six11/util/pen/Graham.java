@@ -13,24 +13,24 @@ import java.io.FileWriter;
 public class Graham {
 
   public static void main(String[] args) {
-//    List<Pt> unsorted = new ArrayList<Pt>();
-//    if (args.length == 0) {
-//      System.out.println("give me x y pairs, or a single number indicating "
-//          + " number of random points to generate.");
-//    } else if (args.length == 1) {
-//      // args[0] is a filename (read data points from file)
-//      unsorted = Sequence.loadFromFile(args[0]).getPoints();
-//    } else {
-//      for (int i = 0; i < args.length; i += 2) {
-//        unsorted.add(new Pt(Double.valueOf(args[i]), Double.valueOf(args[i + 1])));
-//      }
-//    }
-//    // all of the above served to populate a list of points called
-//    // 'unsorted'. In a single call, I can get the convex hull:
-//    List<Pt> hull = Graham.getConvexHull(unsorted);
-//    for (Pt pt : hull) {
-//      System.out.println(pt.toString());
-//    }
+    // List<Pt> unsorted = new ArrayList<Pt>();
+    // if (args.length == 0) {
+    // System.out.println("give me x y pairs, or a single number indicating "
+    // + " number of random points to generate.");
+    // } else if (args.length == 1) {
+    // // args[0] is a filename (read data points from file)
+    // unsorted = Sequence.loadFromFile(args[0]).getPoints();
+    // } else {
+    // for (int i = 0; i < args.length; i += 2) {
+    // unsorted.add(new Pt(Double.valueOf(args[i]), Double.valueOf(args[i + 1])));
+    // }
+    // }
+    // // all of the above served to populate a list of points called
+    // // 'unsorted'. In a single call, I can get the convex hull:
+    // List<Pt> hull = Graham.getConvexHull(unsorted);
+    // for (Pt pt : hull) {
+    // System.out.println(pt.toString());
+    // }
     System.out.println("Broken until Sequence.loadFromFile() has a replacement.");
   }
 
@@ -59,12 +59,13 @@ public class Graham {
       ret.addAll(unsorted);
       return ret;
     }
-    // Sort all points in 'unsorted' using their x coordinates
+
+    // 1. Sort all points in 'unsorted' using their x coordinates into list 'sorted'.
     List<Pt> sorted = new ArrayList<Pt>();
     sorted.addAll(unsorted);
     Collections.sort(sorted, Pt.sortByX);
 
-    // Assign leftmost and rightmost point, and remove from list
+    // Assign leftmost and rightmost point, and remove from sorted list.
     Pt left = sorted.remove(0);
     Pt right = sorted.remove(sorted.size() - 1);
 
@@ -73,7 +74,8 @@ public class Graham {
     List<Pt> upper = new ArrayList<Pt>();
     List<Pt> lower = new ArrayList<Pt>();
 
-    // While there are still points in 'sorted':
+    // Put each point from the sorted list into the 'lower' or 'upper' list. The assignment is based
+    // on which side of the partition line from 'left' to 'right' each point falls.
     while (!sorted.isEmpty()) {
       pt = sorted.remove(0); // remove Point from sorted list
       partitionSide = Functions.getPartition(pt, left, right);
@@ -86,14 +88,11 @@ public class Graham {
       }
     }
 
-    // Debug.out("Graham", "after doing dupes, lists are as follows: ");
-    // Debug.out("Graham", "upper: " + Debug.num(upper, " "));
-    // Debug.out("Graham", "lower: " + Debug.num(lower, " "));
-
     // add 'right' to the lists. This is needed to ensure that the
     // hulls use the rightmost point.
     lower.add(right);
     upper.add(right);
+
     //
     // Construct the lower hull
     //

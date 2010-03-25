@@ -27,6 +27,7 @@ public class OliveSoup {
    **/
   private List<DrawingBuffer> combinedBuffers;
   private List<DrawingBuffer> drawingBuffers;
+  private Map<String, List<DrawingBuffer>> layers;
   private Map<String, DrawingBuffer> namedBuffers;
   private MouseThing mouseThing;
   private Map<Sequence, DrawingBuffer> seqToDrawBuf;
@@ -54,6 +55,7 @@ public class OliveSoup {
   public OliveSoup() {
     drawingBuffers = new ArrayList<DrawingBuffer>();
     namedBuffers = new HashMap<String, DrawingBuffer>();
+    layers = new HashMap<String, List<DrawingBuffer>>();
     pastSequences = new ArrayList<Sequence>();
     sequenceListeners = new HashSet<SequenceListener>();
     allSoupListeners = new HashMap<String, List<OliveSoupListener>>();
@@ -197,6 +199,15 @@ public class OliveSoup {
       fireChange();
     }
   }
+  
+  public void addToLayer(String str, DrawingBuffer buf) {
+    if (!layers.containsKey(str)) {
+      layers.put(str, new ArrayList<DrawingBuffer>());
+    }
+    layers.get(str).add(buf);
+    combinedBuffers = null;
+    fireChange();
+  }
 
   public DrawingBuffer getBuffer(String name) {
     return namedBuffers.get(name);
@@ -208,6 +219,7 @@ public class OliveSoup {
   public void clearBuffers() {
     drawingBuffers.clear();
     namedBuffers.clear();
+    layers.clear();
     combinedBuffers = null;
     fireChange();
   }
@@ -346,6 +358,9 @@ public class OliveSoup {
       combinedBuffers = new ArrayList<DrawingBuffer>();
       combinedBuffers.addAll(drawingBuffers);
       combinedBuffers.addAll(namedBuffers.values());
+      for (List<DrawingBuffer> layer : layers.values()) {
+        combinedBuffers.addAll(layer);
+      }
     }
     return combinedBuffers;
   }
