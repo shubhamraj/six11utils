@@ -16,6 +16,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.six11.util.Debug;
@@ -35,6 +36,7 @@ public class DrawingBuffer {
   public Dimension defaultSize = new Dimension(400, 400);
   private boolean dirty;
   private boolean visible;
+  private long lastModified;
 
   private List<TurtleOp> turtles;
   private BoundingBox bb;
@@ -47,6 +49,14 @@ public class DrawingBuffer {
     return BASIC_PENCIL;
   }
 
+  public static Comparator<DrawingBuffer> sortByAge = new Comparator<DrawingBuffer>() {
+
+    public int compare(DrawingBuffer o1, DrawingBuffer o2) {
+      return ((Long) o1.lastModified).compareTo(o2.lastModified);
+    }
+    
+  };
+  
   /**
    * Creates a new drawing buffer. By default a drawing buffer is visible.
    */
@@ -78,6 +88,7 @@ public class DrawingBuffer {
     turtles.add(op);
     bb = null;
     dirty = true;
+    lastModified = System.currentTimeMillis();
   }
 
   /**

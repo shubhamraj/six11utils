@@ -35,6 +35,15 @@ public class Statistics {
   }
 
   /**
+   * Clears the data. On return, the Statistics instance is like a new one, except the maximum N (if
+   * previously set) is retained.
+   */
+  public void clear() {
+    data.clear();
+    dirty = true;
+  }
+
+  /**
    * Set the maximum number of values this statistics instance will retain. This is useful, for
    * example, if you are interested in statistics on the recent portion of a data stream.
    */
@@ -98,7 +107,7 @@ public class Statistics {
     calc();
     return (x - getMean()) / getStdDev();
   }
-  
+
   public int countOutliersStdDev(double outlierThreshold) {
     int ret = 0;
     calc();
