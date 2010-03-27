@@ -42,6 +42,9 @@ public class OliveSoup {
 
   // sequence listeners are interested in pen activity
   private Set<SequenceListener> sequenceListeners;
+  
+  // hover listeners are interested in pen hover (in/out/move) activity
+  private Set<HoverListener> hoverListeners;
 
   // olive soup listeners are interested in hearing about recognition or any other analysis. There
   // are many types of listeners, so in order to make routing faster, each listener must say which
@@ -58,6 +61,7 @@ public class OliveSoup {
     layers = new HashMap<String, List<DrawingBuffer>>();
     pastSequences = new ArrayList<Sequence>();
     sequenceListeners = new HashSet<SequenceListener>();
+    hoverListeners = new HashSet<HoverListener>();
     allSoupListeners = new HashMap<String, List<OliveSoupListener>>();
     soupData = new HashMap<String, List<Object>>();
     seqToDrawBuf = new HashMap<Sequence, DrawingBuffer>();
@@ -114,6 +118,20 @@ public class OliveSoup {
   private void fireSequenceEvent(SequenceEvent ev) {
     for (SequenceListener lis : sequenceListeners) {
       lis.handleSequenceEvent(ev);
+    }
+  }
+  
+  public void addHoverListener(HoverListener lis) {
+    hoverListeners.add(lis);
+  }
+
+  public void removeHoverListener(HoverListener lis) {
+    hoverListeners.remove(lis);
+  }
+
+  private void fireHoverEvent(HoverEvent ev) {
+    for (HoverListener lis : hoverListeners) {
+      lis.handleHoverEvent(ev);
     }
   }
 
@@ -222,6 +240,10 @@ public class OliveSoup {
     layers.clear();
     combinedBuffers = null;
     fireChange();
+  }
+
+  public void addHover(int x, int y, long when, HoverEvent.Type type) {
+    fireHoverEvent(new HoverEvent(this, new Pt(x,y,when), type));
   }
 
   public void addRawInputBegin(int x, int y, long t) {
@@ -401,9 +423,16 @@ public class OliveSoup {
       soup.addRawInputEnd();
     }
 
-    @SuppressWarnings("unused")
-    private void bug(final String what) {
-      Debug.out("OliveMouseThing", what);
+    public void mouseMoved(MouseEvent ev) {
+      soup.addHover(ev.getX(), ev.getY(), ev.getWhen(), HoverEvent.Type.Hover);
+    };
+
+    public void mouseEntered(MouseEvent ev) {
+      soup.addHover(ev.getX(), ev.getY(), ev.getWhen(), HoverEvent.Type.In);
+    }
+    
+    public void mouseExited(MouseEvent ev) {
+      soup.addHover(ev.getX(), ev.getY(), ev.getWhen(), HoverEvent.Type.Out);
     }
   }
 
