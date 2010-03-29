@@ -42,7 +42,7 @@ public class CircleArc implements Comparable<CircleArc> {
       this.radius = mid.distance(center);
     }
   }
-  
+
   public boolean isValid() {
     return center != null;
   }
@@ -67,14 +67,17 @@ public class CircleArc implements Comparable<CircleArc> {
 
   public double getArcLength() {
     ArcData data = new ArcData(start, mid, end);
-    double ret = (2 * Math.PI) / Math.toRadians(Math.abs(data.extent));
+    double ret = 0;
+    if (data.isValid()) {
+      ret = (2 * Math.PI) / Math.toRadians(Math.abs(data.extent));
+    }
     return ret;
   }
 
   public static void bug(String what) {
     Debug.out("CircleArc", what);
   }
-  
+
   public static CircleArc makeBestCircle(int start, int end, Sequence seq) {
     CircleArc ret = null;
     List<CircleArc> arcs = new ArrayList<CircleArc>();
@@ -84,10 +87,10 @@ public class CircleArc implements Comparable<CircleArc> {
         arcs.add(ca);
       }
     }
-//    Collections.sort(arcs, CircleArc.comparator); // sort based on radius
-//    if (arcs.size() > 0) {
-//      ret = arcs.get(arcs.size() / 2);
-//    }
+    // Collections.sort(arcs, CircleArc.comparator); // sort based on radius
+    // if (arcs.size() > 0) {
+    // ret = arcs.get(arcs.size() / 2);
+    // }
     double lowestError = Double.MAX_VALUE;
     for (CircleArc arc : arcs) {
       double error = 0;
