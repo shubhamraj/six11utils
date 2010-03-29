@@ -21,10 +21,10 @@ public class Circle extends Ellipse2D.Double {
   protected double mid_x, mid_y, r;
 
   /**
-   * Calls the constructor Ellipse2D.Double(x, y, r ,r).
+   * Calls the constructor Ellipse2D.Double(x, y, 2r ,2r).
    */
   public Circle(double x, double y, double r) {
-    super(x - (r / 2.0), y - (r / 2.0), r, r);
+    super(x - r, y - r, r*2, r*2);
     permahash = super.hashCode();
     this.mid_x = x;
     this.mid_y = y;
