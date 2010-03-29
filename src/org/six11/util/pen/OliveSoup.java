@@ -42,7 +42,7 @@ public class OliveSoup {
 
   // sequence listeners are interested in pen activity
   private Set<SequenceListener> sequenceListeners;
-  
+
   // hover listeners are interested in pen hover (in/out/move) activity
   private Set<HoverListener> hoverListeners;
 
@@ -120,7 +120,7 @@ public class OliveSoup {
       lis.handleSequenceEvent(ev);
     }
   }
-  
+
   public void addHoverListener(HoverListener lis) {
     hoverListeners.add(lis);
   }
@@ -217,7 +217,7 @@ public class OliveSoup {
       fireChange();
     }
   }
-  
+
   public void addToLayer(String str, DrawingBuffer buf) {
     if (!layers.containsKey(str)) {
       layers.put(str, new ArrayList<DrawingBuffer>());
@@ -243,7 +243,7 @@ public class OliveSoup {
   }
 
   public void addHover(int x, int y, long when, HoverEvent.Type type) {
-    fireHoverEvent(new HoverEvent(this, new Pt(x,y,when), type));
+    fireHoverEvent(new HoverEvent(this, new Pt(x, y, when), type));
   }
 
   public void addRawInputBegin(int x, int y, long t) {
@@ -321,7 +321,10 @@ public class OliveSoup {
   }
 
   public void updateFinishedSequence(Sequence s) {
-    getDrawingBufferForSequence(s).setVisible(false);
+    DrawingBuffer db = getDrawingBufferForSequence(s);
+    if (db != null) {
+      db.setVisible(false);
+    }
     removeFinishedSequence(s);
 
     if (s != null && s.size() > 1) {
@@ -430,7 +433,7 @@ public class OliveSoup {
     public void mouseEntered(MouseEvent ev) {
       soup.addHover(ev.getX(), ev.getY(), ev.getWhen(), HoverEvent.Type.In);
     }
-    
+
     public void mouseExited(MouseEvent ev) {
       soup.addHover(ev.getX(), ev.getY(), ev.getWhen(), HoverEvent.Type.Out);
     }
