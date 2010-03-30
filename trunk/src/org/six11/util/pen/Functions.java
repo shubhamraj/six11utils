@@ -2,6 +2,7 @@
 
 package org.six11.util.pen;
 
+import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.AffineTransform;
 import java.util.Collections;
@@ -560,6 +561,33 @@ public abstract class Functions {
     return ret;
   }
 
+  public static Pt[] getIntersectionPoints(Rectangle r, Line line) {
+    Pt[] ret = new Pt[2];
+    List<Pt> corners = new ArrayList<Pt>();
+    double x = r.getX();
+    double y = r.getY();
+    double w = r.getWidth();
+    double h = r.getHeight();
+    corners.add(new Pt(x, y));
+    corners.add(new Pt(x + w, y));
+    corners.add(new Pt(x + w, y + h));
+    corners.add(new Pt(x, y + h));
+    corners.add(new Pt(x, y));
+    int retIdx = 0;
+    for (int i = 0; i < corners.size() - 1; i++) {
+      Line side = new Line(corners.get(i), corners.get(i + 1));
+      IntersectionData id = getIntersectionData(line, side);
+      if (id.intersectsOnLineTwo()) {
+        ret[retIdx] = id.getIntersection();
+        retIdx = retIdx + 1;
+        if (retIdx == ret.length) {
+          break;
+        }
+      }
+    }
+    return ret;
+  }
+
   /**
    * Returns the intersection point of the two given lines. If they are colinear or parallel this
    * will return null.
@@ -1088,7 +1116,7 @@ public abstract class Functions {
     double d = getFraction(a, b, c);
     return Math.max(0.0, Math.min(1.0, d));
   }
-  
+
   public static boolean isPointInRegion(Pt where, List<Pt> region) {
     int crossings = getCrossingNumber(where, region);
     return (crossings % 2 == 1);
