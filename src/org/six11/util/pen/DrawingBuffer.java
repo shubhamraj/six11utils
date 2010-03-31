@@ -37,7 +37,7 @@ public class DrawingBuffer {
   private boolean dirty;
   private boolean visible;
   private long lastModified;
-
+  private boolean complain;
   private List<TurtleOp> turtles;
   private BoundingBox bb;
 
@@ -65,8 +65,13 @@ public class DrawingBuffer {
     this.turtles = new ArrayList<TurtleOp>();
     visible = true;
     dirty = true;
+    complain = true;
   }
 
+  public void setComplainWhenDrawingToInvisibleBuffer(boolean v) {
+    // theLongestMethodNameInTheSix11UtilsProjectIsCompensatedForWithAShortInputParameterName()
+    complain = v;
+  }
   /**
    * Sets visibility to the given value (and sets the dirty bit if this changes the value).
    */
@@ -85,6 +90,9 @@ public class DrawingBuffer {
   }
 
   protected void addOp(TurtleOp op) {
+    if (complain && !visible) {
+      bug("Drawing to an invisible canvas. Is that what you want?");
+    }
     turtles.add(op);
     bb = null;
     dirty = true;
