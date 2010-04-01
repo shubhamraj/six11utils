@@ -54,7 +54,7 @@ public class OliveSoup {
   private Map<String, List<Object>> soupData;
 
   private Color penColor;
-
+  
   public OliveSoup() {
     drawingBuffers = new ArrayList<DrawingBuffer>();
     namedBuffers = new HashMap<String, DrawingBuffer>();

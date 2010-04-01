@@ -377,15 +377,10 @@ public abstract class Functions {
     return a.getX() * b.getX() + a.getY() * b.getY();
   }
 
-  // @SuppressWarnings("unused")
-  // public static Vec getCrossProduct(Vec a, Vec b) {
-  // // TODO implement me NOTE: It seems that the cross product of two
-  // // 2D vectors yields a 'vector' with one component... a scalar.
-  //
-  // // NOTE: if you are using this to get the signed angle between two
-  // // vectors, look at getAngleBetween()
-  // return null;
-  // }
+  public static double getCrossProduct(Vec a, Vec b) {
+    return (a.getX() * b.getY()) - (a.getY() * b.getX()); // notice this is the same as
+                                                          // getDeterminant
+  }
 
   public static double getDeterminant(Vec a, Vec b) {
     // det(ab, cd) = a*d - b*c;
