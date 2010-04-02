@@ -54,7 +54,8 @@ public class OliveSoup {
   private Map<String, List<Object>> soupData;
 
   private Color penColor;
-  
+  private double penThickness = 1;
+
   public OliveSoup() {
     drawingBuffers = new ArrayList<DrawingBuffer>();
     namedBuffers = new HashMap<String, DrawingBuffer>();
@@ -92,6 +93,10 @@ public class OliveSoup {
 
   public void setPenColor(Color pc) {
     penColor = pc;
+  }
+
+  public void setPenThickness(double thick) {
+    penThickness = thick;
   }
 
   public void addSoupData(String key, Object data) {
@@ -251,6 +256,8 @@ public class OliveSoup {
     if (penColor != null) {
       seq.setAttribute("pen color", penColor);
     }
+    seq.setAttribute("pen thickness", penThickness);
+
     Pt pt = new Pt(x, y, t);
     seq.add(pt);
 
@@ -293,7 +300,11 @@ public class OliveSoup {
       } else {
         buf.setColor(DrawingBuffer.getBasicPen().color);
       }
-      buf.setThickness(DrawingBuffer.getBasicPen().thickness);
+      if (s.getAttribute("pen thickness") != null) {
+        buf.setThickness((Double) s.getAttribute("pen thickness"));
+      } else {
+        buf.setThickness(DrawingBuffer.getBasicPen().thickness);
+      }
       buf.up();
       buf.moveTo(s.get(0).x, s.get(0).y);
       buf.down();
@@ -335,7 +346,11 @@ public class OliveSoup {
       } else {
         buf.setColor(DrawingBuffer.getBasicPen().color);
       }
-      buf.setThickness(DrawingBuffer.getBasicPen().thickness);
+      if (s.getAttribute("pen thickness") != null) {
+        buf.setThickness((Double) s.getAttribute("pen thickness"));
+      } else {
+        buf.setThickness(DrawingBuffer.getBasicPen().thickness);
+      }
       buf.up();
       buf.moveTo(s.get(0).x, s.get(0).y);
       buf.down();
@@ -446,5 +461,9 @@ public class OliveSoup {
 
   public Color getPenColor() {
     return penColor;
+  }
+
+  public double getPenThickness() {
+    return penThickness;
   }
 }
