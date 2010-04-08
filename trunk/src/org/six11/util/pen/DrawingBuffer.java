@@ -116,6 +116,8 @@ public class DrawingBuffer {
       }
       if (bb.getWidthInt() * bb.getHeightInt() == 0) {
         bug("Not drawing buffer with zero size... check for NaNs");
+      } else if (bb.getWidth() > 1000 || bb.getHeight() > 1000){
+        bug("Buffer size would be " + bb + ". I refuse.");
       } else {
         img = new BufferedImage(bb.getWidthInt(), bb.getHeightInt(),
             BufferedImage.TYPE_INT_ARGB_PRE);
@@ -125,7 +127,6 @@ public class DrawingBuffer {
         Components.antialias(g);
         AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.DST_OVER);
         g.setComposite(alphaComposite);
-
         drawToGraphics(g);
       }
       dirty = false;

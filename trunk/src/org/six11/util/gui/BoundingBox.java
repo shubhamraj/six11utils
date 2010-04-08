@@ -21,6 +21,24 @@ public class BoundingBox {
   double minY;
   double maxY;
 
+  public String toString() {
+    StringBuilder buf = new StringBuilder();
+    buf.append("BoundingBox[");
+    if (hasX) {
+      buf.append(Debug.num(minX) + ", ");
+    } else {
+      buf.append("?, ");
+    }
+    if (hasY) {
+      buf.append(Debug.num(minY) + ", ");
+    } else {
+      buf.append("?, ");
+    }
+    buf.append(" -- " + Debug.num((maxX - minX)) + " x " + Debug.num(maxY - minY));
+    buf.append("]");
+    return buf.toString();
+  }
+
   /**
    * Gives you the minimum X value.
    */
@@ -149,7 +167,7 @@ public class BoundingBox {
     return new Rectangle2D.Double(Math.floor(getX()), Math.floor(getY()), getWidthInt(),
         getHeightInt());
   }
-  
+
   public void grow(double scaleFactor) {
     double w = getWidth();
     double newW = w * scaleFactor;
