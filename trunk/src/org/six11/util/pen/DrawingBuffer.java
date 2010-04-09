@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.Shape;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
@@ -170,7 +169,6 @@ public class DrawingBuffer {
     }
   }
 
-  @SuppressWarnings("unused")
   private static void bug(String what) {
     Debug.out("DrawingBuffer", what);
   }

@@ -14,13 +14,11 @@ import javax.swing.JComponent;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-// import org.six11.slippy.example.BoundDrawingBuffer;
 import org.six11.util.Debug;
 import org.six11.util.gui.ApplicationFrame;
 import org.six11.util.gui.Colors;
 import org.six11.util.gui.Components;
 import org.six11.util.gui.Strokes;
-import org.six11.util.pen.DrawingBuffer.PenState;
 
 /**
  * This is the primary sketching input/output component. It does not collect mouse/pen data on its
