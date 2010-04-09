@@ -4,8 +4,6 @@ package org.six11.util.pen;
 
 import java.util.Comparator;
 
-import org.six11.util.Debug;
-
 /**
  * Represents a 2D vector from one point to another. This gives you access to useful Vector stuff
  * like magnitude, and via the Functions class, other stuff like dot products.

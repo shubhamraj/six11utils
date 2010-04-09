@@ -241,7 +241,7 @@ public class NetworkThing {
         }
 
       } catch (Exception ex) {
-        // TODO: have several catch clauses, because this might hide problems I want to know about.
+        ex.printStackTrace();
       }
     }
     bug("Download thread finished.");

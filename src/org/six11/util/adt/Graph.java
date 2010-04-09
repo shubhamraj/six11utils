@@ -190,10 +190,7 @@ public class Graph {
       boolean ret = false;
       if (other instanceof Node) {
         Node n = (Node) other;
-        ret = (/* state == n.state && */// TODO: It is possible that
-        // commenting this out will
-        // screw things up
-        data.equals(n.data));
+        ret = data.equals(n.data);
       }
       return ret;
     }
@@ -244,7 +241,7 @@ public class Graph {
       }
     }
 
-    public int getMode() { // TODO: remove or demote
+    public int getMode() {
       return mode;
     }
 

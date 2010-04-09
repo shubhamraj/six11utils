@@ -82,7 +82,7 @@ public class Debug {
   public static void setDecimalOutputFormat(String formatString) {
     df = new DecimalFormat(formatString);
   }
-  
+
   public static void stacktrace(String message, int levelsIn) {
     stacktraceIf(null, message, levelsIn);
   }
@@ -219,11 +219,11 @@ public class Debug {
   }
 
   public static String num(Sequence seq) {
-    StringBuffer buf = new StringBuffer("Sequence w/ " + seq.size() + " items: ");
-    // TODO: fix this
-    // for (Pt pt : seq.getPtIterable()) {
-    // buf.append(num(pt) + " ");
-    // }
+    StringBuffer buf = new StringBuffer("Sequence w/ " + seq.size() + " points: [");
+    for (Pt pt : seq) {
+      buf.append(num(pt) + " ");
+    }
+    buf.append("]");
     return buf.toString();
   }
 
@@ -256,10 +256,10 @@ public class Debug {
     }
     return buf.toString();
   }
-  
+
   public static String num(Object[] objects, String separator) {
     boolean first = true;
-    StringBuffer buf= new StringBuffer();
+    StringBuffer buf = new StringBuffer();
     for (Object o : objects) {
       buf.append(!first ? separator : "");
       first = false;

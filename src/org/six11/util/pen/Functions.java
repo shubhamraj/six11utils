@@ -131,12 +131,6 @@ public abstract class Functions {
     return new Pt(pt.getX() + vec.getX(), pt.getY() + vec.getY());
   }
 
-  @SuppressWarnings("unused")
-  public static Line getLineFromPoint(Pt pt, Vec vec) {
-    // TODO implement me
-    return null;
-  }
-
   /**
    * Given some sequence of points (or subsequence) return the average vector that represents the
    * change in position.
@@ -338,12 +332,6 @@ public abstract class Functions {
     return Functions.getScaledVector(vec, scaleFactor);
   }
 
-  @SuppressWarnings("unused")
-  public static Vec getVectorFlip(Vec vec) {
-    // TODO implement me
-    return null;
-  }
-
   public static double getAngleBetween(Line a, Line b) {
     Vec va = getLineVector(a);
     Vec vb = getLineVector(b);
@@ -413,22 +401,6 @@ public abstract class Functions {
     double ret = term1 - term2 + term3 - term4 + term5 - term6;
     return ret;
   }
-
-  // @SuppressWarnings("unused")
-  // public static double getVectorMagnitude(Vec vec) {
-  // // TODO implement me
-  // return 0.0;
-  // }
-  //
-  // @SuppressWarnings("unused")
-  // public static Pt getLineMidpoint(Line line) {
-  // // TODO implement me
-  // return null;
-  // }
-
-  // public static double getLineLength(Line line) {
-
-  // }
 
   public static Vec getLineVector(Line line) {
     double dx = 0.0;
@@ -593,12 +565,6 @@ public abstract class Functions {
     return ret;
   }
 
-  @SuppressWarnings("unused")
-  public static double getMinDistBetweenLines(Line a, Line b) {
-    // TODO implement me
-    return 0.0;
-  }
-
   public static Sequence getNormalizedSequence(Sequence seq, double d) {
     Sequence normalizedSequence = new Sequence();
     normalizedSequence.add(seq.get(0).copy());
@@ -718,12 +684,6 @@ public abstract class Functions {
     return dist;
   }
 
-  @SuppressWarnings("unused")
-  public static Sequence getTweenBetweenSequences(Sequence a, Sequence b) {
-    // TODO implement me
-    return null;
-  }
-
   /**
    * The provided epicenter point may or may not be on the sequence. Wherever it is, there is a
    * point on the sequence that is closest to it. This method runs through all points in the
@@ -828,36 +788,6 @@ public abstract class Functions {
     };
     Collections.sort(input, sortationDevice);
     return input;
-  }
-
-  // public static Sequence getDerivative(Sequence seq) {
-  // Sequence ret = new Sequence();
-  // Pt addMe;
-  // List<Pt> source = seq.getPoints();
-  // double dy, dx, slope;
-  // if (source.size() > 2) {
-  // int last = source.size() - 1;
-  // // initial slope is between 0 and 1.
-  // addMe = new Pt(source.get(0));
-  // addMe.setLocation(addMe.getX(), Functions.getSlope(source.get(0), source.get(1)));
-  // ret.add(addMe);
-  // for (int i = 1; i < last; i++) {
-  // addMe = new Pt(source.get(i));
-  // addMe.setLocation(addMe.getX(), Functions.getSlope(source.get(i-1), source.get(i+1)));
-  // ret.add(addMe);
-  // }
-  // // final slope is between last and it's predecessor
-  // addMe = new Pt(source.get(last));
-  // addMe.setLocation(addMe.getX(), Functions.getSlope(source.get(last-1), source.get(last)));
-  // ret.add(addMe);
-  // }
-  // return ret;
-  // }
-
-  @SuppressWarnings("unused")
-  public static double getMinDistBetweenLineAndSequence(Line line, Sequence seq) {
-    // TODO implement me
-    return 0.0;
   }
 
   public static List<Pt> getIntersectionsOfLineAndSequence(Line line, Sequence seq) {
