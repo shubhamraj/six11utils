@@ -481,17 +481,17 @@ public class DrawingBuffer {
 
   public static class PenState {
 
-    boolean down;
-    float thickness;
-    Color color;
-    boolean filling;
-    Color fillColor;
+    public boolean down;
+    public float thickness;
+    public Color color;
+    public boolean filling;
+    public Color fillColor;
 
-    boolean changeDown;
-    boolean changeThickness;
-    boolean changeColor;
-    boolean changeFilling;
-    boolean changeFillColor;
+    public boolean changeDown;
+    public boolean changeThickness;
+    public boolean changeColor;
+    public boolean changeFilling;
+    public boolean changeFillColor;
 
     public PenState() {
 
