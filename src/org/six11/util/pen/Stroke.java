@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.awt.Shape;
 import java.awt.Rectangle;
-import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.AffineTransform;
@@ -87,8 +86,12 @@ public class Stroke implements Shape {
     return getDefault().getPathIterator(affine, flatness);
   }
 
-  public void draw(Graphics2D g) {
-    getDefault().draw(g);
-  }
+//  /*
+//   * @deprecated
+//   */
+//  public void draw(Graphics2D g) {
+//    System.out.println("Stroke.draw deprecated");
+////    getDefault().draw(g);
+//  }
 
 }

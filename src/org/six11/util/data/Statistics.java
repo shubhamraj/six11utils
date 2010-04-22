@@ -141,7 +141,9 @@ public class Statistics {
       // calculate median
       List<Double> copy = new ArrayList<Double>(data);
       Collections.sort(copy);
-      if ((copy.size() % 2) == 0) {
+      if (copy.size() == 1) {
+        median = copy.get(0);
+      } else if ((copy.size() % 2) == 0) {
         median = copy.get(copy.size() / 2);
       } else {
         double v1 = copy.get(copy.size() / 2);

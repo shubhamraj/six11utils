@@ -23,11 +23,10 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
 
   protected long time;
   protected Map<String, Object> attribs;
-  protected final int id = ID_COUNTER++;
+  protected final int id;
 
   public Pt() {
-    super();
-    attribs = new HashMap<String, Object>();
+    this(0, 0);
   }
 
   public Pt(int x, int y) {
@@ -47,8 +46,16 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   }
 
   public Pt(double x, double y, long time) {
-    super(x, y);
+    this(++ID_COUNTER, x, y, time);
     this.time = time;
+  }
+
+  public Pt(int id, double x, double y, long time) {
+    super(x, y);
+    this.id = id;
+    this.time = time;
+    attribs = new HashMap<String, Object>();
+    ID_COUNTER = Math.max(id, ID_COUNTER);
   }
 
   public Pt(Point2D source, long time) {

@@ -9,11 +9,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.awt.Color;
-import java.awt.BasicStroke;
+import java.util.Set;
 import java.awt.Rectangle;
 import java.awt.Shape;
-import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
@@ -31,8 +29,9 @@ public class Sequence implements Shape, Iterable<Pt> {
 
   private static int ID_COUNTER = 1;
   protected List<Pt> points;
-  protected DrawFunction drawFunction;
+//  protected DrawFunction drawFunction;
   protected Map<String, Object> attributes;
+  
   protected int id;
 
   /**
@@ -42,31 +41,15 @@ public class Sequence implements Shape, Iterable<Pt> {
   protected boolean closedRegion;
 
   public Sequence() {
-    id = ID_COUNTER++;
+    this(++ID_COUNTER);
+  }
+  
+  public Sequence (int id) {
+    this.id = id;
     points = new ArrayList<Pt>();
     closedRegion = false;
     attributes = new HashMap<String, Object>();
-    
-    // the default draw function uses the color of each point, or if
-    // no "color" attribute is set, uses black.
-    drawFunction = new DrawFunction() {
-      public void draw(Sequence seq, Graphics2D g) {
-        g.setStroke(new BasicStroke(2.0f));
-        Line line = new Line();
-        for (Pt pt : seq) {
-          line.push(pt);
-          if (line.isValid()) {
-            if (pt.hasAttribute("color")) {
-              Color color = (Color) pt.getAttribute("color");
-              g.setColor(color);
-            } else {
-              g.setColor(Color.BLACK);
-            }
-            g.draw(line);
-          }
-        }
-      }
-    };
+    ID_COUNTER = Math.max(ID_COUNTER, id);
   }
 
   public int getId() {
@@ -83,6 +66,10 @@ public class Sequence implements Shape, Iterable<Pt> {
   
   public void clearNamedPoint(String key) {
     setAttribute(key, null);
+  }
+  
+  public Set<String> getAttributeNames() {
+    return attributes.keySet();
   }
   
   public Object getAttribute(String key) {
@@ -126,9 +113,9 @@ public class Sequence implements Shape, Iterable<Pt> {
     this.closedRegion = closedRegion;
   }
 
-  public void setDrawFunction(DrawFunction df) {
-    this.drawFunction = df;
-  }
+//  public void setDrawFunction(DrawFunction df) {
+//    this.drawFunction = df;
+//  }
 
   public Sequence copy() {
     Sequence ret = new Sequence();
@@ -629,9 +616,9 @@ public class Sequence implements Shape, Iterable<Pt> {
     return new FlatteningPathIterator(getPathIterator(affine), flatness);
   }
 
-  public void draw(Graphics2D g) {
-    drawFunction.draw(this, g);
-  }
+//  public void draw(Graphics2D g) {
+//    drawFunction.draw(this, g);
+//  }
 
   /**
    * A PathIterator for going through a Sequence as though it were a Shape. (in fact, this Sequence
