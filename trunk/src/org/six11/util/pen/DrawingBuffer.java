@@ -39,6 +39,7 @@ public class DrawingBuffer {
   private boolean complain;
   private List<TurtleOp> turtles;
   private BoundingBox bb;
+  private boolean emptyOK;
 
   public static PenState getBasicPen() {
     PenState BASIC_PENCIL = new PenState();
@@ -53,9 +54,9 @@ public class DrawingBuffer {
     public int compare(DrawingBuffer o1, DrawingBuffer o2) {
       return ((Long) o1.lastModified).compareTo(o2.lastModified);
     }
-    
+
   };
-  
+
   /**
    * Creates a new drawing buffer. By default a drawing buffer is visible.
    */
@@ -65,12 +66,18 @@ public class DrawingBuffer {
     visible = true;
     dirty = true;
     complain = true;
+    emptyOK = false;
+  }
+
+  public void setEmptyOK(boolean v) {
+    this.emptyOK = v;
   }
 
   public void setComplainWhenDrawingToInvisibleBuffer(boolean v) {
     // theLongestMethodNameInTheSix11UtilsProjectIsCompensatedForWithAShortInputParameterName()
     complain = v;
   }
+
   /**
    * Sets visibility to the given value (and sets the dirty bit if this changes the value).
    */
@@ -113,20 +120,24 @@ public class DrawingBuffer {
       for (TurtleOp turtle : turtles) {
         xform = turtle.go(xform, pen, bb, null, regions, pointsAndShapes);
       }
-      if (bb.getWidthInt() * bb.getHeightInt() == 0) {
-        bug("Not drawing buffer with zero size... check for NaNs");
-      } else if (bb.getWidth() > 1000 || bb.getHeight() > 1000){
-        bug("Buffer size would be " + bb + ". I refuse.");
-      } else {
-        img = new BufferedImage(bb.getWidthInt(), bb.getHeightInt(),
-            BufferedImage.TYPE_INT_ARGB_PRE);
-        Graphics2D g = img.createGraphics();
-        g.setTransform(AffineTransform.getTranslateInstance(-bb.getX(), -bb.getY()));
-        g.setClip(bb.getRectangleLoose());
-        Components.antialias(g);
-        AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.DST_OVER);
-        g.setComposite(alphaComposite);
-        drawToGraphics(g);
+      if (bb.isValid()) {
+        if (bb.getWidthInt() * bb.getHeightInt() == 0) {
+          if (!emptyOK) {
+            bug("Not drawing buffer with zero size... check for NaNs");
+          }
+        } else if (bb.getWidth() > 1000 || bb.getHeight() > 1000) {
+          bug("Buffer size would be " + bb + ". I refuse.");
+        } else {
+          img = new BufferedImage(bb.getWidthInt(), bb.getHeightInt(),
+              BufferedImage.TYPE_INT_ARGB_PRE);
+          Graphics2D g = img.createGraphics();
+          g.setTransform(AffineTransform.getTranslateInstance(-bb.getX(), -bb.getY()));
+          g.setClip(bb.getRectangleLoose());
+          Components.antialias(g);
+          AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.DST_OVER);
+          g.setComposite(alphaComposite);
+          drawToGraphics(g);
+        }
       }
       dirty = false;
     }
@@ -201,8 +212,10 @@ public class DrawingBuffer {
     if (bb == null || dirty) {
       update();
     }
-    g.translate(bb.getX(), bb.getY());
-    g.drawImage(getImage(), 0, 0, null);
+    if (bb.isValid()) {
+      g.translate(bb.getX(), bb.getY());
+      g.drawImage(getImage(), 0, 0, null);
+    }
     g.setTransform(before);
   }
 

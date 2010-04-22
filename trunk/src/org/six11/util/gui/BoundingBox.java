@@ -39,12 +39,17 @@ public class BoundingBox {
     return buf.toString();
   }
 
+  public boolean isValid() {
+    return (hasX && hasY);
+  }
+
   /**
    * Gives you the minimum X value.
    */
   public double getX() {
-    if (!hasX)
-      bug("There's no real x value yet!");
+    if (!hasX) {
+      Debug.stacktrace("There's no real x value yet!", 4);
+    }
     return minX;
   }
 
@@ -53,7 +58,7 @@ public class BoundingBox {
    */
   public double getWidth() {
     if (!hasX)
-      bug("There's no real x value yet!");
+      Debug.stacktrace("There's no real x value yet!", 4);
     return maxX - minX;
   }
 
@@ -78,7 +83,7 @@ public class BoundingBox {
    */
   public double getY() {
     if (!hasY)
-      bug("There's no real y value yet!");
+      Debug.stacktrace("There's no real y value yet!", 4);
     return minY;
   }
 
@@ -87,7 +92,7 @@ public class BoundingBox {
    */
   public double getHeight() {
     if (!hasY)
-      bug("There's no real y value yet!");
+      Debug.stacktrace("There's no real y value yet!", 4);
     return maxY - minY;
   }
 
