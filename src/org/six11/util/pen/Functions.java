@@ -55,6 +55,20 @@ public abstract class Functions {
   public static boolean eq(double a, double b, double tolerance) {
     return (Math.abs(a - b) < tolerance);
   }
+  
+  /**
+   * Tells you if a > b, and that the difference between them is larger than a tolerance value.
+   */
+  public static boolean gt(double a, double b, double tolerance) {
+    return (a > b && !eq(a,b,tolerance));
+  }
+  
+  /**
+   * Tells you if a < b, and that the difference between them is larger than a tolerance value.
+   */
+  public static boolean lt(double a, double b, double tolerance) {
+    return (a < b && !eq(a,b,tolerance));
+  }
 
   public static Pt getMean(Pt... points) {
     List<Pt> list = new ArrayList<Pt>();
