@@ -5,19 +5,17 @@ package org.six11.util.pen;
 import org.six11.util.Debug;
 
 /**
- * Gives you information regarding the intersection of two lines as
- * specified by line segments. If the two lines are not parallel, then
- * an intersection exists. A frequent use of finding line
- * intersections is to know if two line segments intersect (e.g. do
- * these two lines intersect somewhere between these four points). You
- * can get at this information using the intersectsInSegments()
- * method.
+ * Gives you information regarding the intersection of two lines as specified by line segments. If
+ * the two lines are not parallel, then an intersection exists. A frequent use of finding line
+ * intersections is to know if two line segments intersect (e.g. do these two lines intersect
+ * somewhere between these four points). You can get at this information using the
+ * intersectsInSegments() method.
  **/
 public class IntersectionData {
-  
+
   double r; // parameter for line a
   double s; // parameter for line b
-  
+
   double denominator; // for both r and s
   double num_r; // numerator for r
   double num_s; // numerator for s
@@ -34,32 +32,31 @@ public class IntersectionData {
   public IntersectionData(Line one, Line two) {
     this.one = one;
     this.two = two;
-    
+
     Pt a = one.getStart();
     Pt b = one.getEnd();
     Pt c = two.getStart();
     Pt d = two.getEnd();
 
-
     /*
-          (Ay-Cy)(Dx-Cx)-(Ax-Cx)(Dy-Cy)
-      r = -----------------------------  (eqn 1)
-          (Bx-Ax)(Dy-Cy)-(By-Ay)(Dx-Cx)
-
-	        (Ay-Cy)(Bx-Ax)-(Ax-Cx)(By-Ay)
-      s = -----------------------------  (eqn 2)
-	        (Bx-Ax)(Dy-Cy)-(By-Ay)(Dx-Cx)
-
-    */
+     * (Ay-Cy)(Dx-Cx)-(Ax-Cx)(Dy-Cy) r = ----------------------------- (eqn 1)
+     * (Bx-Ax)(Dy-Cy)-(By-Ay)(Dx-Cx)
+     * 
+     * (Ay-Cy)(Bx-Ax)-(Ax-Cx)(By-Ay) s = ----------------------------- (eqn 2)
+     * (Bx-Ax)(Dy-Cy)-(By-Ay)(Dx-Cx)
+     */
 
     // please don't reformat the following block.
-    num_r = (a.getY() - c.getY()) * (d.getX() - c.getX()) - (a.getX() - c.getX()) * (d.getY() - c.getY());
-    num_s = (a.getY() - c.getY()) * (b.getX() - a.getX()) - (a.getX() - c.getX()) * (b.getY() - a.getY());
-    denominator = (b.getX() - a.getX()) * (d.getY() - c.getY()) - (b.getY() - a.getY()) * (d.getX() - c.getX());
-    
+    num_r = (a.getY() - c.getY()) * (d.getX() - c.getX()) - (a.getX() - c.getX())
+        * (d.getY() - c.getY());
+    num_s = (a.getY() - c.getY()) * (b.getX() - a.getX()) - (a.getX() - c.getX())
+        * (b.getY() - a.getY());
+    denominator = (b.getX() - a.getX()) * (d.getY() - c.getY()) - (b.getY() - a.getY())
+        * (d.getX() - c.getX());
+
     parallel = (denominator == 0.0);
     collinear = (parallel && num_r == 0.0);
-    
+
     if (!parallel) {
       r = num_r / denominator;
       s = num_s / denominator;
@@ -69,18 +66,18 @@ public class IntersectionData {
       intersection = new Pt(intersectionX, intersectionY);
     }
   }
-  
 
   public static void main(String[] args) {
     Pt a = new Pt(Double.parseDouble(args[0]), Double.parseDouble(args[1]));
     Pt b = new Pt(Double.parseDouble(args[2]), Double.parseDouble(args[3]));
     Pt c = new Pt(Double.parseDouble(args[4]), Double.parseDouble(args[5]));
     Pt d = new Pt(Double.parseDouble(args[6]), Double.parseDouble(args[7]));
-    Line one = new Line(a,b);
-    Line two = new Line(c,d);
+    Line one = new Line(a, b);
+    Line two = new Line(c, d);
     IntersectionData id = new IntersectionData(one, two);
     Pt cross = id.getIntersection();
-    Debug.out("IntersectionData", Debug.num(one) + " and " + Debug.num(two) + " intersect at " + Debug.num(cross) + "(r=" + id.getLineOneParam() + ")");
+    Debug.out("IntersectionData", Debug.num(one) + " and " + Debug.num(two) + " intersect at "
+        + Debug.num(cross) + "(r=" + id.getLineOneParam() + ")");
   }
 
   public double getLineOneParam() {
@@ -100,15 +97,14 @@ public class IntersectionData {
   }
 
   public boolean isSameSegments() {
-    return ((one.getStart().equals(two.getStart()) && one.getEnd().equals(two.getEnd()))
-	    ||
-	    (one.getStart().equals(two.getEnd()) && one.getEnd().equals(two.getStart())));
+    return ((one.getStart().equals(two.getStart()) && one.getEnd().equals(two.getEnd())) || (one
+        .getStart().equals(two.getEnd()) && one.getEnd().equals(two.getStart())));
   }
 
   public boolean intersectsInSegments() {
     return intersectInSegments;
   }
-  
+
   public boolean intersectsOnLineOne() {
     return (r >= 0 && r <= 1);
   }
@@ -118,9 +114,11 @@ public class IntersectionData {
   }
 
   public boolean intersectsStrictlyInsideSegments() {
-    return (r > 0 && r < 1) && (s > 0 && s < 1);
+    return (r > 0 && r < 1) && (s > 0 && s < 1) && !Functions.eq(r, 0, Functions.EQ_TOL)
+        && !Functions.eq(r, 1, Functions.EQ_TOL) && !Functions.eq(s, 0, Functions.EQ_TOL)
+        && !Functions.eq(s, 1, Functions.EQ_TOL);
   }
-  
+
   public Line getLineOne() {
     return one;
   }
