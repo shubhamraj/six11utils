@@ -48,7 +48,8 @@ public class CircleArc implements Comparable<CircleArc> {
   
   public boolean contains(Pt other) {
     double d = center.distance(other);
-    return d <= radius;
+//    return d <= radius;
+    return Functions.lt(d, radius, Functions.EQ_TOL); 
   }
 
   public int compareTo(CircleArc o) {
