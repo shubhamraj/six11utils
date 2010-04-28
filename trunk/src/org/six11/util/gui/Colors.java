@@ -96,6 +96,19 @@ public class Colors {
     return c;
   }
 
+  public static boolean isDark(Color c) {
+    boolean ret = false;
+    int a = c.getAlpha();
+    if (a > 100) {
+      int r = c.getRed();
+      int g = c.getGreen();
+      int b = c.getBlue();
+      int sumSq = r * r + g * g + b * b;
+      ret = (sumSq < 22500);
+    }
+    return ret;
+  }
+
   public Color get(String name) {
     return vals.get(name);
   }
