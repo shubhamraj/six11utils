@@ -50,11 +50,9 @@ public class DrawingBuffer {
   }
 
   public static Comparator<DrawingBuffer> sortByAge = new Comparator<DrawingBuffer>() {
-
     public int compare(DrawingBuffer o1, DrawingBuffer o2) {
       return ((Long) o1.lastModified).compareTo(o2.lastModified);
     }
-
   };
 
   /**
