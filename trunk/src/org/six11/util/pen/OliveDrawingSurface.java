@@ -93,7 +93,7 @@ public class OliveDrawingSurface extends JComponent {
   public void paintContent(Graphics2D g, boolean useCachedImages) {
     Shape currentSeq = soup.getCurrentSequenceShape(); // the in-progress scribble
     List<DrawingBuffer> buffers = soup.getDrawingBuffers(); // finished visual elements
-    Collections.sort(buffers, DrawingBuffer.sortByAge);
+    
     for (DrawingBuffer buffer : buffers) {
       if (buffer.isVisible() && useCachedImages) {
         buffer.paste(g);
