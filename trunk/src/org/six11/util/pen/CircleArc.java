@@ -45,11 +45,14 @@ public class CircleArc implements Comparable<CircleArc> {
   public boolean isValid() {
     return center != null;
   }
-  
+
   public boolean contains(Pt other) {
-    double d = center.distance(other);
-//    return d <= radius;
-    return Functions.lt(d, radius, Functions.EQ_TOL); 
+    boolean ret = false;
+    if (center != null) {
+      double d = center.distance(other);
+      ret = Functions.lt(d, radius, Functions.EQ_TOL);
+    }
+    return ret;
   }
 
   public int compareTo(CircleArc o) {
