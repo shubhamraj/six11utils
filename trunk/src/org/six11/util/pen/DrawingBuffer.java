@@ -123,7 +123,7 @@ public class DrawingBuffer {
           if (!emptyOK) {
             bug("Not drawing buffer with zero size... check for NaNs");
           }
-        } else if (bb.getWidth() > 1000 || bb.getHeight() > 1000) {
+        } else if (bb.getWidth() * bb.getHeight() > (1500 * 1500)) {
           bug("Buffer size would be " + bb + ". I refuse.");
         } else {
           img = new BufferedImage(bb.getWidthInt(), bb.getHeightInt(),
