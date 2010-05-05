@@ -68,6 +68,13 @@ public class Preferences {
     return props.getProperty(key);
   }
 
+  public void setPropertyDefault(String key, String defaultValue) {
+    String currentVal = getProperty(key);
+    if (currentVal == null) {
+      setProperty(key, defaultValue);
+    }
+  }
+  
   public void setProperty(String key, String value) {
     try {
       if (props == null || (lastRead < propsFile.lastModified())) {
