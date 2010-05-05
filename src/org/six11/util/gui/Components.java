@@ -11,8 +11,8 @@ import java.awt.Toolkit;
 import org.six11.util.pen.Pt;
 
 /**
- * Miscellaneous static functions for getting information about and
- * doing things tocomponents and the GUI environment.
+ * Miscellaneous static functions for getting information about and doing things tocomponents and
+ * the GUI environment.
  **/
 public class Components {
   public static Pt getCenter(Component c) {
@@ -21,7 +21,23 @@ public class Components {
   }
 
   /**
-   * @param g Sets KEY_ANTIALIASING to VALUE_ANTIALIAS_ON.
+   * Sets KEY_INTERPOLATION to VALUE_INTERPOLATION_BICUBIC
+   */
+  public static void interpolate(Graphics2D g) {
+    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, //
+        RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+  }
+
+  /**
+   * Sets KEY_RENDERING to VALUE_RENDER_QUALITY. The default value is apparently VALUE_RENDER_CRAP.
+   */
+  public static void quality(Graphics2D g) {
+    g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+  }
+
+  /**
+   * @param g
+   *          Sets KEY_ANTIALIASING to VALUE_ANTIALIAS_ON.
    */
   public static void antialias(Graphics2D g) {
     g.setRenderingHints(new RenderingHints(RenderingHints.KEY_ANTIALIASING,
@@ -35,5 +51,5 @@ public class Components {
     int y = (screenSize.height - frameSize.height) / 2;
     c.setLocation(x, y);
   }
-  
+
 }
