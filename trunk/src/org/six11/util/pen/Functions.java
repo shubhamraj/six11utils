@@ -55,19 +55,19 @@ public abstract class Functions {
   public static boolean eq(double a, double b, double tolerance) {
     return (Math.abs(a - b) < tolerance);
   }
-  
+
   /**
    * Tells you if a > b, and that the difference between them is larger than a tolerance value.
    */
   public static boolean gt(double a, double b, double tolerance) {
-    return (a > b && !eq(a,b,tolerance));
+    return (a > b && !eq(a, b, tolerance));
   }
-  
+
   /**
    * Tells you if a < b, and that the difference between them is larger than a tolerance value.
    */
   public static boolean lt(double a, double b, double tolerance) {
-    return (a < b && !eq(a,b,tolerance));
+    return (a < b && !eq(a, b, tolerance));
   }
 
   public static Pt getMean(Pt... points) {
@@ -194,18 +194,18 @@ public abstract class Functions {
     return line.ptLineDist(pt);
   }
 
-  public static Pt getNearestPoint(Pt pt, Sequence seq) {
-    double dist = Double.MAX_VALUE;
-    Pt nearest = null;
-    for (Pt s : seq) {
-      double thisDist = s.distance(pt);
-      if (thisDist < dist) {
-        nearest = s;
-        dist = thisDist;
-      }
-    }
-    return nearest;
-  }
+  // public static Pt getNearestPoint(Pt pt, Sequence seq) {
+  // double dist = Double.MAX_VALUE;
+  // Pt nearest = null;
+  // for (Pt s : seq) {
+  // double thisDist = s.distance(pt);
+  // if (thisDist < dist) {
+  // nearest = s;
+  // dist = thisDist;
+  // }
+  // }
+  // return nearest;
+  // }
 
   public static double getSignedDistanceBetweenPointAndLine(Pt pt, Line line) {
     double dist = getDistanceBetweenPointAndLine(pt, line);
@@ -237,7 +237,24 @@ public abstract class Functions {
     return mid.distance(p);
   }
 
+  /**
+   * Just like the three-param version with retainrR = false.
+   */
   public static Pt getNearestPointOnLine(Pt c, Line line) {
+    return getNearestPointOnLine(c, line, false);
+  }
+
+  /**
+   * Starting from point c, this returns the nearest point on the provided line. The resulting point
+   * might be between the start and end point of the given line, or it might be on an extension of
+   * the line segment. Sometimes it is useful to know where the resulting point is in relation to
+   * the start/end points of the provided line. To gain access to this, set the retainR parameter to
+   * true, and access the return value's 'r' value:
+   * 
+   * Pt pt = getNearestPointOnLine(c, line, true); // ensure the point's "r" double value is set.
+   * double r = pt.getDouble("r");
+   */
+  public static Pt getNearestPointOnLine(Pt c, Line line, boolean retainR) {
     // Assuming line is AB and the provided point is C, the nearest
     // point on the line P is found with a parameter r:
     //
@@ -258,8 +275,11 @@ public abstract class Functions {
     double r = Functions.getDotProduct(ac, ab) / (mag * mag);
     double x = a.getX() + r * (b.getX() - a.getX());
     double y = a.getY() + r * (b.getY() - a.getY());
-
-    return new Pt(x, y);
+    Pt ret = new Pt(x, y);
+    if (retainR) {
+      ret.setDouble("r", r);
+    }
+    return ret;
   }
 
   // int See if p is left(-1)/on(0)/right(1) of a Line D int getPartition(Pt, Line)
@@ -381,7 +401,7 @@ public abstract class Functions {
 
   public static double getCrossProduct(Vec a, Vec b) {
     return (a.getX() * b.getY()) - (a.getY() * b.getX()); // notice this is the same as
-                                                          // getDeterminant
+    // getDeterminant
   }
 
   public static double getDeterminant(Vec a, Vec b) {
@@ -642,6 +662,15 @@ public abstract class Functions {
     return ret;
   }
 
+  public static double getMinDistBetweenSequences(Sequence seqA, Sequence seqB) {
+    double ret = Double.MAX_VALUE;
+    for (Pt pt : seqA) {
+      double v = getMinDistBetweenPointAndSequence(pt, seqB);
+      ret = Math.min(v, ret);
+    }
+    return ret;
+  }
+  
   public static double getMinDistBetweenPointAndSequence(Pt pt, Sequence seq) {
     double ret = Double.MAX_VALUE;
     Pt nearest = getNearestPointOnSequence(pt, seq);
