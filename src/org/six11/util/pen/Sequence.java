@@ -190,6 +190,9 @@ public class Sequence implements Shape, Iterable<Pt> {
     return ret;
   }
 
+  /**
+   * This has the same semantics of List.indexOf(pt). It returns -1 if the point is not present.
+   */
   public int indexOf(Pt pt) {
     return points.indexOf(pt);
   }
