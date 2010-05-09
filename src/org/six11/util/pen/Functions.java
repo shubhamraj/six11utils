@@ -26,6 +26,90 @@ public abstract class Functions {
   public static final int PARTITION_ON_BORDER = 0;
   public static final int PARTITION_RIGHT = 1;
 
+  public static void main(String[] args) {
+    Sequence dst = new Sequence();
+    dst.add(new Pt(10, 10));
+    dst.add(new Pt(20, 10));
+    dst.add(new Pt(30, 20));
+    dst.add(new Pt(40, 10));
+    dst.add(new Pt(50, 25));
+    dst.add(new Pt(60, 30));
+    dst.add(new Pt(60, 40));
+
+    Sequence result = getSplineAuthentic(dst.getPoints(), dst.size() / 2, 6.0);
+    bug("Input size : " + dst.size());
+    bug("Output size: " + result.size());
+    for (Pt pt : result) {
+      bug("point: " + Debug.num(pt));
+    }
+  }
+
+  /**
+   * Given a source sequence, find the locations along the path defined by a destination sequence
+   * that is closest to the destination. Each point in src is matched with a point along the path
+   * defined by dst. For example, a source point (0,0) is nearest to the path from (0, 1) to (1, 0)
+   * at about (0.707, 0.707). The return sequence contains each 'nearest path' point such as (0.707,
+   * 0.707) in this example. Each point in src maps to the point in the return value with the same
+   * index.
+   */
+  public static List<Pt> getSequenceTweenTarget(List<Pt> src, List<Pt> dst) {
+    List<Pt> ret = new ArrayList<Pt>();
+    for (int i = 0; i < src.size(); i++) {
+      Pt ptA = src.get(i);
+      Pt ptB = getNearestPointOnSequence(ptA, dst);
+      int idxB = dst.indexOf(ptB);
+      Pt ptC = (idxB > 0) ? dst.get(idxB - 1) : null;
+      Pt ptD = (idxB < dst.size() - 1) ? dst.get(idxB + 1) : null;
+      Pt leftPt = null;
+      Pt rightPt = null;
+      if (ptC != null) {
+        leftPt = getNearestPointWithinSegment(ptA, new Line(ptC, ptB));
+      }
+      if (ptD != null) {
+        rightPt = getNearestPointWithinSegment(ptA, new Line(ptB, ptD));
+      }
+      Pt candidate = ptB;
+      double distToCandidate = ptA.distance(candidate);
+      if (leftPt != null) {
+        double d = ptA.distance(leftPt);
+        if (d < distToCandidate) {
+          candidate = leftPt;
+          distToCandidate = ptA.distance(candidate);
+        }
+      }
+      if (rightPt != null) {
+        double d = ptA.distance(rightPt);
+        if (d < distToCandidate) {
+          candidate = rightPt;
+        }
+      }
+      if (candidate != null) {
+        ret.add(candidate);
+      } else {
+        bug("Failage at point " + i + ". Points a, b, c, d: " + ptA + ", " + ptB + ", " + ptC
+            + ", " + ptD);
+      }
+
+    }
+    return ret;
+  }
+
+  /**
+   * Given a point and a line segment, find the location on the segment that is closets to the
+   * point. If that location is outside the boundary of the segment, this returns null. Otherwise it
+   * returns a point somewhere in the range between the start and end locations of the segment.
+   */
+  private static Pt getNearestPointWithinSegment(Pt pt, Line segment) {
+    Pt ret = null;
+    Pt ixResult;
+    ixResult = getNearestPointOnLine(pt, segment, true);
+    double r = ixResult.getDouble("r");
+    if (r >= 0 && r <= 1) {
+      ret = ixResult;
+    }
+    return ret;
+  }
+
   public static double getDistanceBetween(Pt a, Pt b) {
     double dx = b.getX() - a.getX();
     double dy = b.getY() - a.getY();
@@ -670,7 +754,7 @@ public abstract class Functions {
     }
     return ret;
   }
-  
+
   public static double getMinDistBetweenPointAndSequence(Pt pt, Sequence seq) {
     double ret = Double.MAX_VALUE;
     Pt nearest = getNearestPointOnSequence(pt, seq);
@@ -685,6 +769,10 @@ public abstract class Functions {
    * nearest the provided epicenter point.
    */
   public static Pt getNearestPointOnSequence(Pt epicenter, Sequence seq) {
+    return getNearestPointOnSequence(epicenter, seq.getPoints());
+  }
+  
+  public static Pt getNearestPointOnSequence(Pt epicenter, List<Pt> seq) {
     double minDist = Double.MAX_VALUE;
     Pt nearest = null;
     for (Pt pt : seq) {
@@ -694,6 +782,16 @@ public abstract class Functions {
       }
     }
     return nearest;
+  }
+  
+  public static double getMinDistBetween(List<Pt> listA, List<Pt> listB) {
+    double ret = Double.MAX_VALUE;
+    for (Pt ptA : listA) {
+      for (Pt ptB : listB) {
+        ret = Math.min(ret, ptA.distance(ptB));
+      }
+    }
+    return ret;
   }
 
   public static Statistics getClosenessStatistics(List<Pt> listA, List<Pt> listB) {
@@ -923,11 +1021,80 @@ public abstract class Functions {
 
   }
 
+  /**
+   * Make a spline using points from the input sequence as control points. This approach differs
+   * from 'getSpline' because this method does not make a normalized squence from which control
+   * points are extracted. For example, if an input sequence has 40 points and numCtrlPoints is 9,
+   * it will use the first and last points, and pick seven other points that are nearest to 1/7 of
+   * the curvilinear distance along the entire path. Further, the target minimum density specifies
+   * the minimum distance between points in each spline patch. In other words, the distance between
+   * points i and i+1 in the return spline will not exceed targetMinDensity.
+   */
+  public static Sequence getSplineAuthentic(List<Pt> src, int numCtrlPoints, double targetMinDensity) {
+    Sequence ret = new Sequence();
+    Sequence srcSequence = new Sequence();
+    for (Pt srcPt : src) {
+      srcSequence.add(srcPt);
+    }
+    double totalLength = srcSequence.getPathLength(0, src.size() - 1);
+    double curviLengthBetweenControlPoints = totalLength / (double) (numCtrlPoints - 1);
+    List<Pt> controlPoints = new ArrayList<Pt>();
+    controlPoints.add(src.get(0).copy());
+    Pt prev = null;
+    double prevDist = 0;
+    double runningDist = 0;
+    double thisDist;
+    double nextBarrier = curviLengthBetweenControlPoints;
+    for (int i = 0; i < src.size() - 1; i++) {
+      Pt pt = src.get(i);
+      if (prev != null) {
+        thisDist = prev.distance(pt);
+        runningDist = runningDist + thisDist;
+        if (runningDist > nextBarrier) {
+          // pick prev or pt, whichever is closer to nextBarrier.
+          double prevAbs = Math.abs(prevDist - nextBarrier);
+          double thisAbs = Math.abs(runningDist - nextBarrier);
+          if (prevAbs < thisAbs) {
+            controlPoints.add(prev);
+          } else {
+            controlPoints.add(pt);
+          }
+          nextBarrier = nextBarrier + curviLengthBetweenControlPoints;
+        }
+        prevDist = runningDist;
+      }
+      prev = pt;
+    }
+    controlPoints.add(src.get(src.size() - 1));
+    int numPatches = controlPoints.size() - 1;
+    int numSteps = (int) Math.ceil((double) curviLengthBetweenControlPoints / targetMinDensity);
+    int idxA, idxB, idxC, idxD;
+    Pt a, b, c, d;
+    for (int i = 0; i <= controlPoints.size(); i++) {
+
+      idxA = numInRange(i - 2, 0, numPatches);
+      idxB = numInRange(i - 1, 0, numPatches);
+      idxC = numInRange(i, 0, numPatches);
+      idxD = numInRange(i + 1, 0, numPatches);
+
+      a = controlPoints.get(idxA);
+      b = controlPoints.get(idxB);
+      c = controlPoints.get(idxC);
+      d = controlPoints.get(idxD);
+
+      getSplinePatch(a, b, c, d, ret, numSteps);
+    }
+
+    return ret;
+  }
+
   private static int numInRange(int i, int low, int high) {
-    if (i < low)
+    if (i < low) {
       i = low;
-    if (i > high)
+    }
+    if (i > high) {
       i = high;
+    }
     return i;
   }
 
