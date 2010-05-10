@@ -40,6 +40,12 @@ public class DrawingBuffer {
   private List<TurtleOp> turtles;
   private BoundingBox bb;
   private boolean emptyOK;
+  
+  public static Graphics2D bogusGraphics;
+  static {
+    BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
+    bogusGraphics = (Graphics2D) image.getGraphics();
+  }
 
   public static PenState getBasicPen() {
     PenState BASIC_PENCIL = new PenState();
@@ -238,10 +244,10 @@ public class DrawingBuffer {
     addOp(new TurtleOp(arbitraryShape));
   }
 
-  public void addText(String what, Color color) {
+  public void addText(String what, Color color, Font font) {
     setFillColor(color);
     setFilling(true);
-    addOp(new TurtleOp(what));
+    addOp(new TurtleOp(what, font));
     setFilling(false);
   }
 
@@ -302,7 +308,8 @@ public class DrawingBuffer {
     Shape arbitraryShape;
     String text;
     String bugString = "unknown";
-
+    Font font;
+    
     public TurtleOp() {
       bugString = "nothing in particular";
     }
@@ -348,12 +355,13 @@ public class DrawingBuffer {
       bugString = "shape";
     }
 
-    public TurtleOp(String s) {
+    public TurtleOp(String s, Font f) {
       this();
       this.text = s;
+      this.font = f;
       bugString = "text: " + s;
     }
-
+    
     public String toString() {
       return bugString;
     }
@@ -420,7 +428,8 @@ public class DrawingBuffer {
           playground = (Graphics2D) image.getGraphics();
         }
         FontRenderContext frc = playground.getFontRenderContext();
-        TextLayout tl = new TextLayout(text, new Font("Monospaced", Font.PLAIN, 9), frc);
+        Font f = font;
+        TextLayout tl = new TextLayout(text, f, frc);
         arbitraryShape = xform.createTransformedShape(tl.getOutline(null));
         shapeMovement = true;
       }
@@ -484,7 +493,7 @@ public class DrawingBuffer {
       return change;
     }
 
-    @SuppressWarnings("unused")
+     @SuppressWarnings("unused")
     private static void bug(String what) {
       Debug.out("TurtleOp", what);
     }
@@ -639,5 +648,11 @@ public class DrawingBuffer {
       }
       return pathIterator;
     }
+  }
+  
+  public static Rectangle2D getTextBounds(String text, Font font) {
+    FontRenderContext frc = bogusGraphics.getFontRenderContext();
+    TextLayout tl = new TextLayout(text, font, frc);
+    return tl.getBounds();
   }
 }
