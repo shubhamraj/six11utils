@@ -719,7 +719,7 @@ public abstract class Functions {
         bigVec = new Vec(prev, n);
       }
     }
-    ret.add(points.get(points.size() - 1));
+    ret.add(points.get(points.size() - 1).copy());
 
     return ret;
   }
