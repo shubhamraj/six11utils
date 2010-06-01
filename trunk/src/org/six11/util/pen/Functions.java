@@ -5,6 +5,7 @@ package org.six11.util.pen;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.AffineTransform;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -26,23 +27,35 @@ public abstract class Functions {
   public static final int PARTITION_ON_BORDER = 0;
   public static final int PARTITION_RIGHT = 1;
 
-  public static void main(String[] args) {
-    Sequence dst = new Sequence();
-    dst.add(new Pt(10, 10));
-    dst.add(new Pt(20, 10));
-    dst.add(new Pt(30, 20));
-    dst.add(new Pt(40, 10));
-    dst.add(new Pt(50, 25));
-    dst.add(new Pt(60, 30));
-    dst.add(new Pt(60, 40));
-
-    Sequence result = getSplineAuthentic(dst.getPoints(), dst.size() / 2, 6.0);
-    bug("Input size : " + dst.size());
-    bug("Output size: " + result.size());
-    for (Pt pt : result) {
-      bug("point: " + Debug.num(pt));
-    }
+  public static void main(String[] args) throws IOException {
+  
+    
   }
+
+//  public static void printMatrix(int n1, int n2, double[][] m, int d, int w) {
+//    NumberFormat nf = NumberFormat.getNumberInstance();
+//    FieldPosition fp = new FieldPosition(NumberFormat.INTEGER_FIELD);
+//    nf.setMaximumIntegerDigits(d);
+//    nf.setMaximumFractionDigits(d);
+//    nf.setMinimumFractionDigits(d);
+//    for (int i = 0; i < n1; i++) {
+//      for (int j = 0; j < n2; j++) {
+//        String valString = spaces(w - fp.getEndIndex())
+//            + nf.format(m[i][j], new StringBuffer(), fp).toString();
+//        System.out.print(valString);
+//      }
+//      System.out.println();
+//    }
+//    System.out.println();
+//  }
+//
+//  public static String spaces(int n) {
+//    StringBuilder sb = new StringBuilder(n);
+//    for (int i = 0; i < n; i++)
+//      sb.append(' ');
+//    return sb.toString();
+//  }
+
 
   /**
    * Given a source sequence, find the locations along the path defined by a destination sequence
@@ -771,7 +784,7 @@ public abstract class Functions {
   public static Pt getNearestPointOnSequence(Pt epicenter, Sequence seq) {
     return getNearestPointOnSequence(epicenter, seq.getPoints());
   }
-  
+
   public static Pt getNearestPointOnSequence(Pt epicenter, List<Pt> seq) {
     double minDist = Double.MAX_VALUE;
     Pt nearest = null;
@@ -783,7 +796,7 @@ public abstract class Functions {
     }
     return nearest;
   }
-  
+
   public static double getMinDistBetween(List<Pt> listA, List<Pt> listB) {
     double ret = Double.MAX_VALUE;
     for (Pt ptA : listA) {
