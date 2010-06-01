@@ -25,9 +25,7 @@
 
 	<!-- ==================== All Target ====================================== -->
 
-	<target name="all"
-	        depends="clean,compile"
-	        description="Clean build and dist directories, then compile" />
+	<target name="all" depends="clean,compile" description="Clean build and dist directories, then compile" />
 
 	<!-- ==================== Prepare Target ================================== -->
 
@@ -39,15 +37,10 @@
 
 	<!-- ==================== Clean Target ==================================== -->
 
-	<target name="clean"
-	        description="Delete old class files and backup source files">
+	<target name="clean" description="Delete old class files and backup source files">
 		<delete failonerror="false">
-			<fileset defaultexcludes="no"
-			         dir="${compile.output.dir}"
-			         includes="**/*.class" />
-			<fileset defaultexcludes="no"
-			         dir="${compile.src.dir}"
-			         includes="**/*~" />
+			<fileset defaultexcludes="no" dir="${compile.output.dir}" includes="**/*.class" />
+			<fileset defaultexcludes="no" dir="${compile.src.dir}" includes="**/*~" />
 		</delete>
 		<delete dir="${build.dir}" failonerror="false" />
 	</target>
@@ -55,8 +48,7 @@
 	<!-- ==================== Jar Target ====================================== -->
 
 	<target name="jar" depends="compile">
-		<jar destfile="${build.dir}/six11utils.jar"
-		     basedir="${compile.output.dir}" />
+		<jar destfile="${build.dir}/six11utils.jar" basedir="${compile.output.dir}" />
 	</target>
 
 	<target name="olive-jar" depends="compile">
@@ -101,12 +93,7 @@
 
 		<!-- Compile Java classes as necessary -->
 		<mkdir dir="${compile.output.dir}" />
-		<javac srcdir="${compile.src.dir}"
-		       destdir="${compile.output.dir}"
-		       debug="${compile.debug}"
-		       deprecation="${compile.deprecation}"
-		       optimize="${compile.optimize}"
-		       source="1.5">
+		<javac srcdir="${compile.src.dir}" destdir="${compile.output.dir}" debug="${compile.debug}" deprecation="${compile.deprecation}" optimize="${compile.optimize}" source="1.5">
 			<classpath refid="compile.classpath" />
 			<include name="**/*.java" />
 		</javac>
@@ -116,9 +103,7 @@
 
 	<!-- ==================== Run Target ===================================== -->
 
-	<target name="run"
-	        description="Runs arbitrary code using this project's classpath"
-	        depends="compile">
+	<target name="run" description="Runs arbitrary code using this project's classpath" depends="compile">
 		<java fork="yes" classname="${prog}">
 			<arg value="${args}" />
 			<classpath refid="compile.classpath" />
@@ -127,9 +112,7 @@
 	</target>
 
 	<!-- Use Target: will run org.six11.util.${prog} -->
-	<target name="use"
-	        description="Runs an executable in the org.six11.util package"
-	        depends="compile">
+	<target name="use" description="Runs an executable in the org.six11.util package" depends="compile">
 		<java fork="yes" classname="org.six11.util.Main">
 			<arg value="${args}" />
 			<classpath refid="compile.classpath" />
@@ -141,36 +124,23 @@
 
 	<!-- ==================== Javadoc Target ================================== -->
 
-	<target name="javadoc"
-	        depends="compile, javadoc.checkProperties"
-	        description="Create Javadoc API documentation">
+	<target name="javadoc" depends="compile, javadoc.checkProperties" description="Create Javadoc API documentation">
 
 		<mkdir dir="${javadoc.output.dir}" />
-		<javadoc sourcepath="${compile.src.dir}"
-		         destdir="${javadoc.output.dir}"
-		         additionalparam="${breakIterIf14}"
-		         packagenames="*"
-		         source="1.5">
+		<javadoc sourcepath="${compile.src.dir}" destdir="${javadoc.output.dir}" additionalparam="${breakIterIf14}" packagenames="*" source="1.5">
 			<classpath refid="compile.classpath" />
 		</javadoc>
 	</target>
 
-	<target name="javadoc.private"
-	        depends="compile, javadoc.checkProperties"
-	        description="Create Javadoc for internal use (includes private items)">
+	<target name="javadoc.private" depends="compile, javadoc.checkProperties" description="Create Javadoc for internal use (includes private items)">
 
 		<mkdir dir="${javadoc.output.dir}" />
-		<javadoc sourcepath="${compile.src.dir}"
-		         destdir="${javadoc.output.dir}"
-		         additionalparam="${breakIterIf14}"
-		         packagenames="*"
-		         access="private">
+		<javadoc sourcepath="${compile.src.dir}" destdir="${javadoc.output.dir}" additionalparam="${breakIterIf14}" packagenames="*" access="private">
 			<classpath refid="compile.classpath" />
 		</javadoc>
 	</target>
 
-	<target name="javadoc.checkProperties"
-	        description="Sees if we need to use -breakiterator when generating javadoc">
+	<target name="javadoc.checkProperties" description="Sees if we need to use -breakiterator when generating javadoc">
 		<condition property="breakIterIf14" value="-breakiterator">
 			<equals arg1="1.4" arg2="${ant.java.version}" />
 		</condition>
