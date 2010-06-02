@@ -172,7 +172,7 @@ public class PCA {
   double[] means;
 
   public PCA(double[][] input) {
-    means = new double[input.length];
+    means = new double[input[0].length];
     double[][] cov = getCovariance(input, means);
     covMatrix = new Matrix(cov);
     eigenstuff = covMatrix.eig();
@@ -246,8 +246,8 @@ public class PCA {
   }
 
   public static class PrincipleComponent implements Comparable<PrincipleComponent> {
-    double eigenValue;
-    double[] eigenVector;
+    public double eigenValue;
+    public double[] eigenVector;
 
     public PrincipleComponent(double eigenValue, double[] eigenVector) {
       this.eigenValue = eigenValue;
@@ -285,15 +285,20 @@ public class PCA {
     for (int i = 0; i < sum.length; i++) {
       mean[i] = sum[i] / numDataVectors;
     }
+    bug("Calculated means of " + mean.length + " dimensions.");
+    bug(Debug.num(mean));
+    
     double[][] ret = new double[n][n];
     for (int i = 0; i < n; i++) {
       for (int j = i; j < n; j++) {
+//        bug("cov(" + i + ", " + j + ")");
         double v = getCovariance(input, i, j, mean);
         ret[i][j] = v;
         ret[j][i] = v;
       }
     }
     if (meanValues != null) {
+      bug("attempting to copy array of length " + mean.length + " into " + meanValues.length);
       System.arraycopy(mean, 0, meanValues, 0, mean.length);
     }
     return ret;
