@@ -95,10 +95,6 @@ public class CircleArc implements Comparable<CircleArc> {
         arcs.add(ca);
       }
     }
-    // Collections.sort(arcs, CircleArc.comparator); // sort based on radius
-    // if (arcs.size() > 0) {
-    // ret = arcs.get(arcs.size() / 2);
-    // }
     double lowestError = Double.MAX_VALUE;
     for (CircleArc arc : arcs) {
       double error = 0;

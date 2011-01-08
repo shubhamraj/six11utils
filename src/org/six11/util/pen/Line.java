@@ -3,6 +3,8 @@
 package org.six11.util.pen;
 
 import java.awt.geom.Line2D;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A Line that behaves how I want it to as I go through a series of
@@ -12,6 +14,7 @@ public class Line extends Line2D.Double {
 
   Pt a;
   Pt b;
+  protected Map<String, Object> attribs;
 
   public Line(Pt a, Pt b) {
     super(a, b);
@@ -96,5 +99,28 @@ public class Line extends Line2D.Double {
   public void clear() {
     a = null;
     b = null;
+  }
+  
+  public Map<String, Object> getAttribs() {
+    if (attribs == null) {
+      attribs = new HashMap<String, Object>();
+    }
+    return attribs;
+  }
+  
+  public boolean hasAttribute(String name) {
+    return getAttribs().containsKey(name);
+  }
+  
+  public void setAttribute(String name, Object value) {
+    getAttribs().put(name, value);
+  }
+
+  public Object getAttribute(String name) {
+    return getAttribs().get(name);
+  }
+
+  public void removeAttribute(String name) {
+    getAttribs().remove(name);
   }
 }

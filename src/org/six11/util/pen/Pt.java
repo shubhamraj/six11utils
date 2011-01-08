@@ -2,6 +2,7 @@
 
 package org.six11.util.pen;
 
+import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -60,6 +61,10 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
 
   public Pt(Point2D source, long time) {
     this(source.getX(), source.getY(), time);
+  }
+  
+  public Pt(Point src) {
+    this(src.x, src.y);
   }
 
   public int getID() {
