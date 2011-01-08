@@ -201,8 +201,10 @@ public class PCA {
    * @param input
    *          Some data, where each row is a sample point, and each column is a dimension.
    * @param mean
-   *          Subtract the dimension's mean from each value.
-   * @return
+   *          The means of each dimension. This could be computed from 'input' directly, but for
+   *          efficiency's sake, it should only be done once and the result saved.
+   * @return Returns a translated matrix where each cell has been translated by the mean value of
+   *         its dimension.
    */
   public static double[][] getMeanAdjusted(double[][] input, double[] mean) {
     int nRows = input.length;
@@ -216,6 +218,9 @@ public class PCA {
     return ret;
   }
 
+  /**
+   * Returns the top n principle components in descending order of relevance.
+   */
   public List<PrincipleComponent> getDominantComponents(int n) {
     List<PrincipleComponent> ret = new ArrayList<PrincipleComponent>();
     int count = 0;
@@ -285,7 +290,7 @@ public class PCA {
     for (int i = 0; i < sum.length; i++) {
       mean[i] = sum[i] / numDataVectors;
     }
-    
+
     double[][] ret = new double[n][n];
     for (int i = 0; i < n; i++) {
       for (int j = i; j < n; j++) {

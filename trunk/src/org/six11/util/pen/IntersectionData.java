@@ -38,15 +38,18 @@ public class IntersectionData {
     Pt c = two.getStart();
     Pt d = two.getEnd();
 
-    /*
-     * (Ay-Cy)(Dx-Cx)-(Ax-Cx)(Dy-Cy) r = ----------------------------- (eqn 1)
-     * (Bx-Ax)(Dy-Cy)-(By-Ay)(Dx-Cx)
-     * 
-     * (Ay-Cy)(Bx-Ax)-(Ax-Cx)(By-Ay) s = ----------------------------- (eqn 2)
-     * (Bx-Ax)(Dy-Cy)-(By-Ay)(Dx-Cx)
-     */
+    // @formatter: off
+    //
+    //     (Ay - Cy) (Dx - Cy) - (Ax - Cx) (Dy - Cy)
+    // r = -----------------------------------------
+    //     (Bx - Ax) (Dy - Cy) - (By - Ay) (Dx - Cx)
+    //
+    //     (Ay - Cy) (Bx - Ax) - (Ax - Cx) (By - Ay)
+    // s = -----------------------------------------
+    //     (Bx - Ax) (Dy - Cy) - (By - Ay) (Dx - Cx)
+    //
+    // @formatter: on
 
-    // please don't reformat the following block.
     num_r = (a.getY() - c.getY()) * (d.getX() - c.getX()) - (a.getX() - c.getX())
         * (d.getY() - c.getY());
     num_s = (a.getY() - c.getY()) * (b.getX() - a.getX()) - (a.getX() - c.getX())
