@@ -30,6 +30,17 @@ public class CircleArc implements Comparable<CircleArc> {
   public Pt end;
   public Pt center; // can be null in the event of colinear input points.
 
+  /**
+   * This creates a CircleArc based on a center and a radius. CircleArcs made in this way will fail
+   * if you call getArcLength() because that method requires start/mid/end points, so you have to
+   * use the other constructor if you want that. (getArcLength() makes no sense for this
+   * constructor.)
+   */
+  public CircleArc(Pt center, double radius) {
+    this.center = center;
+    this.radius = radius;
+  }
+
   public CircleArc(Pt start, Pt mid, Pt end) {
     this.start = start;
     this.mid = mid;
@@ -74,10 +85,15 @@ public class CircleArc implements Comparable<CircleArc> {
   }
 
   public double getArcLength() {
-    ArcData data = new ArcData(start, mid, end);
     double ret = 0;
-    if (data.isValid()) {
-      ret = (2 * Math.PI) / Math.toRadians(Math.abs(data.extent));
+    if (start == null || mid == null || end == null) {
+      throw new RuntimeException(
+          "CircleArc does not have start/mid/end points. You must use the correct constructor.");
+    } else {
+      ArcData data = new ArcData(start, mid, end);  
+      if (data.isValid()) {
+        ret = (2 * Math.PI) / Math.toRadians(Math.abs(data.extent));
+      }
     }
     return ret;
   }

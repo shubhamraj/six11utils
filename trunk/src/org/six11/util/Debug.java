@@ -109,7 +109,7 @@ public class Debug {
     }
     if (hasIt) {
       Debug.out("<< stacktrace >>", message);
-      for (int i = 1; i < stop; i++) {
+      for (int i = 2; i < stop; i++) {
         elm = elms[i];
         Debug.out("<< stacktrace >>", "  " + elm.getFileName() + ":" + elm.getLineNumber() + " "
             + elm.getClassName() + "#" + elm.getMethodName());
