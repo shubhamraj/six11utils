@@ -22,6 +22,22 @@ public class RotatedEllipse {
     this.ellipseRotation = ellipseRotation;
   }
   
+  public void translate(double dx, double dy) {
+    center.setLocation(center.getX() + dx, center.getY() + dy);
+  }
+  
+  public double getRotation() {
+    return ellipseRotation;
+  }
+  
+  public void setRotation(double newRotation) {
+    this.ellipseRotation = newRotation;
+  }
+  
+  public RotatedEllipse copy() {
+    return new RotatedEllipse(new Pt(center.getX(), center.getY()), a, b, ellipseRotation);
+  }
+  
   /**
    * Returns the point on the ellipse boundary that is between the centroid and the target point.
    * This is NOT the nearest point on the ellipse to the target, but that is more complicated to
@@ -59,5 +75,9 @@ public class RotatedEllipse {
 
   public double getArea() {
     return Math.PI * a * b;
+  }
+  
+  public Pt getCentroid() {
+    return center;
   }
 }

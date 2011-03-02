@@ -41,6 +41,10 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public Pt(Vec direction) {
     this(direction.getX(), direction.getY());
   }
+  
+  public Pt(Point2D pt) {
+    this(pt.getX(), pt.getY());
+  }
 
   public Pt(MouseEvent ev) {
     this(ev.getPoint().getX(), ev.getPoint().getY(), ev.getWhen());

@@ -30,6 +30,10 @@ public class Circle extends Ellipse2D.Double {
     this.mid_y = y;
     this.r = r;
   }
+  
+  public Circle(Pt pt, double r) {
+    this(pt.getX(), pt.getY(), r);
+  }
 
   public List<Sequence> getGeometry() {
     // as you can see this is kinda bogus.

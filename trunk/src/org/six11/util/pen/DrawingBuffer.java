@@ -40,6 +40,7 @@ public class DrawingBuffer {
   private List<TurtleOp> turtles;
   private BoundingBox bb;
   private boolean emptyOK;
+  private String humanName;
   
   public static Graphics2D bogusGraphics;
   static {
@@ -71,8 +72,21 @@ public class DrawingBuffer {
     dirty = true;
     complain = true;
     emptyOK = false;
+    humanName = null;
   }
 
+  public boolean hasHumanReadableName() {
+    return (humanName != null);
+  }
+  
+  public void setHumanReadableName(String name) {
+    humanName = name;
+  }
+  
+  public String getHumanReadableName() {
+    return humanName;
+  }
+  
   public void setEmptyOK(boolean v) {
     this.emptyOK = v;
   }
@@ -87,6 +101,9 @@ public class DrawingBuffer {
    */
   public void setVisible(boolean v) {
     if (v != visible) {
+      if (hasHumanReadableName()) {
+        bug("Buffer '" + getHumanReadableName() + "' now visible: " + v);
+      }
       visible = v;
       dirty = true;
     }
@@ -101,7 +118,8 @@ public class DrawingBuffer {
 
   protected void addOp(TurtleOp op) {
     if (complain && !visible) {
-      bug("Drawing to an invisible canvas. Is that what you want?");
+      String n = hasHumanReadableName() ? "(" + getHumanReadableName() + ")" : "";
+      bug("Drawing to an invisible canvas " + n + ". Is that what you want?");
     }
     turtles.add(op);
     bb = null;

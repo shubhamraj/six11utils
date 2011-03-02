@@ -72,6 +72,10 @@ public class Sequence implements Shape, Iterable<Pt> {
     return attributes.keySet();
   }
   
+  public boolean hasAttribute(String key) {
+    return attributes.get(key) != null;
+  }
+  
   public Object getAttribute(String key) {
     return attributes.get(key);
   }
