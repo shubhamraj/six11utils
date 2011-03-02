@@ -4,8 +4,10 @@ package org.six11.util.gui;
 
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Point2D;
+import java.util.Collection;
 
 import org.six11.util.Debug;
+import org.six11.util.pen.Pt;
 
 /**
  * A handy class for determining the bounding box of 2D objects--just give it some points and it
@@ -20,7 +22,17 @@ public class BoundingBox {
   boolean hasY = false;
   double minY;
   double maxY;
+  
+  public BoundingBox() {
+    
+  }
 
+  public BoundingBox(Collection<Pt> points) {
+    for (Pt pt : points) {
+      add(pt);
+    }
+  }
+  
   public String toString() {
     StringBuilder buf = new StringBuilder();
     buf.append("BoundingBox[");
@@ -51,6 +63,28 @@ public class BoundingBox {
       Debug.stacktrace("There's no real x value yet!", 4);
     }
     return minX;
+  }
+  
+  public double getMinX() {
+    return getX();
+  }
+  
+  public double getMaxX() {
+    if (!hasX) {
+      Debug.stacktrace("There's no real x value yet!", 4);
+    }
+    return maxX;
+  }
+  
+  public double getMinY() {
+    return getY();
+  }
+  
+  public double getMaxY() {
+    if (!hasY) {
+      Debug.stacktrace("There's no real y value yet!", 4);
+    }
+    return maxY;
   }
 
   /**

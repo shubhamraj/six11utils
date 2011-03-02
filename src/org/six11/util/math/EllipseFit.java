@@ -1,10 +1,18 @@
 package org.six11.util.math;
 
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+
+import javax.swing.JComponent;
+
 import static java.lang.Math.atan2;
 import static java.lang.Math.sin;
 import static java.lang.Math.cos;
@@ -14,10 +22,16 @@ import static java.lang.Math.sqrt;
 
 import org.six11.util.Debug;
 import org.six11.util.args.Arguments;
+import org.six11.util.gui.ApplicationFrame;
 import org.six11.util.gui.BoundingBox;
+import org.six11.util.gui.Components;
+import org.six11.util.gui.shape.Circle;
+import org.six11.util.gui.shape.ShapeFactory;
 import org.six11.util.io.FileUtil;
+import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.Functions;
 import org.six11.util.pen.Pt;
+import org.six11.util.pen.RotatedEllipse;
 
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
@@ -62,7 +76,7 @@ public class EllipseFit {
     ellipseFit(points);
   }
 
-  public static void ellipseFit(List<Pt> points) {
+  public static RotatedEllipse ellipseFit(List<Pt> points) {
     bug("random_data:");
     for (Pt pt : points) {
       bug("  " + Debug.num(pt.getX()) + "  " + Debug.num(pt.getY()));
@@ -176,30 +190,75 @@ public class EllipseFit {
     double sineSquared = sineT * sineT;
     double cosineSquared = cosineT * cosineT;
     double cosineSine = sineT * cosineT;
-    double ao = par[5]; bug("ao: " + Debug.num(ao, 4));
-    double au = par[3] * cosineT + par[4] * sineT; bug("au: " + Debug.num(au, 4));
-    double av = -par[3] * sineT + par[4] * cosineT; bug("av: " + Debug.num(av, 4));
+    double ao = par[5];
+    bug("ao: " + Debug.num(ao, 4));
+    double au = par[3] * cosineT + par[4] * sineT;
+    bug("au: " + Debug.num(au, 4));
+    double av = -par[3] * sineT + par[4] * cosineT;
+    bug("av: " + Debug.num(av, 4));
     double auu = par[0] * cosineSquared + par[2] * sineSquared + par[1] * cosineSine;
     bug("auu: " + Debug.num(auu, 4));
     double avv = par[0] * sineSquared + par[2] * cosineSquared - par[1] * cosineSine;
     bug("avv: " + Debug.num(avv, 4));
-    
-    double tuCenter = -au / (2*auu);
-    double tvCenter = -av / (2*avv);
+
+    double tuCenter = -au / (2 * auu);
+    double tvCenter = -av / (2 * avv);
     double wCenter = ao - auu * tuCenter * tuCenter - avv * tvCenter * tvCenter;
     double uCenter = tuCenter * cosineT - tvCenter * sineT;
     double vCenter = tuCenter * sineT + tvCenter * cosineT;
     double ru = -wCenter / auu;
     double rv = -wCenter / avv;
-    ru = sqrt(abs(ru))*signum(ru);
-    rv = sqrt(abs(rv))*signum(rv);
-    double[] ret = { uCenter, vCenter, ru, rv, thetaRadians };
+    ru = sqrt(abs(ru)) * signum(ru);
+    rv = sqrt(abs(rv)) * signum(rv);
+    
     bug("wCenter: " + Debug.num(wCenter, 4));
     bug("uCenter: " + Debug.num(uCenter, 4));
     bug("vCenter: " + Debug.num(vCenter, 4));
     bug("ru: " + Debug.num(ru, 4));
     bug("rv: " + Debug.num(rv, 4));
     bug("thetaRadians: " + Debug.num(thetaRadians, 4));
+    RotatedEllipse ellipse = new RotatedEllipse(new Pt(uCenter, vCenter), ru, rv, thetaRadians);
+    drawThing(points, ellipse, bb);
+    return ellipse;
+  }
+  
+  private static void drawThing(final List<Pt> points, final RotatedEllipse ellipse, BoundingBox bb) {
+    ApplicationFrame af = new ApplicationFrame("EllipseFit Test");
+    final RotatedEllipse ellipse2 = ellipse.copy();
+    ellipse2.setRotation(-ellipse.getRotation());
+    af.setSize(800, 800);
+    af.center();
+    double tx = (bb.getMinX() < 0) ? -bb.getMinX() : 0;
+    double ty = (bb.getMinY() < 0) ? -bb.getMinY() : 0;
+    if (tx > 0 || ty > 0) {
+      for (Pt pt : points) {
+        pt.setLocation(pt.getX() + tx + 6, pt.getY() + ty + 6);
+      }
+      ellipse.translate(tx + 6, ty + 6);
+      ellipse2.translate(tx + 6, ty + 6);
+    }
+    
+    JComponent drawMe = new JComponent() {
+      public void paintComponent(Graphics g1) {
+        bug("Drawing...");
+        Graphics2D g = (Graphics2D) g1;
+        g.setColor(Color.GRAY);
+        g.setStroke(new BasicStroke(0.8f));
+        Components.antialias(g);
+        for (Pt pt : points) {
+          g.draw(new Circle(pt.getX(), pt.getY(), 3));
+        }
+        g.setStroke(new BasicStroke(3.0f));
+        g.setColor(Color.BLUE);
+        g.draw(new ShapeFactory.RotatedEllipseShape(ellipse, 200));
+        g.setColor(Color.RED);
+        g.draw(new ShapeFactory.RotatedEllipseShape(ellipse2, 200));
+
+      }
+    };
+    af.setLayout(new BorderLayout());
+    af.add(BorderLayout.CENTER, drawMe);
+    af.setVisible(true);
   }
 
   private static void bugMat(String what, Matrix mat) {
@@ -208,7 +267,7 @@ public class EllipseFit {
   }
 
   private static void bug(String what) {
-    Debug.out("EllipseFit", what);
+//    Debug.out("EllipseFit", what);
   }
 
 }

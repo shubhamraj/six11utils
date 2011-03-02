@@ -8,14 +8,13 @@ import java.awt.Frame;
 import java.awt.MenuBar;
 
 /**
- * A JFrame that handles some of things you commonly do to a 
- * frame when you first make it -- it centers itself and makes 
- * it so the application quits when you close it (unless 
- * you're in an applet).
- *
+ * A JFrame that handles some of things you commonly do to a frame when you first make it -- it
+ * centers itself and makes it so the application quits when you close it (unless you're in an
+ * applet).
+ * 
  * <pre>
  * // create a centered app frame
- * ApplicationFrame af = new ApplicationFrame("test", w, h);
+ * ApplicationFrame af = new ApplicationFrame(&quot;test&quot;, w, h);
  * af.setVisible(true);
  * </pre>
  **/
@@ -41,7 +40,9 @@ public class ApplicationFrame extends JFrame {
     try {
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     } catch (java.security.AccessControlException ex) {
-      System.out.println("It looks like you aren't allowed to exit the VM, so closing the window won't cause that to happen.");
+      System.out
+          .println("It looks like you aren't allowed to exit the VM, so closing the window won't "
+              + "cause that to happen.");
     }
     createUI(w, h);
   }
@@ -59,16 +60,7 @@ public class ApplicationFrame extends JFrame {
     center();
   }
 
-//   public void setIconFile(String file) {
-//     setIconImage(new ImageIcon(file)).getImage();
-//   }
-
   public void center() {
     Components.centerComponent(this);
-//    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-//    Dimension frameSize = getSize();
-//    int x = (screenSize.width - frameSize.width) / 2;
-//    int y = (screenSize.height - frameSize.height) / 2;
-//    setLocation(x, y);
   }
 }

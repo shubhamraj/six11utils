@@ -28,34 +28,32 @@ public abstract class Functions {
   public static final int PARTITION_RIGHT = 1;
 
   public static void main(String[] args) throws IOException {
-  
-    
+
   }
 
-//  public static void printMatrix(int n1, int n2, double[][] m, int d, int w) {
-//    NumberFormat nf = NumberFormat.getNumberInstance();
-//    FieldPosition fp = new FieldPosition(NumberFormat.INTEGER_FIELD);
-//    nf.setMaximumIntegerDigits(d);
-//    nf.setMaximumFractionDigits(d);
-//    nf.setMinimumFractionDigits(d);
-//    for (int i = 0; i < n1; i++) {
-//      for (int j = 0; j < n2; j++) {
-//        String valString = spaces(w - fp.getEndIndex())
-//            + nf.format(m[i][j], new StringBuffer(), fp).toString();
-//        System.out.print(valString);
-//      }
-//      System.out.println();
-//    }
-//    System.out.println();
-//  }
-//
-//  public static String spaces(int n) {
-//    StringBuilder sb = new StringBuilder(n);
-//    for (int i = 0; i < n; i++)
-//      sb.append(' ');
-//    return sb.toString();
-//  }
-
+  //  public static void printMatrix(int n1, int n2, double[][] m, int d, int w) {
+  //    NumberFormat nf = NumberFormat.getNumberInstance();
+  //    FieldPosition fp = new FieldPosition(NumberFormat.INTEGER_FIELD);
+  //    nf.setMaximumIntegerDigits(d);
+  //    nf.setMaximumFractionDigits(d);
+  //    nf.setMinimumFractionDigits(d);
+  //    for (int i = 0; i < n1; i++) {
+  //      for (int j = 0; j < n2; j++) {
+  //        String valString = spaces(w - fp.getEndIndex())
+  //            + nf.format(m[i][j], new StringBuffer(), fp).toString();
+  //        System.out.print(valString);
+  //      }
+  //      System.out.println();
+  //    }
+  //    System.out.println();
+  //  }
+  //
+  //  public static String spaces(int n) {
+  //    StringBuilder sb = new StringBuilder(n);
+  //    for (int i = 0; i < n; i++)
+  //      sb.append(' ');
+  //    return sb.toString();
+  //  }
 
   /**
    * Given a source sequence, find the locations along the path defined by a destination sequence
@@ -175,6 +173,9 @@ public abstract class Functions {
     return getMean(list);
   }
 
+  /**
+   * This returns the centroid of a point cloud.
+   */
   public static Pt getMean(List<Pt> points) {
     double sumX = 0.0;
     double sumY = 0.0;
@@ -684,6 +685,29 @@ public abstract class Functions {
       }
     }
     return ret;
+  }
+
+  /**
+   * Returns each corner of the given rectangle. Notice this returns FIVE points: the first point is
+   * doubled-up at the end. This way you can draw lines from each point to the next and get a
+   * complete visual rectangle. If you only need the four points make sure you don't hit the last
+   * one!
+   * 
+   * @param r
+   * @return
+   */
+  public static List<Pt> getRectangleCorners(Rectangle r) {
+    List<Pt> corners = new ArrayList<Pt>();
+    double x = r.getX();
+    double y = r.getY();
+    double w = r.getWidth();
+    double h = r.getHeight();
+    corners.add(new Pt(x, y));
+    corners.add(new Pt(x + w, y));
+    corners.add(new Pt(x + w, y + h));
+    corners.add(new Pt(x, y + h));
+    corners.add(new Pt(x, y));
+    return corners;
   }
 
   /**
