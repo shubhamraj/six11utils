@@ -100,7 +100,6 @@ public abstract class ShapeFactory {
           + ellie.isRestrictedArc());
     }
 
-    @Override
     public boolean contains(Point2D pt) {
       boolean ret;
       if (ellie.isRestrictedArc()) {
@@ -117,7 +116,6 @@ public abstract class ShapeFactory {
     /**
      * A rectangle is entirely inside an ellipse (or circle) if each corner is inside.
      */
-    @Override
     public boolean contains(Rectangle2D r) {
       List<Pt> corners = Functions.getRectangleCorners(r.getBounds());
       boolean ok = true;
@@ -129,17 +127,14 @@ public abstract class ShapeFactory {
       return ok;
     }
 
-    @Override
     public boolean contains(double x, double y) {
       return contains(new Pt(x, y));
     }
 
-    @Override
     public boolean contains(double x, double y, double w, double h) {
       return contains(new Rectangle2D.Double(x, y, w, h));
     }
 
-    @Override
     public Rectangle getBounds() {
       if (bounds == null) {
         getPathIterator(null);
@@ -147,12 +142,10 @@ public abstract class ShapeFactory {
       return bounds;
     }
 
-    @Override
     public Rectangle2D getBounds2D() {
       return getBounds();
     }
 
-    @Override
     public PathIterator getPathIterator(AffineTransform at) {
       if (path == null) {
 
@@ -236,12 +229,10 @@ public abstract class ShapeFactory {
       return ret;
     }
 
-    @Override
     public PathIterator getPathIterator(AffineTransform at, double flatnessIgnored) {
       return getPathIterator(at);
     }
 
-    @Override
     public boolean intersects(Rectangle2D r) {
       PathIterator pi = getPathIterator(null);
       boolean ix = false;
@@ -257,7 +248,6 @@ public abstract class ShapeFactory {
       return ix;
     }
 
-    @Override
     public boolean intersects(double x, double y, double w, double h) {
       return intersects(new Rectangle2D.Double(x, y, w, h));
     }
