@@ -8,11 +8,17 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.List;
+import static java.lang.Math.toRadians;
+import static java.lang.Math.abs;
 
 import org.six11.util.Debug;
+import static org.six11.util.Debug.num;
 import org.six11.util.gui.BoundingBox;
 import org.six11.util.pen.Functions;
+import org.six11.util.pen.IntersectionData;
+import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.RotatedEllipse;
 
@@ -90,14 +96,22 @@ public abstract class ShapeFactory {
     public RotatedEllipseShape(RotatedEllipse ellie, int numSegments) {
       this.ellie = ellie;
       this.numSegments = numSegments;
+      bug("Made a rotated ellipse shape. is it a restricted portion of an arc? "
+          + ellie.isRestrictedArc());
     }
 
     @Override
     public boolean contains(Point2D pt) {
-      Pt ix = ellie.getCentroidIntersect(new Pt(pt));
-      double distToInput = ellie.getCentroid().distance(pt);
-      double distToEdge = ellie.getCentroid().distance(ix);
-      return distToInput < distToEdge;
+      boolean ret;
+      if (ellie.isRestrictedArc()) {
+        ret = false;
+      } else {
+        Pt ix = ellie.getCentroidIntersect(new Pt(pt));
+        double distToInput = ellie.getCentroid().distance(pt);
+        double distToEdge = ellie.getCentroid().distance(ix);
+        ret = distToInput < distToEdge;
+      }
+      return ret;
     }
 
     /**
@@ -141,26 +155,85 @@ public abstract class ShapeFactory {
     @Override
     public PathIterator getPathIterator(AffineTransform at) {
       if (path == null) {
-        path = new GeneralPath();
+
         BoundingBox bb = new BoundingBox();
-        boolean first = true;
-        Pt firstPt = null;
-        double step = (Math.PI * 2.0) / (double) numSegments;
-        for (double t = 0; t < Math.PI * 2.0; t += step) {
-          Pt pt = ellie.getEllipticalPoint(t);
-          bb.add(pt);
-          if (first) {
-            firstPt = pt;
-            path.moveTo(pt.getX(), pt.getY());
-            first = false;
-          } else {
-            path.lineTo(pt.getX(), pt.getY());
+        path = new GeneralPath();
+        List<Pt> surface = getSegmentedSurface();
+        if (ellie.isRestrictedArc()) {
+          List<Pt> region = ellie.getRegionPoints();
+          int segA = findIntersectionIndex(surface, region.get(0));
+          int segB = findIntersectionIndex(surface, region.get(1));
+          int segC = findIntersectionIndex(surface, region.get(2));
+          List<Pt> arcPoints = new ArrayList<Pt>();
+          if (segA > segB && segB > segC) { //        segA -> segC
+            addRange(arcPoints, surface, segA, segC);
+          } else if (segA > segB && segB < segC) {
+            if (segA > segC) {
+              addRange(arcPoints, surface, segA, surface.size() - 1);
+              addRange(arcPoints, surface, 0, segC);
+            } else {
+              addRange(arcPoints, surface, segA, 0);
+              addRange(arcPoints, surface, surface.size() - 1, segC);
+            }
+          } else if (segA < segB && segB > segC) { // segA -> n; 0 -> segC
+            if (segA > segC) {
+              addRange(arcPoints, surface, segA, surface.size() - 1);
+              addRange(arcPoints, surface, 0, segC);
+            } else {
+              addRange(arcPoints, surface, segA, 0);
+              addRange(arcPoints, surface, surface.size() - 1, segC);
+            }
+          } else if (segA < segB && segB < segC) { // segA -> segC
+            addRange(arcPoints, surface, segA, segC);
           }
+          path = makeLinePath(arcPoints, false);
+          bb = new BoundingBox(arcPoints);
+        } else {
+          path = makeLinePath(surface, true);
+          bb = new BoundingBox(surface);
         }
-        path.lineTo(firstPt.getX(), firstPt.getY());
         bounds = bb.getRectangle().getBounds();
       }
+
       return path.getPathIterator(at);
+    }
+
+    private void addRange(List<Pt> dst, List<Pt> src, int startIdx, int endIdx) {
+      if (startIdx < endIdx) { // ascending
+        for (int i = startIdx; i <= endIdx; i++) {
+          dst.add(src.get(i));
+        }
+      } else { // descending
+        for (int i = startIdx; i >= endIdx; i--) {
+          dst.add(src.get(i));
+        }
+      }
+    }
+
+    private List<Pt> getSegmentedSurface() {
+      double step = (Math.PI * 2.0) / (double) numSegments;
+      List<Pt> ret = new ArrayList<Pt>();
+      for (double t = 0; t < Math.PI * 2.0; t += step) {
+        Pt pt = ellie.getEllipticalPoint(t);
+        ret.add(pt);
+      }
+      return ret;
+    }
+
+    private int findIntersectionIndex(List<Pt> surface, Pt pt) {
+      int ret = -1;
+      for (int i = 0; i < surface.size(); i++) {
+        Pt a = surface.get(i);
+        Pt b = (i + 1 >= surface.size()) ? surface.get(0) : surface.get(i + 1);
+        Line toPt = new Line(ellie.getCentroid(), pt);
+        Line seg = new Line(a, b);
+        IntersectionData ix = Functions.getIntersectionData(toPt, seg);
+        if (ix.intersectsOnLineTwo() && ix.getLineOneParam() > 0) {
+          ret = i;
+          break;
+        }
+      }
+      return ret;
     }
 
     @Override
@@ -191,8 +264,26 @@ public abstract class ShapeFactory {
 
   }
 
+  public static GeneralPath makeLinePath(List<Pt> points, boolean closed) {
+    boolean first = true;
+    GeneralPath ret = new GeneralPath();
+    for (Pt pt : points) {
+      if (first) {
+        ret.moveTo(pt.getX(), pt.getY());
+        first = false;
+      } else {
+        ret.lineTo(pt.getX(), pt.getY());
+      }
+    }
+    if (closed) {
+      ret.lineTo(points.get(0).getX(), points.get(0).getY());
+    }
+    return ret;
+  }
+
   @SuppressWarnings("unused")
   private static void bug(String what) {
     Debug.out("ShapeFactory", what);
   }
+
 }
