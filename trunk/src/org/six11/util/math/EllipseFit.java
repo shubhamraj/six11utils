@@ -37,7 +37,7 @@ import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
 
 /**
- * This implements the approach described in:
+ * Use this to create an ellipse based on rough data. This implements the approach described in:
  * 
  * Andrew Fitzgibbon, Maurizio Pilu, Robert B. Fisher (1998). ``Direct least Square Fitting of
  * Ellipses''. IEEE Transactions on Pattern Analysis and Machine Intelligence
@@ -68,19 +68,19 @@ public class EllipseFit {
       double y = Double.parseDouble(tok.nextToken());
       points.add(new Pt(x, y));
     }
-    bug("Fit ellipse to points:");
-    for (Pt pt : points) {
-      bug("\t" + Debug.num(pt));
-    }
+//    bug("Fit ellipse to points:");
+//    for (Pt pt : points) {
+//      bug("\t" + Debug.num(pt));
+//    }
 
     ellipseFit(points);
   }
 
   public static RotatedEllipse ellipseFit(List<Pt> points) {
-    bug("random_data:");
-    for (Pt pt : points) {
-      bug("  " + Debug.num(pt.getX()) + "  " + Debug.num(pt.getY()));
-    }
+//    bug("random_data:");
+//    for (Pt pt : points) {
+//      bug("  " + Debug.num(pt.getX()) + "  " + Debug.num(pt.getY()));
+//    }
     Pt mean = Functions.getMean(points);
     BoundingBox bb = new BoundingBox(points);
     double sx = (bb.getMaxX() - bb.getMinX()) / 2.0;
@@ -89,15 +89,15 @@ public class EllipseFit {
     double my = mean.getY();
     double[] x = new double[points.size()];
     double[] y = new double[points.size()];
-    bug("Mean: " + Debug.num(mean));
-    bug("Max x: " + Debug.num(bb.getMaxX()));
-    bug("Min x: " + Debug.num(bb.getMinX()));
-    bug("Scale factors: x: " + Debug.num(sx) + " y: " + Debug.num(sy));
-    bug("normalized data:");
+//    bug("Mean: " + Debug.num(mean));
+//    bug("Max x: " + Debug.num(bb.getMaxX()));
+//    bug("Min x: " + Debug.num(bb.getMinX()));
+//    bug("Scale factors: x: " + Debug.num(sx) + " y: " + Debug.num(sy));
+//    bug("normalized data:");
     for (int i = 0; i < points.size(); i++) {
       x[i] = (points.get(i).getX() - mean.getX()) / sx;
       y[i] = (points.get(i).getY() - mean.getY()) / sy;
-      bug("  " + Debug.num(x[i]) + ", " + Debug.num(y[i]));
+//      bug("  " + Debug.num(x[i]) + ", " + Debug.num(y[i]));
     }
     double[][] designData = new double[points.size()][6];
     for (int i = 0; i < points.size(); i++) {// @formatter:off
@@ -134,16 +134,14 @@ public class EllipseFit {
     Matrix tmpC = scatter.getMatrix(3, 5, 3, 5);
     Matrix tmpD = c.getMatrix(0, 2, 0, 2);
     Matrix tmpE = tmpC.inverse().times(tmpB.transpose());
-    //    Matrix tmpE = tmpC.inverse().
-    Matrix tmpInvC = tmpC.inverse();
 
-    bugMat("Scatter:", scatter);
-    bugMat("tmpInvC:", tmpInvC);
-    bugMat("tmpA:", tmpA);
-    bugMat("tmpB:", tmpB);
-    bugMat("tmpC:", tmpC);
-    bugMat("tmpD:", tmpD);
-    bugMat("tmpE:", tmpE);
+//    bugMat("Scatter:", scatter);
+//    bugMat("tmpInvC:", tmpInvC);
+//    bugMat("tmpA:", tmpA);
+//    bugMat("tmpB:", tmpB);
+//    bugMat("tmpC:", tmpC);
+//    bugMat("tmpD:", tmpD);
+//    bugMat("tmpE:", tmpE);
 
     // [evec_x, eval_x] = eig(inv(tmpD) * (tmpA - tmpB*tmpE));
     Matrix dInv = tmpD.inverse();
@@ -157,23 +155,23 @@ public class EllipseFit {
       if (evals[i] <= 0 && !Double.isInfinite(evals[i])) {
         idxPos = i;
       }
-      bug(" -- Eigenvalue " + (i + 1) + ": " + Debug.num(evals[i], 4));
+//      bug(" -- Eigenvalue " + (i + 1) + ": " + Debug.num(evals[i], 4));
     }
-    bug("The positive eigenvalue is in position " + idxPos);
-    bugMat("Eigenvector matrix", eigenstuff.getV());
+//    bug("The positive eigenvalue is in position " + idxPos);
+//    bugMat("Eigenvector matrix", eigenstuff.getV());
     Matrix evecX = eigenstuff.getV().getMatrix(0, 2, idxPos, idxPos);
-    bugMat("The eigenvector we want", evecX);
+//    bugMat("The eigenvector we want", evecX);
 
     //    A = [A; evec_y];
     Matrix evecY = tmpE.uminus().times(evecX);
-    bugMat("evec_y", evecY);
+//    bugMat("evec_y", evecY);
     double[] d1 = evecX.getColumnPackedCopy();
     double[] d2 = evecY.getColumnPackedCopy();
     double[] a = new double[d1.length + d2.length];
     System.arraycopy(d1, 0, a, 0, d1.length);
     System.arraycopy(d2, 0, a, d1.length, d2.length);
     Matrix aMat = new Matrix(a, a.length);
-    bugMat("Matrix 'A'", aMat);
+//    bugMat("Matrix 'A'", aMat);
 
     double[] par = {
         a[0] * sy * sy,
@@ -191,15 +189,15 @@ public class EllipseFit {
     double cosineSquared = cosineT * cosineT;
     double cosineSine = sineT * cosineT;
     double ao = par[5];
-    bug("ao: " + Debug.num(ao, 4));
+//    bug("ao: " + Debug.num(ao, 4));
     double au = par[3] * cosineT + par[4] * sineT;
-    bug("au: " + Debug.num(au, 4));
+//    bug("au: " + Debug.num(au, 4));
     double av = -par[3] * sineT + par[4] * cosineT;
-    bug("av: " + Debug.num(av, 4));
+//    bug("av: " + Debug.num(av, 4));
     double auu = par[0] * cosineSquared + par[2] * sineSquared + par[1] * cosineSine;
-    bug("auu: " + Debug.num(auu, 4));
+//    bug("auu: " + Debug.num(auu, 4));
     double avv = par[0] * sineSquared + par[2] * cosineSquared - par[1] * cosineSine;
-    bug("avv: " + Debug.num(avv, 4));
+//    bug("avv: " + Debug.num(avv, 4));
 
     double tuCenter = -au / (2 * auu);
     double tvCenter = -av / (2 * avv);
@@ -210,18 +208,21 @@ public class EllipseFit {
     double rv = -wCenter / avv;
     ru = sqrt(abs(ru)) * signum(ru);
     rv = sqrt(abs(rv)) * signum(rv);
-    
-    bug("wCenter: " + Debug.num(wCenter, 4));
-    bug("uCenter: " + Debug.num(uCenter, 4));
-    bug("vCenter: " + Debug.num(vCenter, 4));
-    bug("ru: " + Debug.num(ru, 4));
-    bug("rv: " + Debug.num(rv, 4));
-    bug("thetaRadians: " + Debug.num(thetaRadians, 4));
-    RotatedEllipse ellipse = new RotatedEllipse(new Pt(uCenter, vCenter), ru, rv, thetaRadians);
-    drawThing(points, ellipse, bb);
+
+//    bug("wCenter: " + Debug.num(wCenter, 4));
+//    bug("uCenter: " + Debug.num(uCenter, 4));
+//    bug("vCenter: " + Debug.num(vCenter, 4));
+//    bug("ru: " + Debug.num(ru, 4));
+//    bug("rv: " + Debug.num(rv, 4));
+//    bug("thetaRadians: " + Debug.num(thetaRadians, 4));
+    // IMPORTANT NOTE: I introduced a unary minus to the thetaRadians variable that was not in the
+    // original Matlab code. I suspect that Matlab and Java have opposite notions of up and down
+    // and which way is 'positive' for angles. Negating the angle works in Java.
+    RotatedEllipse ellipse = new RotatedEllipse(new Pt(uCenter, vCenter), ru, rv, -thetaRadians);
+//    drawThing(points, ellipse, bb);
     return ellipse;
   }
-  
+
   private static void drawThing(final List<Pt> points, final RotatedEllipse ellipse, BoundingBox bb) {
     ApplicationFrame af = new ApplicationFrame("EllipseFit Test");
     final RotatedEllipse ellipse2 = ellipse.copy();
@@ -237,10 +238,9 @@ public class EllipseFit {
       ellipse.translate(tx + 6, ty + 6);
       ellipse2.translate(tx + 6, ty + 6);
     }
-    
+
     JComponent drawMe = new JComponent() {
       public void paintComponent(Graphics g1) {
-        bug("Drawing...");
         Graphics2D g = (Graphics2D) g1;
         g.setColor(Color.GRAY);
         g.setStroke(new BasicStroke(0.8f));
@@ -261,13 +261,13 @@ public class EllipseFit {
     af.setVisible(true);
   }
 
-  private static void bugMat(String what, Matrix mat) {
-    bug(what);
-    mat.print(7, 4);
-  }
-
-  private static void bug(String what) {
-//    Debug.out("EllipseFit", what);
-  }
+//  private static void bugMat(String what, Matrix mat) {
+//    bug(what);
+//    mat.print(7, 4);
+//  }
+//
+//  private static void bug(String what) {
+//    //    Debug.out("EllipseFit", what);
+//  }
 
 }

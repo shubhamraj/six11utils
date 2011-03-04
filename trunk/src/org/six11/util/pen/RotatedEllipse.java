@@ -2,6 +2,14 @@ package org.six11.util.pen;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
+import static java.lang.Math.atan2;
+import static java.lang.Math.toDegrees;
+
+import static org.six11.util.Debug.num;
+import org.six11.util.Debug;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 
@@ -15,29 +23,87 @@ public class RotatedEllipse {
   double b; // the 'vertical' radius when the ellipse isn't rotated.
   double ellipseRotation; // the radian angle of rotation
 
+  private boolean restrictedArc;
+  private double extent;
+  private double startAngle;
+  private double midAngle;
+  private double endAngle;
+
+  public List<Pt> regionPoints;
+
   public RotatedEllipse(Pt center, double a, double b, double ellipseRotation) {
     this.center = center;
     this.a = a;
     this.b = b;
     this.ellipseRotation = ellipseRotation;
   }
-  
+
+  public boolean isRestrictedArc() {
+    return restrictedArc;
+  }
+
+  public double getStartAngle() {
+    return startAngle;
+  }
+
+  public double getExtent() {
+    return extent;
+  }
+
+  /**
+   * Specify three points that are *near* the ellipse surface. Points a and b are endpoints, and m
+   * is any point on the inside.
+   */
+  public void setArcRegion(Pt a, Pt m, Pt b) {
+    restrictedArc = true;
+    Pt s = getCentroidIntersect(a);
+    Pt mid = getCentroidIntersect(m);
+    Pt e = getCentroidIntersect(b);
+    regionPoints = new ArrayList<Pt>();
+    regionPoints.add(s);
+    regionPoints.add(mid);
+    regionPoints.add(e);
+    startAngle = Functions.makeAnglePositive(toDegrees(-atan2(s.y - center.y, s.x - center.x)));
+    midAngle = Functions.makeAnglePositive(toDegrees(-atan2(mid.y - center.y, mid.x - center.x)));
+    endAngle = Functions.makeAnglePositive(toDegrees(-atan2(e.y - center.y, e.x - center.x)));
+    
+    double midDecreasing = Functions.getNearestAnglePhase(startAngle, midAngle, -1);
+    double midIncreasing = Functions.getNearestAnglePhase(startAngle, midAngle, 1);
+    double endDecreasing = Functions.getNearestAnglePhase(midDecreasing, endAngle, -1);
+    double endIncreasing = Functions.getNearestAnglePhase(midIncreasing, endAngle, 1);
+
+    extent = 0;
+    if (Math.abs(endDecreasing - startAngle) < Math.abs(endIncreasing - startAngle)) {
+      extent = endDecreasing - startAngle;
+    } else {
+      extent = endIncreasing - startAngle;
+    }
+  }
+
+  public static void bug(String what) {
+    Debug.out("RotatedEllipse", what);
+  }
+
+  public List<Pt> getRegionPoints() {
+    return regionPoints;
+  }
+
   public void translate(double dx, double dy) {
     center.setLocation(center.getX() + dx, center.getY() + dy);
   }
-  
+
   public double getRotation() {
     return ellipseRotation;
   }
-  
+
   public void setRotation(double newRotation) {
     this.ellipseRotation = newRotation;
   }
-  
+
   public RotatedEllipse copy() {
     return new RotatedEllipse(new Pt(center.getX(), center.getY()), a, b, ellipseRotation);
   }
-  
+
   /**
    * Returns the point on the ellipse boundary that is between the centroid and the target point.
    * This is NOT the nearest point on the ellipse to the target, but that is more complicated to
@@ -76,7 +142,7 @@ public class RotatedEllipse {
   public double getArea() {
     return Math.PI * a * b;
   }
-  
+
   public Pt getCentroid() {
     return center;
   }
