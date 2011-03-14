@@ -151,14 +151,22 @@ public class EllipseFit {
     EigenvalueDecomposition eigenstuff = eigMeBaby.eig();
     double[] evals = eigenstuff.getRealEigenvalues();
     int idxPos = -1;
+    double SMALL_NUMBER = 0.00000001; 
     for (int i = 0; i < evals.length; i++) {
-      if (evals[i] <= 0 && !Double.isInfinite(evals[i])) {
+      if (evals[i] <= /*0*/ SMALL_NUMBER && !Double.isInfinite(evals[i])) {
         idxPos = i;
       }
 //      bug(" -- Eigenvalue " + (i + 1) + ": " + Debug.num(evals[i], 4));
     }
 //    bug("The positive eigenvalue is in position " + idxPos);
 //    bugMat("Eigenvector matrix", eigenstuff.getV());
+    if (idxPos < 0) {
+      System.out.println("EllipseFit: idxPos negative. this will ruin your day");
+      System.out.println("Eigenvalues are as follows:");
+      for (int i=0; i < evals.length; i++) {
+        System.out.println("  " + i + ": " + evals[i]);
+      }
+    }
     Matrix evecX = eigenstuff.getV().getMatrix(0, 2, idxPos, idxPos);
 //    bugMat("The eigenvector we want", evecX);
 

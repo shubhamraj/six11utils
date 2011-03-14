@@ -10,8 +10,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
+import static java.lang.Math.acos;
+import static java.lang.Math.abs;
 
 import org.six11.util.Debug;
+import static org.six11.util.Debug.num;
 import org.six11.util.data.Statistics;
 
 /**
@@ -266,6 +269,19 @@ public abstract class Functions {
     return new Vec(aveX, aveY);
   }
 
+  public static double getPathLength(List<Pt> points, int idxStartInclusive, int idxEndInclusive) {
+    double ret = 0.0;
+    Pt prev = null;
+    for (int i = idxStartInclusive; i <= idxEndInclusive; i++) {
+      Pt pt = points.get(i);
+      if (prev != null) {
+        ret += prev.distance(pt);
+      }
+      prev = pt;
+    }
+    return ret;
+  }
+
   /**
    * This interprets the line segment as a finite length, and returns the minimum distance between
    * the input point and any point on the segment.
@@ -492,6 +508,21 @@ public abstract class Functions {
   // }
   // return ret;
   // }
+
+  /**
+   * This uses dot and cross products to determine the signed angle. It does not rely on arc
+   * tangent, which presents problems due to discontinuities.
+   */
+  public static double getSignedAngleBetween(Vec a, Vec b) {
+    double dot = Functions.getDotProduct(a, b);
+    double cross = Functions.getCrossProduct(a, b);
+    double angle = acos(dot / ((a.mag() * b.mag())));
+    double curvature = angle;
+    if (cross < 0) {
+      curvature = -angle;
+    }
+    return curvature;
+  }
 
   public static double getDotProduct(Vec a, Vec b) {
     return a.getX() * b.getX() + a.getY() * b.getY();
@@ -720,6 +751,59 @@ public abstract class Functions {
     return ret;
   }
 
+  /**
+   * Make a normalized sequence where each point is the same distance <b>along the surface</b> of
+   * the input sequence. This differs from the other (non-curvilinear) normalization function in
+   * that the returned points here may not be of uniform spacing in a Euclidean way. This method of
+   * normalizing/interpolating has the nice property that you can chop up a sequence into N pieces
+   * that are mostly uniform.
+   * 
+   * @param seq
+   *          The source sequence.
+   * @param start
+   *          The start index. A copy of this point is included in the return value.
+   * @param end
+   *          The end index (inclusive). A copy of this is included in the return value.
+   * @param threshold
+   *          The curvilinear distance that separates the returned points.
+   * @return
+   */
+  public static Sequence getCurvilinearNormalizedSequence(Sequence seq, int start, int end,
+      double threshold) {
+    Sequence ret = new Sequence();
+    double patchDist = 0;
+    Pt prev = seq.get(start).copy();
+    ret.add(prev);
+    int seqPointer = start + 1;
+    Pt next = seq.get(seqPointer);
+    while (seqPointer <= end) {
+      double dist = prev.distance(next);
+      if (dist + patchDist > threshold) {
+        // patch point between prev and next. update patchDist and prev.
+        double remainder = threshold - patchDist;
+        double frac = remainder / dist;
+        double dx = frac * (next.getX() - prev.getX());
+        double dy = frac * (next.getY() - prev.getY());
+        Pt patchPt = new Pt(prev.getX() + dx, prev.getY() + dy);
+        ret.add(patchPt);
+        prev = patchPt;
+        patchDist = 0;
+      } else {
+        // no patch point. update patchDist, prev and next, and seqPointer.
+        patchDist = patchDist + dist;
+        prev = next;
+        seqPointer++;
+        if (seqPointer <= end) {
+          next = seq.get(seqPointer);
+        } else {
+          break;
+        }
+      }
+    }
+    ret.add(seq.get(end).copy());
+    return ret;
+  }
+
   public static Sequence getNormalizedSequence(Sequence seq, double d) {
     Sequence normalizedSequence = new Sequence();
     normalizedSequence.add(seq.get(0).copy());
@@ -809,6 +893,9 @@ public abstract class Functions {
     return getNearestPointOnSequence(epicenter, seq.getPoints());
   }
 
+  /**
+   * Returns the point in the given list that is nearest the epicenter.
+   */
   public static Pt getNearestPointOnSequence(Pt epicenter, List<Pt> seq) {
     double minDist = Double.MAX_VALUE;
     Pt nearest = null;
@@ -1136,6 +1223,14 @@ public abstract class Functions {
   }
 
   /**
+   * Se the other getPointAtDistance for docs.
+   */
+  public static Pt getPointAtDistance(Sequence seq, int knownIndex, double knownDistance,
+      int direction, double desiredDistance) {
+    return getPointAtDistance(seq, knownIndex, knownDistance, direction, desiredDistance, true);
+  }
+
+  /**
    * From a given index that is a known distance, find the point in some direction (+1 for
    * increasing indexes, -1 for decreasing) that is the specified distance along the sequence. The
    * return value is an interpolated Point based on the surrounding two points that are actually
@@ -1158,12 +1253,12 @@ public abstract class Functions {
    *          indexes or -1 for decreasing indexes.
    * @param desiredDistance
    *          the target point t should be from the other interesting point o
-   * 
+   * @param extrapolatedOK
    * @return an interpolated point (or, extrapolated if the given distance is outside the first or
    *         last point)
    */
   public static Pt getPointAtDistance(Sequence seq, int knownIndex, double knownDistance,
-      int direction, double desiredDistance) {
+      int direction, double desiredDistance, boolean extrapolationOK) {
     if (desiredDistance < knownDistance)
       throw new RuntimeException(
           "desiredDistance must be greater than or equal to known distance: "
@@ -1214,7 +1309,7 @@ public abstract class Functions {
       double newX = ptA.getX() + ((ptB.getX() - ptA.getX()) * s);
       double newY = ptA.getY() + ((ptB.getY() - ptA.getY()) * s);
       ret = new Pt(newX, newY);
-    } else {
+    } else if (extrapolationOK) {
       // if b is negative, then the desired point is outside the
       // boundary of the sequence. Using a and the point before it,
       // extrapolate.
@@ -1225,6 +1320,50 @@ public abstract class Functions {
       double newX = ptB.getX() + ((ptB.getX() - ptA.getX()) * s);
       double newY = ptB.getY() + ((ptB.getY() - ptA.getY()) * s);
       ret = new Pt(newX, newY);
+    }
+    return ret;
+  }
+
+  /**
+   * Returns an array with two points marking the points surrounding seq[i] that are dist units
+   * along the sequence path. A returned value will be null if the starting location is too near the
+   * beginning or end of the sequence. The total length from ret[0] to ret[1] is 2*dist.
+   * 
+   * @param seq
+   * @param idx
+   * @param dist
+   * @return
+   */
+  public static Pt[] getCurvilinearWindow(Sequence seq, int idx, double dist) {
+    Pt[] ret = new Pt[] {
+        getCurvilinearWindow(seq, idx, dist, -1), getCurvilinearWindow(seq, idx, dist, 1)
+    };
+    return ret;
+  }
+
+  private static Pt getCurvilinearWindow(Sequence seq, int idx, double dist, int dir) {
+    double d = 0; // distance travelled so far
+    Pt ret = null;
+    for (int i = idx; i > 1 && i < seq.size() - 1; i = i + dir) {
+      Pt a = seq.get(i);
+      Pt b = seq.get(i + dir);
+      double patchDist = a.distance(b);
+      //      bug("  " + i + ": Distance from points " + i + " to " + (i + dir) + ": " + Debug.num(patchDist));
+      if (patchDist + d > dist) {
+        // interpolate and set ret[1]
+        double remaining = dist - d;
+        double fraction = remaining / patchDist;
+        double dx = b.x - a.x;
+        double dy = b.y - a.y;
+        double x = a.x + (fraction * dx);
+        double y = a.y + (fraction * dy);
+        ret = new Pt(x, y);
+        //        bug("  " + i + ": Interpolated. remaining: " + num(remaining) + ", fraction: " + num(fraction)
+        //            + ", dx: " + num(dx) + ", dy: " + num(dy));
+        break;
+      } else {
+        d = d + patchDist;
+      }
     }
     return ret;
   }
@@ -1452,5 +1591,39 @@ public abstract class Functions {
 
   public static void bug(String what) {
     Debug.out("Functions", what);
+  }
+
+  /**
+   * Returns true iff there are three or more points in the provided list and either of the
+   * following two conditions: (1) they are all at the same location, or (2) all fall directly on
+   * the same line.
+   */
+  public static boolean arePointsColinear(List<Pt> somePoints) {
+    boolean ret = false;
+    if (somePoints.size() >= 3) {
+      // find two points that are not coincident.
+      Pt a = somePoints.get(0);
+      Line line = null;
+      boolean sameSpot = true;
+      for (int i = 1; i < somePoints.size(); i++) {
+        if (!somePoints.get(i).isSameLocation(a)) {
+          sameSpot = false;
+          line = new Line(a, somePoints.get(i));
+          break;
+        }
+      }
+      if (!sameSpot && line != null) {
+        ret = true;
+        for (Pt pt : somePoints) {
+          double dist = getDistanceBetweenPointAndLine(pt, line);
+//          bug(num(dist));
+          if (abs(dist) > EQ_TOL) {
+            ret = false;
+            break;
+          }
+        }
+      }
+    }
+    return ret;
   }
 }

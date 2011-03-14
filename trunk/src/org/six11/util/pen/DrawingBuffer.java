@@ -41,6 +41,7 @@ public class DrawingBuffer {
   private BoundingBox bb;
   private boolean emptyOK;
   private String humanName;
+  private int layer;
   
   public static Graphics2D bogusGraphics;
   static {
@@ -73,7 +74,28 @@ public class DrawingBuffer {
     complain = true;
     emptyOK = false;
     humanName = null;
+    layer = 0;
   }
+  
+  public int getLayer() {
+    return layer;
+  }
+  
+  public void setLayer(int layer) {
+    this.layer = layer;
+  }
+  
+  public static Comparator<DrawingBuffer> sortByLayer = new Comparator<DrawingBuffer>() {
+    public int compare(DrawingBuffer a, DrawingBuffer b) {
+      int ret = 0;
+      if (a.getLayer() < b.getLayer()) {
+        ret = -1;
+      } else if (a.getLayer() > b.getLayer()) {
+        ret = 1;
+      }
+      return ret;
+    }    
+  };
 
   public boolean hasHumanReadableName() {
     return (humanName != null);
@@ -101,9 +123,9 @@ public class DrawingBuffer {
    */
   public void setVisible(boolean v) {
     if (v != visible) {
-      if (hasHumanReadableName()) {
-        bug("Buffer '" + getHumanReadableName() + "' now visible: " + v);
-      }
+//      if (hasHumanReadableName()) {
+//        bug("Buffer '" + getHumanReadableName() + "' now visible: " + v);
+//      }
       visible = v;
       dirty = true;
     }
@@ -672,5 +694,9 @@ public class DrawingBuffer {
     FontRenderContext frc = bogusGraphics.getFontRenderContext();
     TextLayout tl = new TextLayout(text, font, frc);
     return tl.getBounds();
+  }
+
+  public boolean hasContent() {
+    return bb.isValid();
   }
 }
