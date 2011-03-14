@@ -2,12 +2,16 @@ package org.six11.util.pen;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
+import static java.lang.Math.min;
+import static java.lang.Math.max;
 import static java.lang.Math.atan2;
 import static java.lang.Math.toDegrees;
 
 import static org.six11.util.Debug.num;
 import org.six11.util.Debug;
+import org.six11.util.gui.shape.ShapeFactory;
 
+import java.awt.geom.PathIterator;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +34,7 @@ public class RotatedEllipse {
   private double endAngle;
 
   public List<Pt> regionPoints;
+  private List<Pt> restrictedArcPath;
 
   public RotatedEllipse(Pt center, double a, double b, double ellipseRotation) {
     this.center = center;
@@ -42,12 +47,42 @@ public class RotatedEllipse {
     return restrictedArc;
   }
 
+  public List<Pt> getRestrictedArcPath() {
+    if (restrictedArcPath == null) {
+      getRestrictedArcPath(60);
+    }
+    return restrictedArcPath;
+  }
+
+  public List<Pt> getRestrictedArcPath(int numPoints) {
+    if (restrictedArcPath == null) {
+      PathIterator path = new ShapeFactory.RotatedEllipseShape(this, numPoints)
+          .getPathIterator(null);
+      restrictedArcPath = new ArrayList<Pt>();
+      double[] coords = new double[6];
+      while (!path.isDone()) {
+        path.currentSegment(coords);
+        restrictedArcPath.add(new Pt(coords[0], coords[1]));
+        path.next();
+      }
+    }
+    return restrictedArcPath;
+  }
+
   public double getStartAngle() {
     return startAngle;
   }
 
   public double getExtent() {
     return extent;
+  }
+
+  public double getMajorRadius() {
+    return max(a, b);
+  }
+
+  public double getMinorRadius() {
+    return min(a, b);
   }
 
   /**
@@ -66,7 +101,7 @@ public class RotatedEllipse {
     startAngle = Functions.makeAnglePositive(toDegrees(-atan2(s.y - center.y, s.x - center.x)));
     midAngle = Functions.makeAnglePositive(toDegrees(-atan2(mid.y - center.y, mid.x - center.x)));
     endAngle = Functions.makeAnglePositive(toDegrees(-atan2(e.y - center.y, e.x - center.x)));
-    
+
     double midDecreasing = Functions.getNearestAnglePhase(startAngle, midAngle, -1);
     double midIncreasing = Functions.getNearestAnglePhase(startAngle, midAngle, 1);
     double endDecreasing = Functions.getNearestAnglePhase(midDecreasing, endAngle, -1);
@@ -145,5 +180,10 @@ public class RotatedEllipse {
 
   public Pt getCentroid() {
     return center;
+  }
+
+  public String getDebugString() {
+    return "RotatedEllipse[maj:" + num(getMajorRadius()) + ", min: " + num(getMinorRadius())
+        + ", rot: " + num(getRotation()) + ", center: " + num(center) + "]";
   }
 }

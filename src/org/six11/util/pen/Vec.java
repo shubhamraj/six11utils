@@ -109,4 +109,8 @@ public class Vec {
   public double dot(Vec other) {
     return getX() * other.getX() + getY() * other.getY();
   }
+  
+  public double cross(Vec other) {
+    return Functions.getCrossProduct(this, other);
+  }
 }

@@ -18,6 +18,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 import org.six11.util.Debug;
+import static org.six11.util.Debug.num;
 
 /**
  * Implementation of a bi-directional linked list for Pt objects, which are just Point2D.Double
@@ -29,9 +30,9 @@ public class Sequence implements Shape, Iterable<Pt> {
 
   private static int ID_COUNTER = 1;
   protected List<Pt> points;
-//  protected DrawFunction drawFunction;
+  //  protected DrawFunction drawFunction;
   protected Map<String, Object> attributes;
-  
+
   protected int id;
 
   /**
@@ -43,39 +44,46 @@ public class Sequence implements Shape, Iterable<Pt> {
   public Sequence() {
     this(++ID_COUNTER);
   }
-  
-  public Sequence (int id) {
+
+  public Sequence(int id) {
     this.id = id;
     points = new ArrayList<Pt>();
     closedRegion = false;
     attributes = new HashMap<String, Object>();
     ID_COUNTER = Math.max(ID_COUNTER, id);
   }
+  
+  public Sequence(List<Pt> data) {
+    this();
+    for (Pt pt : data) {
+      add(pt);
+    }
+  }
 
   public int getId() {
     return id;
   }
-  
+
   public int getNamedPointIndex(String key) {
     return (Integer) getAttribute(key);
   }
-  
+
   public void setNamedPoint(String key, Pt pt) {
     setAttribute(key, indexOf(pt));
   }
-  
+
   public void clearNamedPoint(String key) {
     setAttribute(key, null);
   }
-  
+
   public Set<String> getAttributeNames() {
     return attributes.keySet();
   }
-  
+
   public boolean hasAttribute(String key) {
     return attributes.get(key) != null;
   }
-  
+
   public Object getAttribute(String key) {
     return attributes.get(key);
   }
@@ -117,9 +125,9 @@ public class Sequence implements Shape, Iterable<Pt> {
     this.closedRegion = closedRegion;
   }
 
-//  public void setDrawFunction(DrawFunction df) {
-//    this.drawFunction = df;
-//  }
+  //  public void setDrawFunction(DrawFunction df) {
+  //    this.drawFunction = df;
+  //  }
 
   public Sequence copy() {
     Sequence ret = new Sequence();
@@ -177,9 +185,11 @@ public class Sequence implements Shape, Iterable<Pt> {
     int incr = (dir > 0 ? 1 : -1);
     Pt prev = null;
     Pt ret = null;
-    for (int i = beginIdx; i >= 0 && i <= size(); i += incr) {
+    for (int i = beginIdx; i >= 0 && i < size(); i += incr) {
       if (prev != null) {
         double chunkDist = getPathLength(Math.min(i, beginIdx), Math.max(i, beginIdx));
+        bug("From " + beginIdx + " to " + i + ": " + num(chunkDist) + " of "
+            + num(curvilinearDistance) + ". Too far? " + (chunkDist > curvilinearDistance));
         if (chunkDist > curvilinearDistance) {
           // now we know that we've gone prevDist units to prev, and it it is a little too far when
           // going to the current point at i, so simply interpolate the difference.
@@ -191,6 +201,8 @@ public class Sequence implements Shape, Iterable<Pt> {
       }
       prev = get(i);
     }
+    //    bug("getInterpolatedPoint(" + beginIdx + ", " + num(curvilinearDistance) + ", " + dir
+    //        + ") returns " + num(ret));
     return ret;
   }
 
@@ -241,16 +253,35 @@ public class Sequence implements Shape, Iterable<Pt> {
    * indices, assuming straight lines between each pair of successive points.
    */
   public double getPathLength(int idxStartInclusive, int idxEndInclusive) {
-    double ret = 0.0;
-    Pt prev = null;
-    for (int i = idxStartInclusive; i <= idxEndInclusive; i++) {
-      Pt pt = points.get(i);
-      if (prev != null) {
-        ret += prev.distance(pt);
+    double ret = 0;
+    if (hasAttribute("cachedPathLength")) {
+      bug("Using cached");
+      for (int i = idxStartInclusive; i < idxEndInclusive; i++) {
+        ret += get(i).getDouble("cachedDist");
       }
-      prev = pt;
+    } else {
+      ret = Functions.getPathLength(points, idxStartInclusive, idxEndInclusive);
     }
     return ret;
+  }
+
+  /**
+   * Calculates the distance between each point <code>i</code> and the next <code>i+1</code> and
+   * stores it in a <code>double</code> attribute keyed off the string "cachedDist" in point
+   * <code>i</code>. Call this once and subsequent calls to getPathLength(int, int) will be more
+   * efficient because it only needs to add these values. The last point's value is set to zero.
+   */
+  public void createPathLengthCache() {
+    int n = size();
+    String k = "cachedDist";
+    for (int i = 0; i < n - 1; i++) {
+      Pt here = get(i);
+      Pt there = get(i + 1);
+      double dist = here.distance(there);
+      here.setDouble(k, dist);
+    }
+    getLast().setDouble(k, 0);
+    setAttribute("cachedPathLength", true);
   }
 
   /**
@@ -623,9 +654,9 @@ public class Sequence implements Shape, Iterable<Pt> {
     return new FlatteningPathIterator(getPathIterator(affine), flatness);
   }
 
-//  public void draw(Graphics2D g) {
-//    drawFunction.draw(this, g);
-//  }
+  //  public void draw(Graphics2D g) {
+  //    drawFunction.draw(this, g);
+  //  }
 
   /**
    * A PathIterator for going through a Sequence as though it were a Shape. (in fact, this Sequence

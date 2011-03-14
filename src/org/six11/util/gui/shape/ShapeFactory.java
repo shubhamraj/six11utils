@@ -96,8 +96,6 @@ public abstract class ShapeFactory {
     public RotatedEllipseShape(RotatedEllipse ellie, int numSegments) {
       this.ellie = ellie;
       this.numSegments = numSegments;
-      bug("Made a rotated ellipse shape. is it a restricted portion of an arc? "
-          + ellie.isRestrictedArc());
     }
 
     public boolean contains(Point2D pt) {
@@ -157,6 +155,16 @@ public abstract class ShapeFactory {
           int segA = findIntersectionIndex(surface, region.get(0));
           int segB = findIntersectionIndex(surface, region.get(1));
           int segC = findIntersectionIndex(surface, region.get(2));
+          while (segA == segB || segA == segC || segB == segC) {
+            bug("Dang I have to ratchet up number of segments to " + (2 * numSegments)
+                + " and try again (" + segA + " " + segB + " " + segC + ")");
+            numSegments = numSegments * 2;
+            surface = getSegmentedSurface();
+            region = ellie.getRegionPoints();
+            segA = findIntersectionIndex(surface, region.get(0));
+            segB = findIntersectionIndex(surface, region.get(1));
+            segC = findIntersectionIndex(surface, region.get(2));
+          }
           List<Pt> arcPoints = new ArrayList<Pt>();
           if (segA > segB && segB > segC) { //        segA -> segC
             addRange(arcPoints, surface, segA, segC);
@@ -178,6 +186,9 @@ public abstract class ShapeFactory {
             }
           } else if (segA < segB && segB < segC) { // segA -> segC
             addRange(arcPoints, surface, segA, segC);
+          } else {
+            bug("Warning: couldn't figure out the order of intersections. segA, segB, segC: "
+                + segA + ", " + segB + ", " + segC);
           }
           path = makeLinePath(arcPoints, false);
           bb = new BoundingBox(arcPoints);
@@ -185,7 +196,16 @@ public abstract class ShapeFactory {
           path = makeLinePath(surface, true);
           bb = new BoundingBox(surface);
         }
-        bounds = bb.getRectangle().getBounds();
+        if (bb.isValid()) {
+          bounds = bb.getRectangle().getBounds();
+        } else {
+          Debug.stacktrace("Bounding box is invalid.", 8);
+          bug("Is this a restricted ellipse? " + ellie.isRestrictedArc());
+          if (ellie.isRestrictedArc()) {
+            bug("Region points: " + Debug.num(ellie.getRegionPoints(), " "));
+
+          }
+        }
       }
 
       return path.getPathIterator(at);
