@@ -1,7 +1,9 @@
 package org.six11.util.tmp;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import static java.lang.Math.sqrt;
 
 import org.six11.util.Debug;
@@ -13,39 +15,85 @@ import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.RotatedEllipse;
 import org.six11.util.pen.Sequence;
-//import static org.six11.util.Debug.num;
+
+// import static org.six11.util.Debug.num;
 
 public class Ant {
 
-  Sequence patchSeq;
-  int lineEnd;
-  int ellipseEnd;
-  RotatedEllipse bestEllipse;
-  RotatedEllipse[] ellipses;
+  public enum SegType {
+    Line, EllipticalArc, None
+  }
+
+  // vars used by outside
+  private SortedSet<AntSegment> segments;
+
+  // vars used in various functions, not used by outside
+  private Sequence patchSeq;
+  private RotatedEllipse bestEllipse;
 
   public Ant(Sequence seq, int start, int end, double minPatchSize, double lineErrorThreshold,
       double ellipseErrorThreshold) {
-    double totalLength = seq.getPathLength(start, end);
-    if (totalLength < 80) {
-      // need more patches for short segments.
-      double numerator = (-4.0/80.0 * totalLength) + 4 + 1; // y = -4/80x + 80 + 1
-      minPatchSize = minPatchSize / numerator;
+    boolean done = false;
+    int segmentCounter = 0;
+    segments = new TreeSet<AntSegment>();
+    while (!done) {
+      double totalLength = seq.getPathLength(start, end);
+      if (totalLength < 80) {
+        // need more patches for short segments.
+        double numerator = (-4.0 / 80.0 * totalLength) + 4f + 1; // y = -4/80x + 80 + 1
+        minPatchSize = minPatchSize / numerator;
+      }
+      int numPatches = (int) Math.floor(totalLength / minPatchSize);
+      double patchLength = totalLength / (double) numPatches;
+      bug("Working patch: " + start + " to " + end + " in " + numPatches + " steps. patchLength "
+          + num(patchLength));
+      // make patch sequence
+      patchSeq = Functions.getCurvilinearNormalizedSequence(seq, start, end, patchLength);
+      int lineEnd = seekLine(lineErrorThreshold, 0);
+      int ellipseEnd = seekEllipse(ellipseErrorThreshold, 0);
+      int extent;
+      if (ellipseEnd > lineEnd) {
+        Pt pa = patchSeq.getFirst();
+        Pt pb = patchSeq.get(ellipseEnd);
+        segments.add(AntSegment.makeArcSegment(bestEllipse, pa, pb, segmentCounter));
+        extent = ellipseEnd;
+        bug("Segment: Arc!");
+      } else if (lineEnd > 0) {
+        Pt pa = patchSeq.getFirst();
+        Pt pb = patchSeq.get(lineEnd);
+        segments.add(AntSegment.makeLineSegment(pa, pb, segmentCounter));
+        extent = lineEnd;
+        bug("Segment: Line!");
+      } else {
+        extent = end;
+        bug("Segment: None! **");
+      }
+      
+      // Now determine if we should stop or not.
+      if (extent == (patchSeq.size() - 1)) { // found last index.
+        bug("Finished patch. Set done to true so we can bail.");
+        done = true;
+      } else {
+        bug("Not done yet. Extent: " + extent + ", patch size: " + patchSeq.size());
+        Sequence nextSeq = new Sequence();
+        for (int i = extent; i < patchSeq.size(); i++) {
+          nextSeq.add(patchSeq.get(i));
+        }
+        seq = nextSeq.getReverseSequence();
+        start = 0;
+        end = seq.size() - 1;
+        bug("Reversed sequence (" + seq.size() + " points, " + num(seq.length())
+            + " long). Updated start/end to " + start + ", " + end);
+      }
+      segmentCounter++;
     }
-    int numPatches = (int) Math.floor(totalLength / minPatchSize);
-    double patchLength = totalLength / (double) numPatches;
-    bug(start + " to " + end + " in " + numPatches + " steps. patchLength " + num(patchLength));
-    // make patch sequence
-    patchSeq = Functions.getCurvilinearNormalizedSequence(seq, start, end, patchLength);
-    lineEnd = seekLine(lineErrorThreshold, 0);
-    ellipseEnd = seekEllipse(ellipseErrorThreshold, 0);
   }
 
   private int seekEllipse(double ellipseErrorThreshold, int startIdx) {
-    bug("--------------------------(startIdx=" + startIdx + ")");
     int ret = -1;
     double bigT = ellipseErrorThreshold * 2;
     double[] ellipseError = new double[patchSeq.size()];
-    ellipses = new RotatedEllipse[patchSeq.size()];
+    RotatedEllipse[] ellipses = new RotatedEllipse[patchSeq.size()];
     int biggestIndexExamined = -1;
     if (patchSeq.size() - (startIdx + 4) >= 0) {
       for (int i = startIdx + 4; i < patchSeq.size(); i++) { // between startIdx (incl.) and i (excl.)
@@ -67,11 +115,9 @@ public class Ant {
               errorSum = errorSum + (error * error);
             }
             ellipseError[i] = sqrt(errorSum) / (i - 2);
-            //            System.out.println(i + "\t" + num(ellipseError[i]));
             ellipses[i] = ellie;
             ret = i;
             biggestIndexExamined = i;
-            bestEllipse = ellie;
             if (ellipseError[i] > bigT) {
               break;
             }
@@ -84,10 +130,6 @@ public class Ant {
           bug("Avoiding ellipse fit on colinear sequence from " + startIdx + " to " + i);
         }
       }
-      //      bug("Error array follows (biggestIndexExamined=" + biggestIndexExamined + "):");
-      //      for (int errorIdx = 0; errorIdx < ellipseError.length; errorIdx++) {
-      //        System.out.println(errorIdx + "\t" + num(ellipseError[errorIdx]));
-      //      }
       boolean found = false;
       for (int j = biggestIndexExamined; j > startIdx; j--) {
         if (j == biggestIndexExamined && ellipseError[j] < ellipseErrorThreshold) {
@@ -104,22 +146,19 @@ public class Ant {
           found = true;
         }
         if (found) {
-          //          ret = j + 1;
-          bestEllipse = ellipses[ret];
-          bug("woo! best ellipse is at index " + ret);
           break;
         } else {
           ret = j;
         }
       }
     }
-    if (ret > 0 && ellipses[ret] == null) {
+    if (ret >= 0 && ellipses[ret] == null) {
       ret = -1;
-    }
-    if (ret < 0) {
-      bug("Couldn't find a reasonable ellipse for this segment. Returning -1.");
+      bestEllipse = null;
+    } else if (ret < 0) {
+      bestEllipse = null;
     } else {
-      bug("Longest ellipse: " + startIdx + " to " + ret);
+      bestEllipse = ellipses[ret];
     }
     return ret;
   }
@@ -138,12 +177,7 @@ public class Ant {
         errorSum = errorSum + (error * error);
       }
       lineError[i] = sqrt(errorSum) / (i - 1);
-      // if we have too much error, we know the solution is somewhere behind us. Look backwards
-      // and pick the first local minimum you come to that is within the lineErrorThreshold.
       biggestIndexExamined = i; // set this in case the entire patchSeq is a straight line
-      //      if (lineError[i] > bigT) {
-      //        break;
-      //      }
     }
 
     boolean found = false;
@@ -152,29 +186,25 @@ public class Ant {
         ret = j;
         found = true;
       }
-
       if (!found && lineError[j] < (lineErrorThreshold / 2)) {
         ret = j;
         found = true;
       }
-
       if (!found && j < biggestIndexExamined
           && (lineError[j] < lineErrorThreshold && lineError[j] > lineError[j + 1])) {
         ret = j + 1;
         found = true;
       }
     }
-
-    for (int i = 0; i < lineError.length; i++) {
-      System.out.println(i + "\t" + num(lineError[i]) + (i == ret ? " *" : ""));
-    }
-
-    bug("Longest line: " + startIdx + " to " + ret);
     return ret;
   }
 
   public Sequence getPatchSeq() {
     return patchSeq;
+  }
+
+  public SortedSet<AntSegment> getSegments() {
+    return segments;
   }
 
   private static void bug(String what) {
