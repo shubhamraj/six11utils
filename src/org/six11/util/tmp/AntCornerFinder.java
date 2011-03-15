@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 
 import javax.swing.Action;
 import javax.swing.JComponent;
@@ -58,6 +59,7 @@ public class AntCornerFinder implements PenListener {
   private static final String DB_PATCH_DOT_LAYER = "2";
   private static final String DB_LINE_LAYER = "3";
   private static final String DB_ELLIPSE_LAYER = "4";
+  private static final String DB_BEST_SEGMENT_LAYER = "5";
 
   public static void main(String[] in) {
     Arguments args = new Arguments(in);
@@ -161,34 +163,40 @@ public class AntCornerFinder implements PenListener {
   }
 
   private void makeAnts() {
+    @SuppressWarnings("unchecked")
     List<Integer> junctions = (List<Integer>) currentSeq.getAttribute(SEGMENT_JUNCTIONS);
     for (int i = 0; i < junctions.size() - 1; i++) {
-      int a = junctions.get(i);
-      int b = junctions.get(i + 1);
-      Ant ant = new Ant(currentSeq, a, b, minSegmentPatchLength, lineErrorThreshold,
-          ellipseErrorThreshold);
-      DrawingBuffer db = layers.getLayer(DB_PATCH_DOT_LAYER);
-      DrawingBufferRoutines.dots(db, ant.getPatchSeq().getPoints(), 2.5, 0.5, Color.BLACK,
-          Color.WHITE);
-      db = layers.getLayer(DB_LINE_LAYER);
-      int lineEnd = ant.lineEnd;
-      if (lineEnd > 0) {
-        Color c = Color.GREEN;
-        DrawingBufferRoutines.line(db, new Line(ant.getPatchSeq().getFirst(), ant.getPatchSeq()
-            .get(lineEnd)), c, 3.0);
-      }
-      db = layers.getLayer(DB_ELLIPSE_LAYER);
-      int ellipseEnd = ant.ellipseEnd;
-      if (ellipseEnd > 0) {
-        RotatedEllipse ellie = ant.bestEllipse;
+      makeAnt(junctions, i);
+    }
+  }
+
+  private void makeAnt(List<Integer> junctions, int i) {
+    int a = junctions.get(i);
+    int b = junctions.get(i + 1);
+    Ant ant = new Ant(currentSeq, a, b, minSegmentPatchLength, lineErrorThreshold,
+        ellipseErrorThreshold);
+    drawAnt(ant);
+  }
+
+  private void drawAnt(Ant ant) {
+    DrawingBuffer db = layers.getLayer(DB_PATCH_DOT_LAYER);
+    DrawingBufferRoutines.dots(db, ant.getPatchSeq().getPoints(), 2.5, 0.5, Color.BLACK,
+        Color.WHITE);
+    SortedSet<AntSegment> segments = ant.getSegments();
+    db = layers.getLayer(DB_BEST_SEGMENT_LAYER);
+    Color m = Color.magenta.darker().darker();
+    for (AntSegment seg : segments) {
+      if (seg.getType() == Ant.SegType.Line) {
+        Line line = seg.getLine();
+        DrawingBufferRoutines.line(db, line, Color.GREEN.darker(), 3.0);
+      } else if (seg.getType() == Ant.SegType.EllipticalArc) {
+        RotatedEllipse ellie = seg.getEllipse();
         DrawingBufferRoutines.lines(db, ellie.getRestrictedArcPath(), Color.BLUE, 4.0);
-        bug("Fit ellipse to index " + ellipseEnd + ": " + ellie.getDebugString());
-        Color candidateColor = new Color(0.7f, 0.7f, 0.7f, 0.3f);
-        for (RotatedEllipse candidate : ant.ellipses) {
-          if (candidate != null) {
-            DrawingBufferRoutines.lines(db, candidate.getRestrictedArcPath(), candidateColor, 2.0);
-          }
-        }
+      }
+      
+      if (seg.getType() != Ant.SegType.None) {
+        DrawingBufferRoutines.cross(db, seg.getSegmentStartPoint(), 3, m);
+        DrawingBufferRoutines.cross(db, seg.getSegmentEndPoint(), 3, m);
       }
     }
   }

@@ -714,4 +714,12 @@ public class Sequence implements Shape, Iterable<Pt> {
   private static void bug(String what) {
     Debug.out("Sequence", what);
   }
+
+  public Sequence getReverseSequence() {
+    Sequence ret = new Sequence();
+    for (int i=points.size() - 1; i >= 0; i--){ 
+      ret.add(points.get(i));
+    }
+    return ret;
+  }
 }
