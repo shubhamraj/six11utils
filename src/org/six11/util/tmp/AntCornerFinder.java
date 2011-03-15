@@ -44,7 +44,7 @@ public class AntCornerFinder implements PenListener {
   // these are subject to zooming. e.g. if you zoom in by 2x, use windowSize/2, errorThresh/2, etc
   private double windowSize = 10;
   private double clusterDistanceThreshold = 6;
-  private double minSegmentPatchLength = 12;
+  private double minSegmentPatchLength = 12; // will be adjusted downward for short (<80px) segs.
   private double lineErrorThreshold = 1.5;
   private double ellipseErrorThreshold = 0.7;
   //
