@@ -13,6 +13,7 @@ import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.RotatedEllipse;
 import org.six11.util.pen.Sequence;
+//import static org.six11.util.Debug.num;
 
 public class Ant {
 
@@ -25,6 +26,11 @@ public class Ant {
   public Ant(Sequence seq, int start, int end, double minPatchSize, double lineErrorThreshold,
       double ellipseErrorThreshold) {
     double totalLength = seq.getPathLength(start, end);
+    if (totalLength < 80) {
+      // need more patches for short segments.
+      double numerator = (-4.0/80.0 * totalLength) + 4 + 1; // y = -4/80x + 80 + 1
+      minPatchSize = minPatchSize / numerator;
+    }
     int numPatches = (int) Math.floor(totalLength / minPatchSize);
     double patchLength = totalLength / (double) numPatches;
     bug(start + " to " + end + " in " + numPatches + " steps. patchLength " + num(patchLength));
@@ -78,17 +84,17 @@ public class Ant {
           bug("Avoiding ellipse fit on colinear sequence from " + startIdx + " to " + i);
         }
       }
-      bug("Error array follows (biggestIndexExamined=" + biggestIndexExamined + "):");
-      for (int errorIdx = 0; errorIdx < ellipseError.length; errorIdx++) {
-        System.out.println(errorIdx + "\t" + num(ellipseError[errorIdx]));
-      }
+      //      bug("Error array follows (biggestIndexExamined=" + biggestIndexExamined + "):");
+      //      for (int errorIdx = 0; errorIdx < ellipseError.length; errorIdx++) {
+      //        System.out.println(errorIdx + "\t" + num(ellipseError[errorIdx]));
+      //      }
       boolean found = false;
       for (int j = biggestIndexExamined; j > startIdx; j--) {
         if (j == biggestIndexExamined && ellipseError[j] < ellipseErrorThreshold) {
           ret = j;
           found = true;
         }
-        if (ellipseError[j] < (ellipseErrorThreshold / 2)) {
+        if (!found && ellipseError[j] < (ellipseErrorThreshold / 2)) {
           ret = j;
           found = true;
         }
@@ -120,8 +126,7 @@ public class Ant {
 
   private int seekLine(double lineErrorThreshold, int startIdx) {
     int ret = -1;
-    // use bigT to plow through areas that are slightly un-line-like.
-    double bigT = lineErrorThreshold * 2;
+    int biggestIndexExamined = -1;
     Pt startPt = patchSeq.get(startIdx);
     double[] lineError = new double[patchSeq.size()];
     for (int i = startIdx + 2; i < patchSeq.size(); i++) { // patch between startIdx and i
@@ -135,17 +140,35 @@ public class Ant {
       lineError[i] = sqrt(errorSum) / (i - 1);
       // if we have too much error, we know the solution is somewhere behind us. Look backwards
       // and pick the first local minimum you come to that is within the lineErrorThreshold.
-      ret = i; // set this in case the entire patchSeq is a straight line
-      if (lineError[i] > bigT) {
-        for (int j = i - 1; j > startIdx; j--) {
-          if (lineError[j] < lineErrorThreshold && lineError[j] > lineError[j + 1]) {
-            ret = j + 1;
-            break;
-          }
-        }
-        break;
+      biggestIndexExamined = i; // set this in case the entire patchSeq is a straight line
+      //      if (lineError[i] > bigT) {
+      //        break;
+      //      }
+    }
+
+    boolean found = false;
+    for (int j = biggestIndexExamined; j > startIdx; j--) {
+      if (j == biggestIndexExamined && lineError[j] < lineErrorThreshold) {
+        ret = j;
+        found = true;
+      }
+
+      if (!found && lineError[j] < (lineErrorThreshold / 2)) {
+        ret = j;
+        found = true;
+      }
+
+      if (!found && j < biggestIndexExamined
+          && (lineError[j] < lineErrorThreshold && lineError[j] > lineError[j + 1])) {
+        ret = j + 1;
+        found = true;
       }
     }
+
+    for (int i = 0; i < lineError.length; i++) {
+      System.out.println(i + "\t" + num(lineError[i]) + (i == ret ? " *" : ""));
+    }
+
     bug("Longest line: " + startIdx + " to " + ret);
     return ret;
   }
