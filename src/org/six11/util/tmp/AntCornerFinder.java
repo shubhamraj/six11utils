@@ -63,6 +63,7 @@ public class AntCornerFinder implements PenListener {
   private static final String DB_SEGMENT_DEBUG_LAYER = "4";
   private static final String DB_SEGMENT_FINAL_LAYER = "5";
   private static final String DB_OLD_INK_LAYER = "6";
+  private static final String DB_MERGE_LAYER = "7";
 
   public static void main(String[] in) {
     Arguments args = new Arguments(in);
@@ -190,11 +191,35 @@ public class AntCornerFinder implements PenListener {
     isolateCorners(seq);
     drawJunctions(seq);
     makeAnts(seq);
+    mergeSegments(seq);
     layers.repaint();
+  }
+
+  private void mergeSegments(Sequence seq) {
+    List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
+    List<AntSegment> allSegments = new ArrayList<AntSegment>();
+    for (Ant ant : ants) {
+      SortedSet<AntSegment> segments = ant.getSegments();
+      allSegments.addAll(segments);
+    }
+    float up = 0f;
+    float down = 1f;
+    float step = 1f / (float) allSegments.size();
+    DrawingBuffer db = layers.getLayer(DB_MERGE_LAYER);
+    for (AntSegment seg : allSegments) {
+      up = (float) Math.min(1.0, up + step);
+      down = (float) Math.max(0, down - step);
+      Color color = new Color(up, down, 0f);
+      bug("Drew segment to layer " + DB_MERGE_LAYER + " using up/down: " + num(up) + ", "
+          + num(down));
+      drawSegment(seg, db, color);
+    }
   }
 
   private void makeAnts(Sequence seq) {
     @SuppressWarnings("unchecked")
+    List<Ant> ants = new ArrayList<Ant>();
+    seq.setAttribute("ants", ants);
     List<Integer> junctions = (List<Integer>) seq.getAttribute(SEGMENT_JUNCTIONS);
     for (int i = 0; i < junctions.size() - 1; i++) {
       makeAnt(seq, junctions, i);
@@ -205,7 +230,19 @@ public class AntCornerFinder implements PenListener {
     int a = junctions.get(i);
     int b = junctions.get(i + 1);
     Ant ant = new Ant(seq, a, b, minSegmentPatchLength, lineErrorThreshold, ellipseErrorThreshold);
+    List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
+    ants.add(ant);
     drawAnt(ant);
+  }
+
+  private void drawSegment(AntSegment seg, DrawingBuffer db, Color color) {
+    if (seg.getType() == Ant.SegType.Line) {
+      Line line = seg.getLine();
+      DrawingBufferRoutines.line(db, line, color, 3.0);
+    } else if (seg.getType() == Ant.SegType.EllipticalArc) {
+      RotatedEllipse ellie = seg.getEllipse();
+      DrawingBufferRoutines.lines(db, ellie.getRestrictedArcPath(), color, 3.0);
+    }
   }
 
   private void drawAnt(Ant ant) {
@@ -215,23 +252,24 @@ public class AntCornerFinder implements PenListener {
     SortedSet<AntSegment> segments = ant.getSegments();
     db = layers.getLayer(DB_SEGMENT_DEBUG_LAYER);
     DrawingBuffer niceDb = layers.getLayer(DB_SEGMENT_FINAL_LAYER);
-    Color m = Color.magenta.darker().darker();
+
     Color black = Color.BLACK;
+    Color color;
     for (AntSegment seg : segments) {
       if (seg.getType() == Ant.SegType.Line) {
-        Line line = seg.getLine();
-        DrawingBufferRoutines.line(db, line, Color.GREEN.darker(), 3.0);
-        DrawingBufferRoutines.line(niceDb, line, black, 3.0);
+        color = Color.green.darker();
       } else if (seg.getType() == Ant.SegType.EllipticalArc) {
-        RotatedEllipse ellie = seg.getEllipse();
-        DrawingBufferRoutines.lines(db, ellie.getRestrictedArcPath(), Color.BLUE, 3.0);
-        DrawingBufferRoutines.lines(niceDb, ellie.getRestrictedArcPath(), black, 3.0);
+        color = Color.blue;
+      } else {
+        color = Color.BLACK;
       }
-
-      if (seg.getType() != Ant.SegType.None) {
-        DrawingBufferRoutines.cross(db, seg.getSegmentStartPoint(), 3, m);
-        DrawingBufferRoutines.cross(db, seg.getSegmentEndPoint(), 3, m);
-      }
+      drawSegment(seg, db, color);
+      drawSegment(seg, niceDb, black);
+      //    Color m = Color.magenta.darker().darker();
+      //      if (seg.getType() != Ant.SegType.None) {
+      //        DrawingBufferRoutines.cross(db, seg.getSegmentStartPoint(), 3, m);
+      //        DrawingBufferRoutines.cross(db, seg.getSegmentEndPoint(), 3, m);
+      //      }
     }
   }
 
@@ -264,7 +302,6 @@ public class AntCornerFinder implements PenListener {
         highCurvature.add(i);
       }
     }
-    //    drawCurvature(highCurvature);
     List<int[]> clusterBoundaries = new ArrayList<int[]>();
     int lastIdx = 0;
     double clusterSize = 0;
