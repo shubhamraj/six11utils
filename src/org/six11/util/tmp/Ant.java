@@ -45,8 +45,6 @@ public class Ant {
       }
       int numPatches = (int) Math.floor(totalLength / minPatchSize);
       double patchLength = totalLength / (double) numPatches;
-      bug("Working patch: " + start + " to " + end + " in " + numPatches + " steps. patchLength "
-          + num(patchLength));
       // make patch sequence
       patchSeq = Functions.getCurvilinearNormalizedSequence(seq, start, end, patchLength);
       int lineEnd = seekLine(lineErrorThreshold, 0);
@@ -57,24 +55,19 @@ public class Ant {
         Pt pb = patchSeq.get(ellipseEnd);
         segments.add(AntSegment.makeArcSegment(bestEllipse, pa, pb, segmentCounter));
         extent = ellipseEnd;
-        bug("Segment: Arc!");
       } else if (lineEnd > 0) {
         Pt pa = patchSeq.getFirst();
         Pt pb = patchSeq.get(lineEnd);
         segments.add(AntSegment.makeLineSegment(pa, pb, segmentCounter));
         extent = lineEnd;
-        bug("Segment: Line!");
       } else {
         extent = end;
-        bug("Segment: None! **");
       }
       
       // Now determine if we should stop or not.
       if (extent == (patchSeq.size() - 1)) { // found last index.
-        bug("Finished patch. Set done to true so we can bail.");
         done = true;
       } else {
-        bug("Not done yet. Extent: " + extent + ", patch size: " + patchSeq.size());
         Sequence nextSeq = new Sequence();
         for (int i = extent; i < patchSeq.size(); i++) {
           nextSeq.add(patchSeq.get(i));
@@ -82,8 +75,6 @@ public class Ant {
         seq = nextSeq.getReverseSequence();
         start = 0;
         end = seq.size() - 1;
-        bug("Reversed sequence (" + seq.size() + " points, " + num(seq.length())
-            + " long). Updated start/end to " + start + ", " + end);
       }
       segmentCounter++;
     }
@@ -207,6 +198,7 @@ public class Ant {
     return segments;
   }
 
+  
   private static void bug(String what) {
     Debug.out("Ant", what);
   }
