@@ -10,7 +10,6 @@ import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -86,7 +85,10 @@ public class DrawingBufferLayers extends JComponent {
     addMouseListener(mt);
     addMouseMotionListener(mt);
     penListeners = new ArrayList<PenListener>();
-
+  }
+  
+  public void clearScribble() {
+    currentScribble = null;
   }
 
   public void addPenListener(PenListener pl) {
@@ -100,7 +102,7 @@ public class DrawingBufferLayers extends JComponent {
     AffineTransform before = new AffineTransform(g.getTransform());
     drawBorderAndBackground(g);
     g.setTransform(before);
-    paintContent(g, false); // was TRUE. if the world starts burning down change this back
+    paintContent(g, true);
     g.setTransform(before);
   }
 
@@ -112,6 +114,10 @@ public class DrawingBufferLayers extends JComponent {
       } else if (buffer.isVisible()) {
         buffer.drawToGraphics(g);
       }
+//      if (buffer.hasHumanReadableName()) {
+//        bug(buffer.getHumanReadableName() + ": "
+//            + (buffer.isVisible() ? "visible" : "not visible **"));
+//      }
     }
     if (currentScribble != null) {
       g.setColor(DEFAULT_COLOR);
@@ -176,8 +182,12 @@ public class DrawingBufferLayers extends JComponent {
     Date now = new Date();
     SimpleDateFormat df = new SimpleDateFormat("MMMdd");
     String today = df.format(now);
+    File parentDir = new File("screenshots");
+    if (!parentDir.exists()) {
+      parentDir.mkdir();
+    }
     while (file == null || file.exists()) {
-      file = new File(today + "-" + fileCounter + ".pdf");
+      file = new File(parentDir, today + "-" + fileCounter + ".pdf");
       fileCounter++;
     }
 

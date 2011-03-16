@@ -42,7 +42,7 @@ public class DrawingBuffer {
   private boolean emptyOK;
   private String humanName;
   private int layer;
-  
+
   public static Graphics2D bogusGraphics;
   static {
     BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
@@ -76,15 +76,27 @@ public class DrawingBuffer {
     humanName = null;
     layer = 0;
   }
+
+  public void clear() {
+    this.img = new BufferedImage(defaultSize.width, defaultSize.height, BufferedImage.TYPE_INT_ARGB_PRE);
+    this.turtles = new ArrayList<TurtleOp>();
+    this.dirty = true;
+  }
   
+  public void copy(DrawingBuffer src) {
+    for (TurtleOp op : src.turtles) {
+      addOp(op);
+    }
+  }
+
   public int getLayer() {
     return layer;
   }
-  
+
   public void setLayer(int layer) {
     this.layer = layer;
   }
-  
+
   public static Comparator<DrawingBuffer> sortByLayer = new Comparator<DrawingBuffer>() {
     public int compare(DrawingBuffer a, DrawingBuffer b) {
       int ret = 0;
@@ -94,21 +106,21 @@ public class DrawingBuffer {
         ret = 1;
       }
       return ret;
-    }    
+    }
   };
 
   public boolean hasHumanReadableName() {
     return (humanName != null);
   }
-  
+
   public void setHumanReadableName(String name) {
     humanName = name;
   }
-  
+
   public String getHumanReadableName() {
     return humanName;
   }
-  
+
   public void setEmptyOK(boolean v) {
     this.emptyOK = v;
   }
@@ -123,9 +135,9 @@ public class DrawingBuffer {
    */
   public void setVisible(boolean v) {
     if (v != visible) {
-//      if (hasHumanReadableName()) {
-//        bug("Buffer '" + getHumanReadableName() + "' now visible: " + v);
-//      }
+      //      if (hasHumanReadableName()) {
+      //        bug("Buffer '" + getHumanReadableName() + "' now visible: " + v);
+      //      }
       visible = v;
       dirty = true;
     }
@@ -258,7 +270,8 @@ public class DrawingBuffer {
     }
     if (bb.isValid()) {
       g.translate(bb.getX(), bb.getY());
-      g.drawImage(getImage(), 0, 0, null);
+      //      g.drawImage(getImage(), 0, 0, null);
+      g.drawImage(getImage(), 1, 1, null);
     }
     g.setTransform(before);
   }
@@ -349,7 +362,7 @@ public class DrawingBuffer {
     String text;
     String bugString = "unknown";
     Font font;
-    
+
     public TurtleOp() {
       bugString = "nothing in particular";
     }
@@ -401,7 +414,7 @@ public class DrawingBuffer {
       this.font = f;
       bugString = "text: " + s;
     }
-    
+
     public String toString() {
       return bugString;
     }
@@ -533,7 +546,7 @@ public class DrawingBuffer {
       return change;
     }
 
-     @SuppressWarnings("unused")
+    @SuppressWarnings("unused")
     private static void bug(String what) {
       Debug.out("TurtleOp", what);
     }
@@ -689,7 +702,7 @@ public class DrawingBuffer {
       return pathIterator;
     }
   }
-  
+
   public static Rectangle2D getTextBounds(String text, Font font) {
     FontRenderContext frc = bogusGraphics.getFontRenderContext();
     TextLayout tl = new TextLayout(text, font, frc);

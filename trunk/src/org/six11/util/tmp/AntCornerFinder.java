@@ -54,12 +54,15 @@ public class AntCornerFinder implements PenListener {
 
   private Map<String, Action> actions;
   private static final String ACTION_PRINT = "print";
+  private static final String ACTION_GO = "go";
   private static final String DEBUG_LAYER_PREFIX = "Debug layer ";
   public static final String SEGMENT_JUNCTIONS = "junctions";
-  private static final String DB_PATCH_DOT_LAYER = "2";
-  private static final String DB_LINE_LAYER = "3";
-  private static final String DB_ELLIPSE_LAYER = "4";
-  private static final String DB_BEST_SEGMENT_LAYER = "5";
+  private static final String DB_RECENT_INK = "1";
+  private static final String DB_CORNER_LAYER = "2";
+  private static final String DB_PATCH_DOT_LAYER = "3";
+  private static final String DB_SEGMENT_DEBUG_LAYER = "4";
+  private static final String DB_SEGMENT_FINAL_LAYER = "5";
+  private static final String DB_OLD_INK_LAYER = "6";
 
   public static void main(String[] in) {
     Arguments args = new Arguments(in);
@@ -69,16 +72,22 @@ public class AntCornerFinder implements PenListener {
     AntCornerFinder acf = new AntCornerFinder();
   }
 
-  Sequence currentSeq;
-  DrawingBufferLayers layers;
+  private Sequence currentSeq;
+  private DrawingBufferLayers layers;
+  private int goCount = 0; // how many times we've pressed go since last pen input
+  private List<Sequence> unprocessedSequences;
+  private List<Sequence> processedSequences;
 
   public AntCornerFinder() {
     ApplicationFrame af = new ApplicationFrame("Ant Corner Finder");
     layers = new DrawingBufferLayers();
     layers.addPenListener(this);
     for (int i = 1; i < 10; i++) {
-      layers.createLayer("" + i, DEBUG_LAYER_PREFIX + i, i + 10, false);
+      boolean layerVisible = (i == 1); // only layer 1 is initially visible
+      layers.createLayer("" + i, DEBUG_LAYER_PREFIX + i, i + 10, layerVisible);
     }
+    unprocessedSequences = new ArrayList<Sequence>();
+    processedSequences = new ArrayList<Sequence>();
     currentSeq = new Sequence();
     createActions(af.getRootPane());
     af.setLayout(new BorderLayout());
@@ -111,14 +120,37 @@ public class AntCornerFinder implements PenListener {
         print();
       }
     });
+    actions.put(ACTION_GO, new NamedAction("Go", KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0)) {
+      public void activate() {
+        go();
+      }
+    });
 
-    // 3. For those actions with keyboard accellerators, register them to the root pane.
+    // 3. For those actions with keyboard accelerators, register them to the root pane.
     for (Action action : actions.values()) {
       KeyStroke s = (KeyStroke) action.getValue(Action.ACCELERATOR_KEY);
       if (s != null) {
         rp.registerKeyboardAction(action, s, JComponent.WHEN_IN_FOCUSED_WINDOW);
       }
     }
+  }
+
+  private void go() {
+    if (goCount == 0) {
+      for (Sequence seq : unprocessedSequences) {
+        findCorners(seq);
+        DrawingBuffer recentInkLayer = layers.getLayer(DB_RECENT_INK);
+        DrawingBuffer oldInkLayer = layers.getLayer(DB_OLD_INK_LAYER);
+        oldInkLayer.copy(recentInkLayer);
+        recentInkLayer.clear();
+        bug("Copied recent ink (" + DB_RECENT_INK + ") into old ink (" + DB_OLD_INK_LAYER + ").");
+        layers.clearScribble();
+      }
+      processedSequences.addAll(unprocessedSequences);
+    } else {
+      bug("Go again!");
+    }
+    goCount++;
   }
 
   private void print() {
@@ -133,6 +165,7 @@ public class AntCornerFinder implements PenListener {
   }
 
   public void handlePenEvent(PenEvent ev) {
+    goCount = 0;
     switch (ev.getType()) {
       case PenEvent.TYPE_DRAG:
         if (currentSeq.size() == 0) {
@@ -145,36 +178,33 @@ public class AntCornerFinder implements PenListener {
         }
         break;
       case PenEvent.TYPE_IDLE:
-        findCorners();
+        unprocessedSequences.add(currentSeq);
+        drawCurrentSequence(currentSeq); // first draw currentSeq to the raw ink layer
         currentSeq = new Sequence();
         break;
     }
   }
 
-  private void findCorners() {
-    drawCurrentSequence(); // first draw currentSeq to the raw ink layer
-    assignCurvature(); // put a 'curvature' double attribute at every point
-    isolateCorners();
-    drawJunctions();
-    makeAnts();
-    // other stuff goes here.
-
-    //    drawCorners();
+  private void findCorners(Sequence seq) {
+    assignCurvature(seq); // put a 'curvature' double attribute at every point
+    isolateCorners(seq);
+    drawJunctions(seq);
+    makeAnts(seq);
+    layers.repaint();
   }
 
-  private void makeAnts() {
+  private void makeAnts(Sequence seq) {
     @SuppressWarnings("unchecked")
-    List<Integer> junctions = (List<Integer>) currentSeq.getAttribute(SEGMENT_JUNCTIONS);
+    List<Integer> junctions = (List<Integer>) seq.getAttribute(SEGMENT_JUNCTIONS);
     for (int i = 0; i < junctions.size() - 1; i++) {
-      makeAnt(junctions, i);
+      makeAnt(seq, junctions, i);
     }
   }
 
-  private void makeAnt(List<Integer> junctions, int i) {
+  private void makeAnt(Sequence seq, List<Integer> junctions, int i) {
     int a = junctions.get(i);
     int b = junctions.get(i + 1);
-    Ant ant = new Ant(currentSeq, a, b, minSegmentPatchLength, lineErrorThreshold,
-        ellipseErrorThreshold);
+    Ant ant = new Ant(seq, a, b, minSegmentPatchLength, lineErrorThreshold, ellipseErrorThreshold);
     drawAnt(ant);
   }
 
@@ -183,17 +213,21 @@ public class AntCornerFinder implements PenListener {
     DrawingBufferRoutines.dots(db, ant.getPatchSeq().getPoints(), 2.5, 0.5, Color.BLACK,
         Color.WHITE);
     SortedSet<AntSegment> segments = ant.getSegments();
-    db = layers.getLayer(DB_BEST_SEGMENT_LAYER);
+    db = layers.getLayer(DB_SEGMENT_DEBUG_LAYER);
+    DrawingBuffer niceDb = layers.getLayer(DB_SEGMENT_FINAL_LAYER);
     Color m = Color.magenta.darker().darker();
+    Color black = Color.BLACK;
     for (AntSegment seg : segments) {
       if (seg.getType() == Ant.SegType.Line) {
         Line line = seg.getLine();
         DrawingBufferRoutines.line(db, line, Color.GREEN.darker(), 3.0);
+        DrawingBufferRoutines.line(niceDb, line, black, 3.0);
       } else if (seg.getType() == Ant.SegType.EllipticalArc) {
         RotatedEllipse ellie = seg.getEllipse();
-        DrawingBufferRoutines.lines(db, ellie.getRestrictedArcPath(), Color.BLUE, 4.0);
+        DrawingBufferRoutines.lines(db, ellie.getRestrictedArcPath(), Color.BLUE, 3.0);
+        DrawingBufferRoutines.lines(niceDb, ellie.getRestrictedArcPath(), black, 3.0);
       }
-      
+
       if (seg.getType() != Ant.SegType.None) {
         DrawingBufferRoutines.cross(db, seg.getSegmentStartPoint(), 3, m);
         DrawingBufferRoutines.cross(db, seg.getSegmentEndPoint(), 3, m);
@@ -201,39 +235,32 @@ public class AntCornerFinder implements PenListener {
     }
   }
 
-  private void drawJunctions() {
-    DrawingBuffer db = layers.getLayer("1");
-    List<Integer> junctions = (List<Integer>) currentSeq.getAttribute(SEGMENT_JUNCTIONS);
-    for (int idx : junctions) {
-      Pt pt = currentSeq.get(idx);
-      Color c = new Color(1f, 0, 0);
-      DrawingBufferRoutines.dot(db, pt, 4.0, 1.0, c, c);
+  private void drawJunctions(Sequence seq) {
+    DrawingBuffer db = layers.getLayer(DB_CORNER_LAYER);
+    List<Integer> junctions = (List<Integer>) seq.getAttribute(SEGMENT_JUNCTIONS);
+    if (junctions == null) {
+      bug("No junctions for sequence " + seq.getId());
+    } else {
+      for (int idx : junctions) {
+        Pt pt = seq.get(idx);
+        Color c = new Color(1f, 0, 0);
+        DrawingBufferRoutines.dot(db, pt, 4.0, 1.0, c, c);
+      }
+      layers.repaint();
     }
-    layers.repaint();
   }
 
-  //  private void drawCurvature(List<Integer> highCurvature) {
-  //    DrawingBuffer db = layers.getLayer("1");
-  //    for (int idx : highCurvature) {
-  //      Pt pt = currentSeq.get(idx);
-  //      double howRed = 1 - abs(currentSeq.get(idx).getDouble("curvature")) / (2.0 * Math.PI);
-  //      Color c = new Color((float) howRed, 0, 0);
-  //      DrawingBufferRoutines.dot(db, pt, 4.0, 1.0, c, c);
-  //    }
-  //    layers.repaint();
-  //  }
-
   /**
-   * Sets the currentSeq's SEGMENT_JUNCTIONS attribute, which is a List<Integer> indicating where
+   * Sets the sequence's SEGMENT_JUNCTIONS attribute, which is a List<Integer> indicating where
    * segment boundaries are. It includes the endpoints of the stroke.
    */
-  private void isolateCorners() {
+  private void isolateCorners(Sequence seq) {
     // there will be clusters of high curvature. Pick the one in the curvilinear-wise middle.
-    int n = currentSeq.size();
+    int n = seq.size();
     double highCurvatureThreshold = toRadians(highCurvatureThresholdDegrees);
     List<Integer> highCurvature = new ArrayList<Integer>();
     for (int i = 0; i < n; i++) {
-      if (abs(currentSeq.get(i).getDouble("curvature")) > highCurvatureThreshold) {
+      if (abs(seq.get(i).getDouble("curvature")) > highCurvatureThreshold) {
         highCurvature.add(i);
       }
     }
@@ -243,7 +270,7 @@ public class AntCornerFinder implements PenListener {
     double clusterSize = 0;
     for (int idx : highCurvature) {
       if (clusterBoundaries.size() > 0) {
-        double dist = currentSeq.getPathLength(lastIdx, idx);
+        double dist = seq.getPathLength(lastIdx, idx);
         if (dist > clusterDistanceThreshold) {
           // we left the last cluster. finish the last one off and begin a new one.
           int[] bounds = clusterBoundaries.get(clusterBoundaries.size() - 1);
@@ -269,12 +296,12 @@ public class AntCornerFinder implements PenListener {
     }
     // get the index of the point that is closest to the middle.
     for (int[] bounds : clusterBoundaries) {
-      clusterSize = currentSeq.getPathLength(bounds[0], bounds[2]);
+      clusterSize = seq.getPathLength(bounds[0], bounds[2]);
       double dist = 0;
       double target = clusterSize / 2;
       Pt prev = null;
       for (int idx = bounds[0]; idx <= bounds[2]; idx++) {
-        Pt here = currentSeq.get(idx);
+        Pt here = seq.get(idx);
         if (prev != null) {
           double thisDist = here.distance(prev);
           if (dist + thisDist > target) {
@@ -299,18 +326,18 @@ public class AntCornerFinder implements PenListener {
       int[] bounds = clusterBoundaries.get(i);
       junctions.add(bounds[1]);
     }
-    junctions.add(currentSeq.size() - 1);
-    currentSeq.setAttribute(SEGMENT_JUNCTIONS, junctions);
+    junctions.add(seq.size() - 1);
+    seq.setAttribute(SEGMENT_JUNCTIONS, junctions);
   }
 
-  private void assignCurvature() {
-    int n = currentSeq.size();
+  private void assignCurvature(Sequence seq) {
+    int n = seq.size();
     Pt[][] windows = new Pt[n][2];
     for (int i = 0; i < n; i++) {
-      windows[i] = Functions.getCurvilinearWindow(currentSeq, i, windowSize);
+      windows[i] = Functions.getCurvilinearWindow(seq, i, windowSize);
     }
     for (int i = 0; i < n; i++) {
-      Pt me = currentSeq.get(i);
+      Pt me = seq.get(i);
       if (windows[i][0] != null && windows[i][1] != null) {
         Vec a = new Vec(windows[i][0], me);
         Vec b = new Vec(me, windows[i][1]);
@@ -322,9 +349,9 @@ public class AntCornerFinder implements PenListener {
     }
   }
 
-  private void drawCurrentSequence() {
-    DrawingBuffer raw = layers.getLayer("raw ink");
-    DrawingBufferRoutines.drawShape(raw, currentSeq.getPoints(), DrawingBufferLayers.DEFAULT_COLOR,
+  private void drawCurrentSequence(Sequence seq) {
+    DrawingBuffer raw = layers.getLayer(DB_RECENT_INK);
+    DrawingBufferRoutines.drawShape(raw, seq.getPoints(), DrawingBufferLayers.DEFAULT_COLOR,
         DrawingBufferLayers.DEFAULT_THICKNESS);
     layers.repaint();
   }
