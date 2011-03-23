@@ -48,6 +48,7 @@ public class AntCornerFinder implements PenListener {
   private double minSegmentPatchLength = 12; // will be adjusted downward for short (<80px) segs.
   private double lineErrorThreshold = 1.5;
   private double ellipseErrorThreshold = 0.7;
+  private double mergeImprovementMult = 1.2;
   //
   // end param block
   //  ------------------------------------------------------------------------ - - - -
@@ -219,29 +220,60 @@ public class AntCornerFinder implements PenListener {
   }
 
   private boolean mergeSegments(List<AntSegment> segments) {
-    bug("-------------- merging....");
+    boolean ret = false;
     int n = segments.size();
     double[] thisErr = new double[n];
-    double[] prevErr = new double[n];
-    double[] nextErr = new double[n];
-    AntSegment[] prevMerge = new AntSegment[n];
-    AntSegment[] nextMerge = new AntSegment[n];
-    for (int i = 0; i < n; i++) {
-      AntSegment seg = segments.get(i);
-      Sequence seq = seg.getRawInk();
-      if (seg.getType() == Ant.SegType.Line) {
-        thisErr[i]  = Functions.getLineError(seg.getLine(), seg.getRawInkSubsequence());
-        bug("Error of line segment " + i + " is " + num(thisErr[i]));
+    double[] mergedErr = new double[n - 1];
+    AntSegment[] merged = new AntSegment[n - 1];
+    for (int i = 0; i < (n - 1); i++) {
+      AntSegment here = segments.get(i);
+      AntSegment there = segments.get(i + 1);
+      Sequence seq = here.getRawInk();
+      if (here.getType() == Ant.SegType.Line) {
+        thisErr[i] = Functions.getLineError(here.getLine(), here.getRawInkSubsequence());
       } else {
-        thisErr[i] = Functions.getEllipseError(seg.getEllipse(), seg.getRawInkSubsequence());
-        bug("Error of ellipse arc " + i + " is " + num(thisErr[i]));
+        thisErr[i] = Functions.getEllipseError(here.getEllipse(), here.getRawInkSubsequence());
       }
-//      int startIdx = Functions.seekByTime(seg.getEarlyPoint(), seq, 0);
-//      int endIdx = Functions.seekByTime(seg.getEarlyPoint(), seq, startIdx + 1);
-       
+      int startIdx = Functions.seekByTime(here.getEarlyPoint(), seq, 0);
+      int endIdx = Functions.seekByTime(there.getLatePoint(), seq, startIdx + 1);
+      Sequence mergeSeq = seq.getSubSequence(startIdx, endIdx + 1);
+      Line mergeLine = new Line(seq.get(startIdx), seq.get(endIdx));
+      RotatedEllipse mergeEllipse = Functions.createEllipse(mergeSeq.getPoints());
+      double mergeLineError = Functions.getLineError(mergeLine, mergeSeq);
+      double mergeEllipseError = mergeEllipse == null ? Double.MAX_VALUE : Functions
+          .getEllipseError(mergeEllipse, mergeSeq);
+      if (mergeLineError <= mergeEllipseError) {
+        merged[i] = AntSegment.makeLineSegment(seq.get(startIdx), seq.get(endIdx), seq);
+        mergedErr[i] = mergeLineError;
+      } else {
+        merged[i] = AntSegment
+            .makeArcSegment(mergeEllipse, seq.get(startIdx), seq.get(endIdx), seq);
+        mergedErr[i] = mergeEllipseError;
+      }
     }
-    bug("-------------- done merging");
-    return false;
+    // pick best candidate for mergine
+    int bestIndex = -1; // which one to replace
+    double bestMergeError = Double.MAX_VALUE;
+    for (int i = 0; i < (n - 1); i++) {
+      if (mergedErr[i] < bestMergeError) {
+        double nomergeError = thisErr[i] + thisErr[i + 1];
+        if (nomergeError * mergeImprovementMult < mergedErr[i]) {
+          bestIndex = i;
+          bestMergeError = mergedErr[i];
+        }
+      }
+    }
+    // if bestIndex is non-negative, swap in the new segment, update the input list, set ret=true
+    if (bestIndex >= 0) {
+      int before = segments.size();
+      segments.remove(bestIndex);
+      segments.remove(bestIndex);
+      segments.add(bestIndex, merged[bestIndex]);
+      ret = true;
+      bug("Merged at index " + bestIndex + ". There were " + before + " segments, now there are "
+          + segments.size());
+    }
+    return ret;
   }
 
   private void makeAnts(Sequence seq) {

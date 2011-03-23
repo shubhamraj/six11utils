@@ -156,8 +156,16 @@ public abstract class ShapeFactory {
           int segB = findIntersectionIndex(surface, region.get(1));
           int segC = findIntersectionIndex(surface, region.get(2));
           while (segA == segB || segA == segC || segB == segC) {
-            bug("Dang I have to ratchet up number of segments to " + (2 * numSegments)
+            bug(">> Dang I have to ratchet up number of segments to " + (2 * numSegments)
                 + " and try again (" + segA + " " + segB + " " + segC + ")");
+            bug(">> region points are as follows: " + num(region.get(0)) + ", "
+                + num(region.get(1)) + ", " + num(region.get(2)));
+            bug(">> Distance between region points: " + num(region.get(0).distance(region.get(1)))
+                + ", " + num(region.get(1).distance(region.get(2))) + ", "
+                + num(region.get(2).distance(region.get(0))));
+            bug(">> length between points 0 and 1 on most recent surface segmentation: "
+                + num(surface.get(0).distance(surface.get(1))));
+            bug(">> Ellipse info: " + ellie.getDebugString());
             numSegments = numSegments * 2;
             surface = getSegmentedSurface();
             region = ellie.getRegionPoints();
