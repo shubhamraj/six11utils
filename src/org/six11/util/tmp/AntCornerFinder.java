@@ -144,7 +144,6 @@ public class AntCornerFinder implements PenListener {
         DrawingBuffer oldInkLayer = layers.getLayer(DB_OLD_INK_LAYER);
         oldInkLayer.copy(recentInkLayer);
         recentInkLayer.clear();
-        bug("Copied recent ink (" + DB_RECENT_INK + ") into old ink (" + DB_OLD_INK_LAYER + ").");
         layers.clearScribble();
       }
       processedSequences.addAll(unprocessedSequences);
@@ -202,33 +201,47 @@ public class AntCornerFinder implements PenListener {
       SortedSet<AntSegment> segments = ant.getSegments();
       allSegments.addAll(segments);
     }
+    while (true) {
+      if (mergeSegments(allSegments) == false) {
+        break;
+      }
+    }
     float up = 0f;
     float down = 1f;
     float step = 1f / (float) allSegments.size();
     DrawingBuffer db = layers.getLayer(DB_MERGE_LAYER);
-    long prevTime = 0;
-    long delta = 0;
-    int counter = 0;
     for (AntSegment seg : allSegments) {
-      long thisTime = seg.getSegmentStartPoint().getTime();
-      delta = thisTime - prevTime;
-      if (delta < 0) {
-        bug("Warning: segments out of order: " + delta + ", " + counter);
-      }
-      prevTime = thisTime;
-      thisTime = seg.getSegmentEndPoint().getTime();
-      delta = thisTime - prevTime;
-      if (delta < 0) {
-        bug("Warning: segments out of order: " + delta + ", " + counter);
-      }
       up = (float) Math.min(1.0, up + step);
       down = (float) Math.max(0, down - step);
       Color color = new Color(up, down, 0f);
-      bug("Drew segment to layer " + DB_MERGE_LAYER + " using up/down: " + num(up) + ", "
-          + num(down));
       drawSegment(seg, db, color);
-      counter++;
     }
+  }
+
+  private boolean mergeSegments(List<AntSegment> segments) {
+    bug("-------------- merging....");
+    int n = segments.size();
+    double[] thisErr = new double[n];
+    double[] prevErr = new double[n];
+    double[] nextErr = new double[n];
+    AntSegment[] prevMerge = new AntSegment[n];
+    AntSegment[] nextMerge = new AntSegment[n];
+    for (int i = 0; i < n; i++) {
+      AntSegment seg = segments.get(i);
+      Sequence seq = seg.getRawInk();
+      if (seg.getType() == Ant.SegType.Line) {
+        thisErr[i]  = Functions.getLineError(seg.getLine(), seg.getRawInkSubsequence());
+        bug("Error of line segment " + i + " is " + num(thisErr[i]));
+      } else {
+        thisErr[i] = Functions.getEllipseError(seg.getEllipse(), seg.getRawInkSubsequence());
+        bug("Error of ellipse arc " + i + " is " + num(thisErr[i]));
+      }
+//      int startIdx = Functions.seekByTime(seg.getEarlyPoint(), seq, 0);
+//      int endIdx = Functions.seekByTime(seg.getEarlyPoint(), seq, startIdx + 1);
+       
+    }
+    bug("-------------- done merging");
+    return false;
   }
 
   private void makeAnts(Sequence seq) {

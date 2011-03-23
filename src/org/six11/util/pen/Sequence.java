@@ -59,6 +59,38 @@ public class Sequence implements Shape, Iterable<Pt> {
       add(pt);
     }
   }
+  
+  /**
+   * Returns true if the sequence is nondecreasing in time.
+   */
+  public boolean isForward() {
+    boolean ret = true;
+    long prev = 0;
+    for (Pt pt : this) {
+      if (pt.getTime() < prev) {
+        ret = false;
+        break;
+      }
+      prev = pt.getTime();
+    }
+    return ret;
+  }
+
+  /**
+   * Returns true if the sequence is nonincreasing in time.
+   */
+  public boolean isBackward() {
+    boolean ret = true;
+    long prev = Long.MAX_VALUE;
+    for (Pt pt : this) {
+      if (pt.getTime() > prev) {
+        ret = false;
+        break;
+      }
+      prev = pt.getTime();
+    }
+    return ret;
+  }
 
   public int getId() {
     return id;
