@@ -206,13 +206,28 @@ public class AntCornerFinder implements PenListener {
     float down = 1f;
     float step = 1f / (float) allSegments.size();
     DrawingBuffer db = layers.getLayer(DB_MERGE_LAYER);
+    long prevTime = 0;
+    long delta = 0;
+    int counter = 0;
     for (AntSegment seg : allSegments) {
+      long thisTime = seg.getSegmentStartPoint().getTime();
+      delta = thisTime - prevTime;
+      if (delta < 0) {
+        bug("Warning: segments out of order: " + delta + ", " + counter);
+      }
+      prevTime = thisTime;
+      thisTime = seg.getSegmentEndPoint().getTime();
+      delta = thisTime - prevTime;
+      if (delta < 0) {
+        bug("Warning: segments out of order: " + delta + ", " + counter);
+      }
       up = (float) Math.min(1.0, up + step);
       down = (float) Math.max(0, down - step);
       Color color = new Color(up, down, 0f);
       bug("Drew segment to layer " + DB_MERGE_LAYER + " using up/down: " + num(up) + ", "
           + num(down));
       drawSegment(seg, db, color);
+      counter++;
     }
   }
 
