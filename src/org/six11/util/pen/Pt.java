@@ -41,7 +41,7 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public Pt(Vec direction) {
     this(direction.getX(), direction.getY());
   }
-  
+
   public Pt(Point2D pt) {
     this(pt.getX(), pt.getY());
   }
@@ -66,7 +66,7 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
   public Pt(Point2D source, long time) {
     this(source.getX(), source.getY(), time);
   }
-  
+
   public Pt(Point src) {
     this(src.x, src.y);
   }
@@ -196,9 +196,13 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
     return hash;
   }
 
+  public Pt copyXYT() {
+    return new Pt(getX(), getY(), getTime());
+  }
+
   @SuppressWarnings("unchecked")
   public Pt copy() {
-    Pt twin = new Pt(getX(), getY(), getTime());
+    Pt twin = copyXYT();
     if (attribs == null) {
       twin.attribs = null;
     } else {
