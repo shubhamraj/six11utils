@@ -772,7 +772,7 @@ public abstract class Functions {
       double threshold) {
     Sequence ret = new Sequence();
     double patchDist = 0;
-    Pt prev = seq.get(start).copy();
+    Pt prev = seq.get(start).copyXYT();
     ret.add(prev);
     int seqPointer = start + 1;
     Pt next = seq.get(seqPointer);
@@ -784,7 +784,8 @@ public abstract class Functions {
         double frac = remainder / dist;
         double dx = frac * (next.getX() - prev.getX());
         double dy = frac * (next.getY() - prev.getY());
-        Pt patchPt = new Pt(prev.getX() + dx, prev.getY() + dy);
+        long dt = (long) (frac * (double) (next.getTime() - prev.getTime()));
+        Pt patchPt = new Pt(prev.getX() + dx, prev.getY() + dy, prev.getTime() + dt);
         ret.add(patchPt);
         prev = patchPt;
         patchDist = 0;
@@ -800,7 +801,7 @@ public abstract class Functions {
         }
       }
     }
-    ret.add(seq.get(end).copy());
+    ret.add(seq.get(end).copyXYT());
     return ret;
   }
 
