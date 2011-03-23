@@ -10,12 +10,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
+import static java.lang.Math.*;
 import static java.lang.Math.acos;
 import static java.lang.Math.abs;
 
 import org.six11.util.Debug;
 import static org.six11.util.Debug.num;
 import org.six11.util.data.Statistics;
+import org.six11.util.math.EllipseFit;
 
 /**
  * This is a whole slew of static methods that operate on points, lines, vectors, and point
@@ -29,34 +31,6 @@ public abstract class Functions {
   public static final int PARTITION_LEFT = -1;
   public static final int PARTITION_ON_BORDER = 0;
   public static final int PARTITION_RIGHT = 1;
-
-  public static void main(String[] args) throws IOException {
-
-  }
-
-  //  public static void printMatrix(int n1, int n2, double[][] m, int d, int w) {
-  //    NumberFormat nf = NumberFormat.getNumberInstance();
-  //    FieldPosition fp = new FieldPosition(NumberFormat.INTEGER_FIELD);
-  //    nf.setMaximumIntegerDigits(d);
-  //    nf.setMaximumFractionDigits(d);
-  //    nf.setMinimumFractionDigits(d);
-  //    for (int i = 0; i < n1; i++) {
-  //      for (int j = 0; j < n2; j++) {
-  //        String valString = spaces(w - fp.getEndIndex())
-  //            + nf.format(m[i][j], new StringBuffer(), fp).toString();
-  //        System.out.print(valString);
-  //      }
-  //      System.out.println();
-  //    }
-  //    System.out.println();
-  //  }
-  //
-  //  public static String spaces(int n) {
-  //    StringBuilder sb = new StringBuilder(n);
-  //    for (int i = 0; i < n; i++)
-  //      sb.append(' ');
-  //    return sb.toString();
-  //  }
 
   /**
    * Given a source sequence, find the locations along the path defined by a destination sequence
@@ -1617,12 +1591,76 @@ public abstract class Functions {
         ret = true;
         for (Pt pt : somePoints) {
           double dist = getDistanceBetweenPointAndLine(pt, line);
-//          bug(num(dist));
           if (abs(dist) > EQ_TOL) {
             ret = false;
             break;
           }
         }
+      }
+    }
+    return ret;
+  }
+
+  public static double getLineError(Line line, Sequence sequence) {
+    double errorSum = 0;
+    for (int i = 0; i < sequence.size(); i++) {
+      Pt pt = sequence.get(i);
+      double error = Functions.getDistanceBetweenPointAndLine(pt, line);
+      errorSum = errorSum + (error * error);
+    }
+    return sqrt(errorSum) / (sequence.size() - 2);
+  }
+
+  /**
+   * Make a rotated ellipse given some points. If the points are colinear, or if the resulting
+   * ellipse has a minor radius less than 2, this returns null. Be careful to check the return
+   * value.
+   */
+  public static RotatedEllipse createEllipse(List<Pt> somePoints) {
+    Sequence somePointsSeq = new Sequence(somePoints);
+    RotatedEllipse ret = null;
+    if (!Functions.arePointsColinear(somePoints)) {
+      Pt midPt = somePointsSeq.get(somePointsSeq.size() / 2);
+      RotatedEllipse ellie = EllipseFit.ellipseFit(somePoints);
+      // don't want to work with very skinny ellipses.
+      if (ellie.getMinorRadius() > 2) {
+        ellie.setArcRegion(somePointsSeq.getFirst(), midPt, somePointsSeq.getLast());
+        ret = ellie;
+      }
+    }
+    return ret;
+  }
+
+  /**
+   * Calculate the error between the ellipse surface and the target sequence. The ellipse is assumed
+   * to be a restricted arc.
+   */
+  public static double getEllipseError(RotatedEllipse ellie, Sequence target) {
+    int numPoints = (int) Math.ceil(target.length());
+    double ret = 0;
+    List<Pt> ellipseSurface = ellie.getRestrictedArcPath(numPoints);
+    double errorSum = 0;
+    for (Pt pt : target) {
+      Pt nearest = Functions.getNearestPointOnSequence(pt, ellipseSurface);
+      double error = nearest.distance(pt);
+      errorSum = errorSum + (error * error);
+    }
+    ret = (sqrt(errorSum) / (target.size() - 2));
+    return ret;
+  }
+
+  /**
+   * Find the first index of the point (beginning at the given start location) in the sequence whose
+   * timestamp is equal to or greater than the timestamp of the input point. If all the points in
+   * the sequence are younger than the input, this returns -1.
+   */
+  public static int seekByTime(Pt targetTime, Sequence seq, int idxStart) {
+    int ret = -1;
+    long target = targetTime.getTime();
+    for (int i = idxStart; i < seq.size(); i++) {
+      if (seq.get(i).getTime() >= target) {
+        ret = i;
+        break;
       }
     }
     return ret;
