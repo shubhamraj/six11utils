@@ -52,6 +52,7 @@ public class AntCornerFinder implements PenListener {
   private double lineErrorThreshold = 1.5;
   private double ellipseErrorThreshold = 0.7;
   private double mergeImprovementMult = 1.2;
+  private double maxSplineDeviationThreshold = 14;
   //
   // end param block
   //  ------------------------------------------------------------------------ - - - -
@@ -208,6 +209,7 @@ public class AntCornerFinder implements PenListener {
       SortedSet<AntSegment> segments = ant.getSegments();
       allSegments.addAll(segments);
     }
+//    List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute("segments");
     DrawingBuffer db = layers.getLayer(DB_SEGMENT_FINAL_LAYER);
     for (AntSegment seg : allSegments) {
       drawSegment(seg, db, Color.BLACK);
@@ -221,6 +223,7 @@ public class AntCornerFinder implements PenListener {
       SortedSet<AntSegment> segments = ant.getSegments();
       allSegments.addAll(segments);
     }
+//    List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute("segments");
     List<Integer> junctions = (List<Integer>) seq.getAttribute(SEGMENT_JUNCTIONS);
     List<AntSegment> arcs = new ArrayList<AntSegment>();
     int junctionCounter = 1;
@@ -230,7 +233,6 @@ public class AntCornerFinder implements PenListener {
         arcs.add(seg);
       }
       if (seg.getLatePoint().isSameLocation(seq.get(junctions.get(junctionCounter)))) {
-        bug("There are " + arcs.size() + " arcs in this splotch.");
         if (arcs.size() > 0) {
           List<Pt> spline = splinifySegments(arcs);
           for (AntSegment arcSeg : arcs) {
@@ -240,7 +242,6 @@ public class AntCornerFinder implements PenListener {
         arcs.clear();
         junctionCounter++;
       }
-      bug("Segment " + seg.getType() + ": length " + seg.getRawInkSubsequence().length());
     }
   }
 
@@ -251,14 +252,15 @@ public class AntCornerFinder implements PenListener {
     int earlyIdx = Functions.seekByTime(early, raw, 0);
     int lateIdx = Functions.seekByTime(late, raw, earlyIdx);
     Sequence rawRegion = raw.getSubSequence(earlyIdx, lateIdx + 1);
-    int numPatches = (int) Math.floor(rawRegion.length() / minSegmentPatchLength * 4);
+    int numPatches = (int) Math.floor(rawRegion.length() / minSegmentPatchLength);
     double patchLength = rawRegion.length() / (double) numPatches;
     Sequence patchRegion = Functions.getCurvilinearNormalizedSequence(rawRegion, 0,
         rawRegion.size() - 1, patchLength);
-    List<Pt> spline = CardinalSpline.interpolateCardinal(patchRegion.getPoints(), 1.0, 4.0);
-    //    CardinalSpline.trim(spline, 1.0);
-    bug("Made a spline for " + arcs.size() + " arc segments that contains " + patchRegion.size()
-        + " control points and " + spline.size() + " interpolated points");
+    List<Pt> ctrl = CardinalSpline.subdivideControlPoints(patchRegion.getPoints(),
+        maxSplineDeviationThreshold);
+    List<Pt> spline = CardinalSpline.interpolateCardinal(ctrl, 1.0, 4.0);
+    DrawingBuffer db = layers.getLayer(DB_CORNER_LAYER);
+    DrawingBufferRoutines.dots(db, ctrl, 4.0, 0.6, Color.BLACK, new Color(1.0f, 0.4f, 0.8f));
     return spline;
   }
 
@@ -274,16 +276,9 @@ public class AntCornerFinder implements PenListener {
         break;
       }
     }
-    //    float up = 0f;
-    //    float down = 1f;
-    //    float step = 1f / (float) allSegments.size();
-    //    DrawingBuffer db = layers.getLayer(DB_MERGE_LAYER);
-    //    for (AntSegment seg : allSegments) {
-    //      up = (float) Math.min(1.0, up + step);
-    //      down = (float) Math.max(0, down - step);
-    //      Color color = new Color(up, down, 0f);
-    //      drawSegment(seg, db, color);
-    //    }
+    // clear the 'ants' attrib because it is no longer a thing
+//    seq.setAttribute("ants", null);
+    seq.setAttribute("segments", allSegments);
   }
 
   private boolean mergeSegments(List<AntSegment> segments) {
@@ -332,13 +327,10 @@ public class AntCornerFinder implements PenListener {
     }
     // if bestIndex is non-negative, swap in the new segment, update the input list, set ret=true
     if (bestIndex >= 0) {
-      int before = segments.size();
       segments.remove(bestIndex);
-      segments.remove(bestIndex);
+      segments.remove(bestIndex); // ^^ clean up ants
       segments.add(bestIndex, merged[bestIndex]);
       ret = true;
-      bug("Merged at index " + bestIndex + ". There were " + before + " segments, now there are "
-          + segments.size());
     }
     return ret;
   }
@@ -363,22 +355,20 @@ public class AntCornerFinder implements PenListener {
   }
 
   private void drawSegment(AntSegment seg, DrawingBuffer db, Color color) {
-    bug("Drawing segment? Anything?");
     Set<List<Pt>> splinesDrawn = new HashSet<List<Pt>>();
     if (seg.getType() == Ant.SegType.Line) {
       Line line = seg.getLine();
-      DrawingBufferRoutines.line(db, line, color, 3.0);
+//      DrawingBufferRoutines.line(db, line, color, 3.0);
+      DrawingBufferRoutines.line(db, line, Color.green.darker(), 3.0);
     } else if (seg.getType() == Ant.SegType.EllipticalArc) {
-      bug("Drawing arc. Does it have a spline? " + seg.hasSpline() + " ..." + seg.getSpline());
       if (seg.hasSpline()) {
-        bug("Splines! Whee!");
-        if (splinesDrawn.contains(seg.getSpline())) {
-          bug("Already drew that one.");
-        } else {
-          DrawingBufferRoutines.lines(db, seg.getSpline(), color, 3.0);
+        if (!splinesDrawn.contains(seg.getSpline())) {
+//          DrawingBufferRoutines.lines(db, seg.getSpline(), color, 3.0);
+          DrawingBufferRoutines.lines(db, seg.getSpline(), Color.blue.darker(), 3.0);
           splinesDrawn.add(seg.getSpline());
         }
       } else {
+        bug("Drawing ellipse, but I shouldn't because I should use the spline. Fail.");
         RotatedEllipse ellie = seg.getEllipse();
         DrawingBufferRoutines.lines(db, ellie.getRestrictedArcPath(), color, 3.0);
       }

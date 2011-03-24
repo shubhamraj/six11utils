@@ -114,7 +114,6 @@ public class AntSegment implements Comparable<AntSegment> {
   }
 
   public void setSpline(List<Pt> spline) {
-    bug("Setting spline!");
     this.spline = spline;
   }
   
