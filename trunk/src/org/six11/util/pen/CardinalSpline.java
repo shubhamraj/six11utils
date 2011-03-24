@@ -3,7 +3,6 @@ package org.six11.util.pen;
 import static java.lang.Math.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -12,7 +11,7 @@ import org.six11.util.Debug;
 import static org.six11.util.Debug.num;
 
 /**
- * 
+ * Makes a cardninal spline based on some control points and a tightness parameter. 
  * 
  * @author Gabe Johnson <johnsogg@cmu.edu>
  */
@@ -135,12 +134,14 @@ public class CardinalSpline {
     int numSteps = Math.max(1, (int) (a.distance(b) / maxPointDist));
     Pt prev = null;
     Pt pt = null;
+    double timeDiff = b.getTime() - a.getTime();
     if (m0 != null && m1 != null) {
       for (int i = 0; i <= numSteps; i++) {
         double t = (double) i / numSteps;
         double x = a.x * h1(t) + m0.getX() * h2(t) + b.x * h3(t) + m1.getX() * h4(t);
         double y = a.y * h1(t) + m0.getY() * h2(t) + b.y * h3(t) + m1.getY() * h4(t);
-        pt = new Pt(x, y);
+        long time = a.getTime() + (long) (t * timeDiff);
+        pt = new Pt(x, y, time);
         ret.add(pt);
         if (prev != null && prev.distance(pt) > maxPointDist) {
           i = 0;

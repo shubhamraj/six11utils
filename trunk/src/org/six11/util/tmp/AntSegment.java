@@ -18,12 +18,16 @@ public class AntSegment implements Comparable<AntSegment> {
   private Pt endPt;
   private Sequence rawInk;
   private List<Pt> spline; // set from outside
+  private int earlyPointIndex;
+  private int latePointIndex;
 
   private AntSegment(Ant.SegType type, Pt startPoint, Pt endPoint, Sequence rawInk) {
     this.type = type;
     this.startPt = startPoint;
     this.endPt = endPoint;
     this.rawInk = rawInk;
+    this.earlyPointIndex = -1;
+    this.latePointIndex = -1;
     if (rawInk.isForward() == false) {
       bug("Sorry, the rawInk argument is not forward. Committing ritualistic suicide (stacktrace first)");
       new RuntimeException("foo").printStackTrace();
@@ -97,8 +101,24 @@ public class AntSegment implements Comparable<AntSegment> {
     return (startPt.getTime() < endPt.getTime() ? startPt : endPt);
   }
 
+  public int getEarlyPointIndex() {
+    if (earlyPointIndex < 0) {
+      Pt early = getEarlyPoint();
+      earlyPointIndex = Functions.seekByTime(early, rawInk, 0);
+    }
+    return earlyPointIndex;
+  }
+
   public Pt getLatePoint() {
     return (startPt.getTime() < endPt.getTime() ? endPt : startPt);
+  }
+
+  public int getLatePointIndex() {
+    if (latePointIndex < 0) {
+      Pt late = getLatePoint();
+      latePointIndex = Functions.seekByTime(late, rawInk, getEarlyPointIndex());
+    }
+    return latePointIndex;
   }
 
   public int compareTo(AntSegment other) {
@@ -116,11 +136,11 @@ public class AntSegment implements Comparable<AntSegment> {
   public void setSpline(List<Pt> spline) {
     this.spline = spline;
   }
-  
+
   public boolean hasSpline() {
     return (spline != null);
   }
-  
+
   public List<Pt> getSpline() {
     return spline;
   }
