@@ -883,6 +883,30 @@ public abstract class Functions {
     return nearest;
   }
 
+  /**
+   * Return the index of the point in the input list that is in the range [startIncl, endIncl] that
+   * is farthest from the given line. If there is a tie the first index is returned.
+   * 
+   * @param points The source point list.
+   * @param startIncl The start index, inclusive.
+   * @param endIncl The end index, inclusive.
+   * @param line A line to measure distance.
+   * @return the index of the farthest point from the line.
+   */
+  public static int getIndexFarthestFromLine(List<Pt> points, int startIncl, int endIncl, Line line) {
+    int ret = -1;
+    double maxDist = -1;
+    for (int i=startIncl; i <= endIncl; i++) {
+      Pt here = points.get(i);
+      double dist = getDistanceBetweenPointAndLine(here, line);
+      if (dist > maxDist) {
+        ret = i;
+        maxDist = dist;
+      }
+    }
+    return ret;
+  }
+
   public static double getMinDistBetween(List<Pt> listA, List<Pt> listB) {
     double ret = Double.MAX_VALUE;
     for (Pt ptA : listA) {

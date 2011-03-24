@@ -3,7 +3,10 @@ package org.six11.util.pen;
 import static java.lang.Math.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.six11.util.Debug;
 import static org.six11.util.Debug.num;
@@ -182,6 +185,34 @@ public class CardinalSpline {
    */
   private static double h4(double t) {
     return (pow(t, 3) - pow(t, 2));
+  }
+
+  /**
+   * Creates a set of control points. The input list is recursively chopped up into linear segments
+   * until all points are less than 'maxPointDist' units from a line.
+   */
+  public static List<Pt> subdivideControlPoints(List<Pt> points, double maxPointDist) {
+    SortedSet<Integer> indices = new TreeSet<Integer>();
+    indices.add(0);
+    indices.add(points.size() - 1);
+    subdiv(points, 0, points.size() - 1, maxPointDist, indices);
+    List<Pt> ret = new ArrayList<Pt>();
+    for (int idx : indices) {
+      ret.add(points.get(idx));
+    }
+    return ret;
+  }
+
+  private static void subdiv(List<Pt> points, int a, int b, double maxPointDist,
+      SortedSet<Integer> indices) {
+    Line line = new Line(points.get(a), points.get(b));
+    int where = Functions.getIndexFarthestFromLine(points, a, b, line);
+    double howFar = Functions.getDistanceBetweenPointAndLine(points.get(where), line);
+    if (howFar > maxPointDist) {
+      indices.add(where);
+      subdiv(points, a, where, maxPointDist, indices);
+      subdiv(points, where, b, maxPointDist, indices);
+    }
   }
 
 }
