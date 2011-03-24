@@ -203,30 +203,37 @@ public class AntCornerFinder implements PenListener {
   }
 
   private void drawSegments(Sequence seq) {
-    List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
-    List<AntSegment> allSegments = new ArrayList<AntSegment>();
-    for (Ant ant : ants) {
-      SortedSet<AntSegment> segments = ant.getSegments();
-      allSegments.addAll(segments);
-    }
-//    List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute("segments");
+    //    List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
+    //    List<AntSegment> allSegments = new ArrayList<AntSegment>();
+    //    for (Ant ant : ants) {
+    //      SortedSet<AntSegment> segments = ant.getSegments();
+    //      allSegments.addAll(segments);
+    //    }
+    List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute("segments");
     DrawingBuffer db = layers.getLayer(DB_SEGMENT_FINAL_LAYER);
+    tmpBugSegments("Drawing segments", allSegments);
     for (AntSegment seg : allSegments) {
       drawSegment(seg, db, Color.BLACK);
     }
   }
 
   private void splinify(Sequence seq) {
-    List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
-    List<AntSegment> allSegments = new ArrayList<AntSegment>();
-    for (Ant ant : ants) {
-      SortedSet<AntSegment> segments = ant.getSegments();
-      allSegments.addAll(segments);
-    }
-//    List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute("segments");
+    //    List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
+    //    List<AntSegment> allSegments = new ArrayList<AntSegment>();
+    //    for (Ant ant : ants) {
+    //      SortedSet<AntSegment> segments = ant.getSegments();
+    //      allSegments.addAll(segments);
+    //    }
+    List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute("segments");
     List<Integer> junctions = (List<Integer>) seq.getAttribute(SEGMENT_JUNCTIONS);
     List<AntSegment> arcs = new ArrayList<AntSegment>();
     int junctionCounter = 1;
+    bug("Splinify: Corners: " + num(junctions, " "));
+    StringBuilder startStopStr = new StringBuilder();
+    for (AntSegment seg : allSegments) {
+      startStopStr.append(seg.getEarlyPointIndex() + "--" + seg.getLatePointIndex() + " ");
+    }
+    bug("Splinify: Segments: " + startStopStr);
     for (int i = 0; i < allSegments.size(); i++) {
       AntSegment seg = allSegments.get(i);
       if (seg.getType() == Ant.SegType.EllipticalArc) {
@@ -236,6 +243,8 @@ public class AntCornerFinder implements PenListener {
         if (arcs.size() > 0) {
           List<Pt> spline = splinifySegments(arcs);
           for (AntSegment arcSeg : arcs) {
+            bug("Made spline for arc segment " + arcSeg.getEarlyPointIndex() + "--"
+                + arcSeg.getLatePointIndex());
             arcSeg.setSpline(spline);
           }
         }
@@ -243,6 +252,7 @@ public class AntCornerFinder implements PenListener {
         junctionCounter++;
       }
     }
+    tmpBugSegments("End of splinify", allSegments);
   }
 
   private List<Pt> splinifySegments(List<AntSegment> arcs) {
@@ -271,14 +281,27 @@ public class AntCornerFinder implements PenListener {
       SortedSet<AntSegment> segments = ant.getSegments();
       allSegments.addAll(segments);
     }
+    int before = allSegments.size();
     while (true) {
       if (mergeSegments(allSegments) == false) {
         break;
       }
     }
+    bug("Merged sequence " + seq.getId() + ". Before: " + before + " segs, after: "
+        + allSegments.size() + " segs.");
     // clear the 'ants' attrib because it is no longer a thing
-//    seq.setAttribute("ants", null);
+    //    seq.setAttribute("ants", null);
+    tmpBugSegments("setting sequence segs in mergeSegments(Sequence)...", allSegments);
     seq.setAttribute("segments", allSegments);
+  }
+
+  private void tmpBugSegments(String msg, List<AntSegment> segs) {
+    bug(msg);
+    for (AntSegment seg : segs) {
+      bug("  seq " + seg.getRawInk().getId() + " " + seg.getEarlyPointIndex() + "--"
+          + seg.getLatePointIndex() + "\t" + seg.getType() + " "
+          + (seg.hasSpline() ? "[splinified]" : ""));
+    }
   }
 
   private boolean mergeSegments(List<AntSegment> segments) {
@@ -313,20 +336,37 @@ public class AntCornerFinder implements PenListener {
         mergedErr[i] = mergeEllipseError;
       }
     }
-    // pick best candidate for mergine
+    // pick best candidate for merging
     int bestIndex = -1; // which one to replace
     double bestMergeError = Double.MAX_VALUE;
+    String mergeString = "";
     for (int i = 0; i < (n - 1); i++) {
       if (mergedErr[i] < bestMergeError) {
         double nomergeError = thisErr[i] + thisErr[i + 1];
-        if (nomergeError * mergeImprovementMult < mergedErr[i]) {
+        if (nomergeError * mergeImprovementMult > mergedErr[i]) { // merging is a sloppy improvement
           bestIndex = i;
           bestMergeError = mergedErr[i];
+          mergeString = "merge at index " + i + " with nomerge/merge errors: " + num(nomergeError)
+              + " vs. " + num(bestMergeError);
         }
       }
     }
     // if bestIndex is non-negative, swap in the new segment, update the input list, set ret=true
     if (bestIndex >= 0) {
+      bug(mergeString);
+      Sequence whichSequence = segments.get(bestIndex).getRawInk();
+      List<Integer> junctions = (List<Integer>) whichSequence.getAttribute(SEGMENT_JUNCTIONS);
+      AntSegment mondoSeg = merged[bestIndex];
+      int newSegStart = mondoSeg.getEarlyPointIndex();
+      int newSegEnd = mondoSeg.getLatePointIndex();
+      List<Integer> doomed = new ArrayList<Integer>();
+      for (int junction : junctions) {
+        if (junction > newSegStart && junction < newSegEnd) {
+          doomed.add(junction);
+          bug("Will remove junction " + junction + " from list of corners");
+        }
+      }
+      junctions.removeAll(doomed);
       segments.remove(bestIndex);
       segments.remove(bestIndex); // ^^ clean up ants
       segments.add(bestIndex, merged[bestIndex]);
@@ -358,14 +398,18 @@ public class AntCornerFinder implements PenListener {
     Set<List<Pt>> splinesDrawn = new HashSet<List<Pt>>();
     if (seg.getType() == Ant.SegType.Line) {
       Line line = seg.getLine();
-//      DrawingBufferRoutines.line(db, line, color, 3.0);
+      //      DrawingBufferRoutines.line(db, line, color, 3.0);
       DrawingBufferRoutines.line(db, line, Color.green.darker(), 3.0);
     } else if (seg.getType() == Ant.SegType.EllipticalArc) {
       if (seg.hasSpline()) {
         if (!splinesDrawn.contains(seg.getSpline())) {
-//          DrawingBufferRoutines.lines(db, seg.getSpline(), color, 3.0);
+          //          DrawingBufferRoutines.lines(db, seg.getSpline(), color, 3.0);
           DrawingBufferRoutines.lines(db, seg.getSpline(), Color.blue.darker(), 3.0);
           splinesDrawn.add(seg.getSpline());
+          int idxStart = Functions.seekByTime(seg.getSpline().get(0), seg.getRawInk(), 0);
+          int idxEnd = Functions.seekByTime(seg.getSpline().get(seg.getSpline().size() - 1),
+              seg.getRawInk(), idxStart);
+          bug("Drew spline from indices " + idxStart + "--" + idxEnd);
         }
       } else {
         bug("Drawing ellipse, but I shouldn't because I should use the spline. Fail.");
