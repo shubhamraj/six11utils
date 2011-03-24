@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.six11.util.Debug;
+import static org.six11.util.Debug.num;
 
 /**
  * 
@@ -24,10 +25,31 @@ public class CardinalSpline {
     List<Pt> interpolatedPoints = new ArrayList<Pt>();
     calculateCardinalSlopeVectors(controlPoints, tightness);
     for (int i = 0; i < controlPoints.size() - 1; i++) {
-      interpolatedPoints.addAll(interpolateCardinalPatch(controlPoints.get(i), controlPoints
-          .get(i + 1), maxPointDist));
+      interpolatedPoints.addAll(interpolateCardinalPatch(controlPoints.get(i),
+          controlPoints.get(i + 1), maxPointDist));
     }
     return interpolatedPoints;
+  }
+
+  /**
+   * Sometimes this algorithm makes a spline that has a lot of points that are very close together
+   * in a not-very-helpful way. Use the 'trim' function to remove points that are too close. It will
+   * retain the first and last points, and get rid of any points that are within 'tooClose' of the
+   * previous. It edits the 'spline' input structure directly.
+   */
+  public static void trim(List<Pt> spline, double tooClose) {
+    List<Pt> doomed = new ArrayList<Pt>();
+    Pt prev = spline.get(0);
+    for (int i = 1; i < spline.size() - 1; i++) {
+      Pt pt = spline.get(i);
+      bug("dist: " + num(prev.distance(pt)));
+      if (prev.distance(pt) < tooClose) {
+        doomed.add(pt);
+      } else {
+        prev = pt;
+      }
+    }
+    spline.removeAll(doomed);
   }
 
   /**
