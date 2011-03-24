@@ -5,8 +5,10 @@ import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 
 import javax.swing.Action;
@@ -20,6 +22,7 @@ import org.six11.util.args.Arguments;
 import org.six11.util.gui.ApplicationFrame;
 import org.six11.util.gui.BoundingBox;
 import org.six11.util.lev.NamedAction;
+import org.six11.util.pen.CardinalSpline;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
@@ -148,6 +151,7 @@ public class AntCornerFinder implements PenListener {
         layers.clearScribble();
       }
       processedSequences.addAll(unprocessedSequences);
+      unprocessedSequences.clear(); // TODO: May want to keep batches together for later go() calls
     } else {
       bug("Go again!");
     }
@@ -192,7 +196,70 @@ public class AntCornerFinder implements PenListener {
     drawJunctions(seq);
     makeAnts(seq);
     mergeSegments(seq);
+    splinify(seq);
+    drawSegments(seq);
     layers.repaint();
+  }
+
+  private void drawSegments(Sequence seq) {
+    List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
+    List<AntSegment> allSegments = new ArrayList<AntSegment>();
+    for (Ant ant : ants) {
+      SortedSet<AntSegment> segments = ant.getSegments();
+      allSegments.addAll(segments);
+    }
+    DrawingBuffer db = layers.getLayer(DB_SEGMENT_FINAL_LAYER);
+    for (AntSegment seg : allSegments) {
+      drawSegment(seg, db, Color.BLACK);
+    }
+  }
+
+  private void splinify(Sequence seq) {
+    List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
+    List<AntSegment> allSegments = new ArrayList<AntSegment>();
+    for (Ant ant : ants) {
+      SortedSet<AntSegment> segments = ant.getSegments();
+      allSegments.addAll(segments);
+    }
+    List<Integer> junctions = (List<Integer>) seq.getAttribute(SEGMENT_JUNCTIONS);
+    List<AntSegment> arcs = new ArrayList<AntSegment>();
+    int junctionCounter = 1;
+    for (int i = 0; i < allSegments.size(); i++) {
+      AntSegment seg = allSegments.get(i);
+      if (seg.getType() == Ant.SegType.EllipticalArc) {
+        arcs.add(seg);
+      }
+      if (seg.getLatePoint().isSameLocation(seq.get(junctions.get(junctionCounter)))) {
+        bug("There are " + arcs.size() + " arcs in this splotch.");
+        if (arcs.size() > 0) {
+          List<Pt> spline = splinifySegments(arcs);
+          for (AntSegment arcSeg : arcs) {
+            arcSeg.setSpline(spline);
+          }
+        }
+        arcs.clear();
+        junctionCounter++;
+      }
+      bug("Segment " + seg.getType() + ": length " + seg.getRawInkSubsequence().length());
+    }
+  }
+
+  private List<Pt> splinifySegments(List<AntSegment> arcs) {
+    Sequence raw = arcs.get(0).getRawInk();
+    Pt early = arcs.get(0).getEarlyPoint();
+    Pt late = arcs.get(arcs.size() - 1).getLatePoint();
+    int earlyIdx = Functions.seekByTime(early, raw, 0);
+    int lateIdx = Functions.seekByTime(late, raw, earlyIdx);
+    Sequence rawRegion = raw.getSubSequence(earlyIdx, lateIdx + 1);
+    int numPatches = (int) Math.floor(rawRegion.length() / minSegmentPatchLength * 4);
+    double patchLength = rawRegion.length() / (double) numPatches;
+    Sequence patchRegion = Functions.getCurvilinearNormalizedSequence(rawRegion, 0,
+        rawRegion.size() - 1, patchLength);
+    List<Pt> spline = CardinalSpline.interpolateCardinal(patchRegion.getPoints(), 1.0, 4.0);
+    //    CardinalSpline.trim(spline, 1.0);
+    bug("Made a spline for " + arcs.size() + " arc segments that contains " + patchRegion.size()
+        + " control points and " + spline.size() + " interpolated points");
+    return spline;
   }
 
   private void mergeSegments(Sequence seq) {
@@ -207,16 +274,16 @@ public class AntCornerFinder implements PenListener {
         break;
       }
     }
-    float up = 0f;
-    float down = 1f;
-    float step = 1f / (float) allSegments.size();
-    DrawingBuffer db = layers.getLayer(DB_MERGE_LAYER);
-    for (AntSegment seg : allSegments) {
-      up = (float) Math.min(1.0, up + step);
-      down = (float) Math.max(0, down - step);
-      Color color = new Color(up, down, 0f);
-      drawSegment(seg, db, color);
-    }
+    //    float up = 0f;
+    //    float down = 1f;
+    //    float step = 1f / (float) allSegments.size();
+    //    DrawingBuffer db = layers.getLayer(DB_MERGE_LAYER);
+    //    for (AntSegment seg : allSegments) {
+    //      up = (float) Math.min(1.0, up + step);
+    //      down = (float) Math.max(0, down - step);
+    //      Color color = new Color(up, down, 0f);
+    //      drawSegment(seg, db, color);
+    //    }
   }
 
   private boolean mergeSegments(List<AntSegment> segments) {
@@ -292,46 +359,54 @@ public class AntCornerFinder implements PenListener {
     Ant ant = new Ant(seq, a, b, minSegmentPatchLength, lineErrorThreshold, ellipseErrorThreshold);
     List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
     ants.add(ant);
-    drawAnt(ant);
+    //    drawAnt(ant);
   }
 
   private void drawSegment(AntSegment seg, DrawingBuffer db, Color color) {
+    bug("Drawing segment? Anything?");
+    Set<List<Pt>> splinesDrawn = new HashSet<List<Pt>>();
     if (seg.getType() == Ant.SegType.Line) {
       Line line = seg.getLine();
       DrawingBufferRoutines.line(db, line, color, 3.0);
     } else if (seg.getType() == Ant.SegType.EllipticalArc) {
-      RotatedEllipse ellie = seg.getEllipse();
-      DrawingBufferRoutines.lines(db, ellie.getRestrictedArcPath(), color, 3.0);
-    }
-  }
-
-  private void drawAnt(Ant ant) {
-    DrawingBuffer db = layers.getLayer(DB_PATCH_DOT_LAYER);
-    DrawingBufferRoutines.dots(db, ant.getPatchSeq().getPoints(), 2.5, 0.5, Color.BLACK,
-        Color.WHITE);
-    SortedSet<AntSegment> segments = ant.getSegments();
-    db = layers.getLayer(DB_SEGMENT_DEBUG_LAYER);
-    DrawingBuffer niceDb = layers.getLayer(DB_SEGMENT_FINAL_LAYER);
-
-    Color black = Color.BLACK;
-    Color color;
-    for (AntSegment seg : segments) {
-      if (seg.getType() == Ant.SegType.Line) {
-        color = Color.green.darker();
-      } else if (seg.getType() == Ant.SegType.EllipticalArc) {
-        color = Color.blue;
+      bug("Drawing arc. Does it have a spline? " + seg.hasSpline() + " ..." + seg.getSpline());
+      if (seg.hasSpline()) {
+        bug("Splines! Whee!");
+        if (splinesDrawn.contains(seg.getSpline())) {
+          bug("Already drew that one.");
+        } else {
+          DrawingBufferRoutines.lines(db, seg.getSpline(), color, 3.0);
+          splinesDrawn.add(seg.getSpline());
+        }
       } else {
-        color = Color.BLACK;
+        RotatedEllipse ellie = seg.getEllipse();
+        DrawingBufferRoutines.lines(db, ellie.getRestrictedArcPath(), color, 3.0);
       }
-      drawSegment(seg, db, color);
-      drawSegment(seg, niceDb, black);
-      //    Color m = Color.magenta.darker().darker();
-      //      if (seg.getType() != Ant.SegType.None) {
-      //        DrawingBufferRoutines.cross(db, seg.getSegmentStartPoint(), 3, m);
-      //        DrawingBufferRoutines.cross(db, seg.getSegmentEndPoint(), 3, m);
-      //      }
     }
   }
+
+  //  private void drawAnt(Ant ant) {
+  //    DrawingBuffer db = layers.getLayer(DB_PATCH_DOT_LAYER);
+  //    DrawingBufferRoutines.dots(db, ant.getPatchSeq().getPoints(), 2.5, 0.5, Color.BLACK,
+  //        Color.WHITE);
+  //    SortedSet<AntSegment> segments = ant.getSegments();
+  //    db = layers.getLayer(DB_SEGMENT_DEBUG_LAYER);
+  //    DrawingBuffer niceDb = layers.getLayer(DB_SEGMENT_FINAL_LAYER);
+  //
+  //    Color black = Color.BLACK;
+  //    Color color;
+  //    for (AntSegment seg : segments) {
+  //      if (seg.getType() == Ant.SegType.Line) {
+  //        color = Color.green.darker();
+  //      } else if (seg.getType() == Ant.SegType.EllipticalArc) {
+  //        color = Color.blue;
+  //      } else {
+  //        color = Color.BLACK;
+  //      }
+  //      drawSegment(seg, db, color);
+  //      drawSegment(seg, niceDb, black);
+  //    }
+  //  }
 
   private void drawJunctions(Sequence seq) {
     DrawingBuffer db = layers.getLayer(DB_CORNER_LAYER);

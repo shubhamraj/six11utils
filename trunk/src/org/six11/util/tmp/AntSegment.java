@@ -1,5 +1,7 @@
 package org.six11.util.tmp;
 
+import java.util.List;
+
 import org.six11.util.Debug;
 import org.six11.util.pen.Functions;
 import org.six11.util.pen.Line;
@@ -15,6 +17,7 @@ public class AntSegment implements Comparable<AntSegment> {
   private Pt startPt;
   private Pt endPt;
   private Sequence rawInk;
+  private List<Pt> spline; // set from outside
 
   private AntSegment(Ant.SegType type, Pt startPoint, Pt endPoint, Sequence rawInk) {
     this.type = type;
@@ -108,5 +111,18 @@ public class AntSegment implements Comparable<AntSegment> {
       ret = 1;
     }
     return ret;
+  }
+
+  public void setSpline(List<Pt> spline) {
+    bug("Setting spline!");
+    this.spline = spline;
+  }
+  
+  public boolean hasSpline() {
+    return (spline != null);
+  }
+  
+  public List<Pt> getSpline() {
+    return spline;
   }
 }
