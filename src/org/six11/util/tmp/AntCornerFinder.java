@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import javax.swing.Action;
 import javax.swing.JComponent;
@@ -39,12 +41,14 @@ import static java.lang.Math.toDegrees;
 import static java.lang.Math.toRadians;
 import static java.lang.Math.abs;
 
+@SuppressWarnings("unchecked")
 public class AntCornerFinder implements PenListener {
 
   //  ------------------------------------------------------------------------ - - - -
   // param block - keep these together - don't mix with non-params
   //
   private double highCurvatureThresholdDegrees = 45;
+  private double maxSplineDeviationThreshold = 8;
   // these are subject to zooming. e.g. if you zoom in by 2x, use windowSize/2, errorThresh/2, etc
   private double windowSize = 10;
   private double clusterDistanceThreshold = 6;
@@ -52,7 +56,8 @@ public class AntCornerFinder implements PenListener {
   private double lineErrorThreshold = 1.5;
   private double ellipseErrorThreshold = 0.7;
   private double mergeImprovementMult = 1.2;
-  private double maxSplineDeviationThreshold = 14;
+  private double maxLatchRadius = 60.0;
+
   //
   // end param block
   //  ------------------------------------------------------------------------ - - - -
@@ -69,6 +74,7 @@ public class AntCornerFinder implements PenListener {
   private static final String DB_SEGMENT_FINAL_LAYER = "5";
   private static final String DB_OLD_INK_LAYER = "6";
   private static final String DB_MERGE_LAYER = "7";
+  private static final String DB_LATCH = "8";
 
   public static void main(String[] in) {
     Arguments args = new Arguments(in);
@@ -82,7 +88,8 @@ public class AntCornerFinder implements PenListener {
   private DrawingBufferLayers layers;
   private int goCount = 0; // how many times we've pressed go since last pen input
   private List<Sequence> unprocessedSequences;
-  private List<Sequence> processedSequences;
+  //  private List<Sequence> processedSequences;
+  private SketchBook sketchBook;
 
   public AntCornerFinder() {
     ApplicationFrame af = new ApplicationFrame("Ant Corner Finder");
@@ -93,7 +100,8 @@ public class AntCornerFinder implements PenListener {
       layers.createLayer("" + i, DEBUG_LAYER_PREFIX + i, i + 10, layerVisible);
     }
     unprocessedSequences = new ArrayList<Sequence>();
-    processedSequences = new ArrayList<Sequence>();
+    //    processedSequences = new ArrayList<Sequence>();
+    sketchBook = new SketchBook();
     currentSeq = new Sequence();
     createActions(af.getRootPane());
     af.setLayout(new BorderLayout());
@@ -151,12 +159,34 @@ public class AntCornerFinder implements PenListener {
         recentInkLayer.clear();
         layers.clearScribble();
       }
-      processedSequences.addAll(unprocessedSequences);
-      unprocessedSequences.clear(); // TODO: May want to keep batches together for later go() calls
+      sketchBook.addBatch(unprocessedSequences);
+      unprocessedSequences.clear();
+    } else if (goCount == 1) {
+      latch();
     } else {
-      bug("Go again!");
+      bug("goCount for " + goCount + " not implemented.");
     }
     goCount++;
+  }
+
+  private void latch() {
+    List<Sequence> last = sketchBook.getLastBatch();
+    if (last != null) {
+      bug("Latch last batch of " + last.size() + " seqs.");
+      // draw latch graphics
+      DrawingBuffer db = layers.getLayer(DB_LATCH);
+      Color zc = new Color(0.7f, 0.8f, 0.9f, 0.2f);
+      double dotRadius = 3.0;
+      Color dc = new Color(0.1f, 0.3f, 0.1f, 1f);
+      for (Sequence seq : last) {
+        double latchRadius = min(maxLatchRadius, seq.length() / 10);
+        DrawingBufferRoutines.dot(db, seq.getFirst(), latchRadius, 1.0, zc.darker(), zc);
+        DrawingBufferRoutines.dot(db, seq.getLast(), latchRadius, 1.0, zc.darker(), zc);
+        DrawingBufferRoutines.dot(db, seq.getFirst(), dotRadius, 1.0, dc, dc);
+        DrawingBufferRoutines.dot(db, seq.getLast(), dotRadius, 1.0, dc, dc);
+      }
+      layers.repaint();
+    }
   }
 
   private void print() {
@@ -209,6 +239,7 @@ public class AntCornerFinder implements PenListener {
     //      SortedSet<AntSegment> segments = ant.getSegments();
     //      allSegments.addAll(segments);
     //    }
+    @SuppressWarnings("unchecked")
     List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute("segments");
     DrawingBuffer db = layers.getLayer(DB_SEGMENT_FINAL_LAYER);
     tmpBugSegments("Drawing segments", allSegments);
@@ -228,12 +259,10 @@ public class AntCornerFinder implements PenListener {
     List<Integer> junctions = (List<Integer>) seq.getAttribute(SEGMENT_JUNCTIONS);
     List<AntSegment> arcs = new ArrayList<AntSegment>();
     int junctionCounter = 1;
-    bug("Splinify: Corners: " + num(junctions, " "));
     StringBuilder startStopStr = new StringBuilder();
     for (AntSegment seg : allSegments) {
       startStopStr.append(seg.getEarlyPointIndex() + "--" + seg.getLatePointIndex() + " ");
     }
-    bug("Splinify: Segments: " + startStopStr);
     for (int i = 0; i < allSegments.size(); i++) {
       AntSegment seg = allSegments.get(i);
       if (seg.getType() == Ant.SegType.EllipticalArc) {
@@ -243,8 +272,6 @@ public class AntCornerFinder implements PenListener {
         if (arcs.size() > 0) {
           List<Pt> spline = splinifySegments(arcs);
           for (AntSegment arcSeg : arcs) {
-            bug("Made spline for arc segment " + arcSeg.getEarlyPointIndex() + "--"
-                + arcSeg.getLatePointIndex());
             arcSeg.setSpline(spline);
           }
         }
@@ -252,7 +279,6 @@ public class AntCornerFinder implements PenListener {
         junctionCounter++;
       }
     }
-    tmpBugSegments("End of splinify", allSegments);
   }
 
   private List<Pt> splinifySegments(List<AntSegment> arcs) {
@@ -266,9 +292,11 @@ public class AntCornerFinder implements PenListener {
     double patchLength = rawRegion.length() / (double) numPatches;
     Sequence patchRegion = Functions.getCurvilinearNormalizedSequence(rawRegion, 0,
         rawRegion.size() - 1, patchLength);
+    double tightness = 1.0;
+    double maxSegLen = 4.0;
     List<Pt> ctrl = CardinalSpline.subdivideControlPoints(patchRegion.getPoints(),
-        maxSplineDeviationThreshold);
-    List<Pt> spline = CardinalSpline.interpolateCardinal(ctrl, 1.0, 4.0);
+        maxSplineDeviationThreshold, tightness, maxSegLen);
+    List<Pt> spline = CardinalSpline.interpolateCardinal(ctrl, tightness, maxSegLen);
     DrawingBuffer db = layers.getLayer(DB_CORNER_LAYER);
     DrawingBufferRoutines.dots(db, ctrl, 4.0, 0.6, Color.BLACK, new Color(1.0f, 0.4f, 0.8f));
     return spline;
@@ -287,8 +315,6 @@ public class AntCornerFinder implements PenListener {
         break;
       }
     }
-    bug("Merged sequence " + seq.getId() + ". Before: " + before + " segs, after: "
-        + allSegments.size() + " segs.");
     // clear the 'ants' attrib because it is no longer a thing
     //    seq.setAttribute("ants", null);
     tmpBugSegments("setting sequence segs in mergeSegments(Sequence)...", allSegments);

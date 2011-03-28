@@ -11,7 +11,7 @@ import org.six11.util.Debug;
 import static org.six11.util.Debug.num;
 
 /**
- * Makes a cardninal spline based on some control points and a tightness parameter. 
+ * Makes a cardninal spline based on some control points and a tightness parameter.
  * 
  * @author Gabe Johnson <johnsogg@cmu.edu>
  */
@@ -191,18 +191,73 @@ public class CardinalSpline {
   /**
    * Creates a set of control points. The input list is recursively chopped up into linear segments
    * until all points are less than 'maxPointDist' units from a line.
+   * 
+   * @param maxSegLen
+   * @param tightness
    */
-  public static List<Pt> subdivideControlPoints(List<Pt> points, double maxPointDist) {
+  public static List<Pt> subdivideControlPoints(List<Pt> points, double maxPointDist,
+      double tightness, double maxSegLen) {
     SortedSet<Integer> indices = new TreeSet<Integer>();
     indices.add(0);
     indices.add(points.size() - 1);
     subdiv(points, 0, points.size() - 1, maxPointDist, indices);
+//    boolean inserted = false;
+//    do {
+//      inserted = insertCtrlPtOnError(points, indices, tightness, maxSegLen, 2.0);
+//    } while (inserted);
     List<Pt> ret = new ArrayList<Pt>();
     for (int idx : indices) {
       ret.add(points.get(idx));
     }
     return ret;
   }
+
+//  private static boolean insertCtrlPtOnError(List<Pt> points, SortedSet<Integer> indices,
+//      double tightness, double maxSegLen, double maxError) {
+//    boolean ret = false;
+//    List<Pt> ctrl = new ArrayList<Pt>();
+//    for (int idx : indices) {
+//      ctrl.add(points.get(idx));
+//    }
+//    List<Pt> spline = interpolateCardinal(ctrl, tightness, maxSegLen);
+//    //    double errorSquaredThresh = maxError * maxError;
+//    double errorSquaredSum = 0;
+//    bug("Error threshold: " + maxError);
+//    int ctrlIdx = 0;
+//    int patchN = 0;
+//    for (int i = 0; i < spline.size(); i++) {
+//      Pt splinePt = spline.get(i);
+//      if (splinePt.getTime() > ctrl.get(ctrlIdx).getTime()) {
+//        // reset the error after we move into a new patch, and update the index
+//        bug("Resetting error and move to patch " + (ctrlIdx + 1));
+//        patchN = 1;
+//        ctrlIdx++;
+//        errorSquaredSum = 0;
+//      }
+//      Pt nearest = Functions.getNearestPointOnPolyline(splinePt, points);
+//      if (nearest != null) {
+//        double dist = nearest.getDouble("nearest-polyline"); // tuples would rule.
+//        errorSquaredSum = errorSquaredSum + (dist * dist);
+//        double stdErr = sqrt(errorSquaredSum) / (patchN + 2);
+//        System.out.println(i + "\t" + num(dist) + "\t" + num(stdErr)); // + (stdErr > threshErr ? " *" : ""));
+//        if (stdErr > maxError) {
+//          int newCtrlPoint = Functions.seekByTimeNearest(nearest, points);
+//          if (indices.contains(newCtrlPoint)) {
+//            bug("Not adding duplicate control point.  Just ignoring it.");
+//          } else {
+//            bug("New control point: " + newCtrlPoint);
+//            indices.add(newCtrlPoint);
+//            ret = true;
+//            break;
+//          }
+//        }
+//      } else {
+////        bug("No nearest point could be found, which is odd.");
+//      }
+//      patchN++;
+//    }
+//    return ret;
+//  }
 
   private static void subdiv(List<Pt> points, int a, int b, double maxPointDist,
       SortedSet<Integer> indices) {
@@ -215,5 +270,4 @@ public class CardinalSpline {
       subdiv(points, where, b, maxPointDist, indices);
     }
   }
-
 }

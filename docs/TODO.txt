@@ -1,15 +1,14 @@
 TODO:
 
--- Improve segmenter:
-
-  * Ensure ellipses start/end in reasonable places
-  * Associate original ink points with ant segments
-  * Associate ant segments with patch points
-  * Use timestamps to determine where points are. Much better than interpolating position.
-  * For ellipse/ellipse junctions, probably replace them with spline segments.
-
+-- Data structure
+  * Need a data structure to hold raw and processed information
+  * Must be searchable, e.g. "give me lines about x units long", "which segments are near X,Y"
+  * I have something like this already in the old art thing. Just need to port/refactor. 
+  
 -- Beyond segmentation:
 
+  * Detect closed loops
+    > If it is elliptical, do not run through junction finder. keep it as an ellipse.
   * Latcher:
     > Latch types: 
       \ Tee: One segment ends at the surface of another
