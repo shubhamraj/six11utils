@@ -8,6 +8,8 @@ import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.RotatedEllipse;
 import org.six11.util.pen.Sequence;
+import org.six11.util.pen.Vec;
+import org.six11.util.tmp.Ant.SegType;
 
 public class AntSegment implements Comparable<AntSegment> {
 
@@ -20,6 +22,9 @@ public class AntSegment implements Comparable<AntSegment> {
   private List<Pt> spline; // set from outside
   private int earlyPointIndex;
   private int latePointIndex;
+  private double cachedLength;
+  private double fixedAngle;
+  private Vec fixedVector;
 
   private AntSegment(Ant.SegType type, Pt startPoint, Pt endPoint, Sequence rawInk) {
     this.type = type;
@@ -28,6 +33,10 @@ public class AntSegment implements Comparable<AntSegment> {
     this.rawInk = rawInk;
     this.earlyPointIndex = -1;
     this.latePointIndex = -1;
+    this.cachedLength = -1;
+    this.fixedAngle = Double.NaN;
+    this.fixedVector = null;
+    
     if (rawInk.isForward() == false) {
       bug("Sorry, the rawInk argument is not forward. Committing ritualistic suicide (stacktrace first)");
       new RuntimeException("foo").printStackTrace();
@@ -46,6 +55,52 @@ public class AntSegment implements Comparable<AntSegment> {
     ret.setEllipse(ellipse);
     return ret;
   }
+
+  public double length() {
+    double ret = cachedLength;
+    if (ret < 0) {
+      if (type == SegType.Line) {
+        ret = startPt.distance(endPt);
+      } else if (type == SegType.EllipticalArc) {
+        if (hasSpline()) {
+          ret = 0;
+          for (int i = 1; i < spline.size(); i++) {
+            ret = ret + spline.get(i-1).distance(spline.get(i));
+          }
+        } else {
+          ret = rawInk.getPathLength(getEarlyPointIndex(), getLatePointIndex());
+        }
+      }
+      cachedLength = ret;
+    }
+    return ret;
+  }
+  
+  public Vec getFixedVector() {
+    if (fixedVector == null) {
+      Pt start = startPt;
+      Pt end = endPt;
+      Pt left = start;
+      Pt right = end;
+      if (Pt.sortByX.compare(start, end) == 1) {
+        left = end;
+        right = start;
+      }
+      double dx = right.x - left.x;
+      double dy = right.y - left.y;
+      fixedVector = new Vec(dx, dy);
+    }
+    return fixedVector;
+  }
+
+  public double getFixedAngle() {
+    if (fixedAngle == Double.NaN) {
+      Vec fv = getFixedVector();
+      fixedAngle = Math.atan2(fv.getY(), fv.getX());
+    }
+    return fixedAngle;
+  }
+
 
   public Sequence getRawInk() {
     return rawInk;

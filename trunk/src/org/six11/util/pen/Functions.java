@@ -363,7 +363,8 @@ public abstract class Functions {
     double r = Functions.getDotProduct(ac, ab) / (mag * mag);
     double x = a.getX() + r * (b.getX() - a.getX());
     double y = a.getY() + r * (b.getY() - a.getY());
-    Pt ret = new Pt(x, y);
+    long t = a.getTime() + (long) (r * (b.getTime() - a.getTime()));
+    Pt ret = new Pt(x, y, t);
     if (retainR) {
       ret.setDouble("r", r);
     }
@@ -884,19 +885,59 @@ public abstract class Functions {
   }
 
   /**
+   * Finds the point on the polyline that is closest to the epicenter. The 'polyline' is chopped
+   * into discrete line segments, and the distance between epicenter and that line segment is
+   * calculated. If the nearest point on the segment is outside the segment bounds it is not used.
+   * It is therefore possible for this function to return null.
+   * 
+   * @param epicenter
+   *          A target point
+   * @param polyline
+   *          A list of points that defien a polyline.
+   * @return a point that appears somewhere along the interpolated polyline, or null if no such
+   *         point can be found. If the return value is non-null, a the "nearest-polyline" double
+   *         value is set to the distance to the polyline.
+   */
+  public static Pt getNearestPointOnPolyline(Pt epicenter, List<Pt> polyline) {
+    double minDist = Double.MAX_VALUE;
+    Pt nearest = null;
+    if (polyline.size() > 1) {
+      for (int i = 0; i < polyline.size() - 1; i++) {
+        Line line = new Line(polyline.get(i), polyline.get(i + 1));
+        Pt pt = getNearestPointWithinSegment(epicenter, line);
+        if (pt != null) {
+          double dist = pt.distance(epicenter);
+          if (dist < minDist) {
+            minDist = dist;
+            nearest = pt;
+          }
+        }
+      }
+    }
+    if (nearest != null) {
+      nearest.setDouble("nearest-polyline", minDist);
+    }
+    return nearest;
+  }
+
+  /**
    * Return the index of the point in the input list that is in the range [startIncl, endIncl] that
    * is farthest from the given line. If there is a tie the first index is returned.
    * 
-   * @param points The source point list.
-   * @param startIncl The start index, inclusive.
-   * @param endIncl The end index, inclusive.
-   * @param line A line to measure distance.
+   * @param points
+   *          The source point list.
+   * @param startIncl
+   *          The start index, inclusive.
+   * @param endIncl
+   *          The end index, inclusive.
+   * @param line
+   *          A line to measure distance.
    * @return the index of the farthest point from the line.
    */
   public static int getIndexFarthestFromLine(List<Pt> points, int startIncl, int endIncl, Line line) {
     int ret = -1;
     double maxDist = -1;
-    for (int i=startIncl; i <= endIncl; i++) {
+    for (int i = startIncl; i <= endIncl; i++) {
       Pt here = points.get(i);
       double dist = getDistanceBetweenPointAndLine(here, line);
       if (dist > maxDist) {
@@ -1688,5 +1729,26 @@ public abstract class Functions {
       }
     }
     return ret;
+  }
+
+  /**
+   * Returns the index of the point in the list that is closest in time (absolute difference) to the
+   * target point's time stamp.
+   * 
+   * @return the index, or -1 if none are found.
+   */
+  public static int seekByTimeNearest(Pt targetTime, List<Pt> points) {
+    long target = targetTime.getTime();
+    int bestIdx = -1;
+    long bestDiff = Long.MAX_VALUE;
+    for (int i = 0; i < points.size(); i++) {
+      Pt pt = points.get(i);
+      long diff = abs(pt.getTime() - target);
+      if (bestIdx < 0 || (diff < bestDiff)) {
+        bestIdx = i;
+        bestDiff = diff;
+      }
+    }
+    return bestIdx;
   }
 }
