@@ -49,14 +49,15 @@ public class AntCornerFinder implements PenListener {
   //
   private double highCurvatureThresholdDegrees = 45;
   private double maxSplineDeviationThreshold = 8;
+  private double mergeImprovementMult = 1.2;
   // these are subject to zooming. e.g. if you zoom in by 2x, use windowSize/2, errorThresh/2, etc
   private double windowSize = 10;
   private double clusterDistanceThreshold = 6;
   private double minSegmentPatchLength = 12; // will be adjusted downward for short (<80px) segs.
   private double lineErrorThreshold = 1.5;
   private double ellipseErrorThreshold = 0.7;
-  private double mergeImprovementMult = 1.2;
   private double maxLatchRadius = 60.0;
+  private double latchNumerator = 10.0;
 
   //
   // end param block
@@ -67,6 +68,7 @@ public class AntCornerFinder implements PenListener {
   private static final String ACTION_GO = "go";
   private static final String DEBUG_LAYER_PREFIX = "Debug layer ";
   public static final String SEGMENT_JUNCTIONS = "junctions";
+  private static final String SEQUENCE_SEGMENTS = "segments";
   private static final String DB_RECENT_INK = "1";
   private static final String DB_CORNER_LAYER = "2";
   private static final String DB_PATCH_DOT_LAYER = "3";
@@ -179,13 +181,65 @@ public class AntCornerFinder implements PenListener {
       double dotRadius = 3.0;
       Color dc = new Color(0.1f, 0.3f, 0.1f, 1f);
       for (Sequence seq : last) {
-        double latchRadius = min(maxLatchRadius, seq.length() / 10);
+        double latchRadius = min(maxLatchRadius, seq.length() / latchNumerator);
         DrawingBufferRoutines.dot(db, seq.getFirst(), latchRadius, 1.0, zc.darker(), zc);
         DrawingBufferRoutines.dot(db, seq.getLast(), latchRadius, 1.0, zc.darker(), zc);
         DrawingBufferRoutines.dot(db, seq.getFirst(), dotRadius, 1.0, dc, dc);
         DrawingBufferRoutines.dot(db, seq.getLast(), dotRadius, 1.0, dc, dc);
       }
       layers.repaint();
+      // end drawing section
+
+      for (Sequence seq : last) {
+        double latchRadius = min(maxLatchRadius, seq.length() / 10);
+        latch(seq, seq.getFirst(), latchRadius);
+        latch(seq, seq.getLast(), latchRadius);
+      }
+    }
+  }
+
+  /**
+   * Try to latch the given sequence to something. 'dot' is one of the endpoints of the sequence. It
+   * looks for segments nearby and tries to latch it in one of the three ways: co-termination, tee,
+   * or continuation.
+   * 
+   * @param seq
+   *          A recently made sequence.
+   * @param dot
+   *          One of the endpoints of the sequence.
+   * @param latchRadius
+   *          The magnetized region around dot.
+   */
+  private void latch(Sequence seq, Pt dot, double latchRadius) {
+    Set<Pt> near = sketchBook.getAllPoints().getNear(dot, latchRadius);
+    // some nearby points will obviously be part of the input sequence. Ignore those.
+    Set<Sequence> candidates = new HashSet<Sequence>();
+    for (Pt pt : near) {
+      Sequence nearSeq = (Sequence) pt.getAttribute(SketchBook.SEQUENCE);
+      if (nearSeq != seq) {
+        if (!candidates.contains(nearSeq)) {
+          bug("Candidate sequence: " + seq.getId() + " is near " + nearSeq.getId());
+        }
+        candidates.add(nearSeq);
+      }
+    }
+    bug("Found " + candidates.size() + " other sequences.");
+    for (Sequence candidate : candidates) {
+      latchCoterminate(seq, dot, latchRadius, candidate);
+    }
+  }
+
+  private void latchCoterminate(Sequence seq, Pt dot, double latchRadius, Sequence candidate) {
+    Pt candStart = candidate.getFirst();
+    Pt candEnd = candidate.getLast();
+    double otherLatchRadius = min(maxLatchRadius, candidate.length() / latchNumerator);
+    if (candStart.distance(dot) < otherLatchRadius) {
+      bug("I might be able to latch candidate **start** with this one! Sequences " + seq.getId()
+          + " and " + candidate.getId() + " have endpoints that are reasonably close.");
+    }
+    if (candEnd.distance(dot) < otherLatchRadius) {
+      bug("I might be able to latch candidate **end** with this one! Sequences " + seq.getId()
+          + " and " + candidate.getId() + " have endpoints that are reasonably close.");
     }
   }
 
@@ -240,7 +294,7 @@ public class AntCornerFinder implements PenListener {
     //      allSegments.addAll(segments);
     //    }
     @SuppressWarnings("unchecked")
-    List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute("segments");
+    List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute(SEQUENCE_SEGMENTS);
     DrawingBuffer db = layers.getLayer(DB_SEGMENT_FINAL_LAYER);
     tmpBugSegments("Drawing segments", allSegments);
     for (AntSegment seg : allSegments) {
@@ -255,7 +309,7 @@ public class AntCornerFinder implements PenListener {
     //      SortedSet<AntSegment> segments = ant.getSegments();
     //      allSegments.addAll(segments);
     //    }
-    List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute("segments");
+    List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute(SEQUENCE_SEGMENTS);
     List<Integer> junctions = (List<Integer>) seq.getAttribute(SEGMENT_JUNCTIONS);
     List<AntSegment> arcs = new ArrayList<AntSegment>();
     int junctionCounter = 1;
@@ -317,8 +371,7 @@ public class AntCornerFinder implements PenListener {
     }
     // clear the 'ants' attrib because it is no longer a thing
     //    seq.setAttribute("ants", null);
-    tmpBugSegments("setting sequence segs in mergeSegments(Sequence)...", allSegments);
-    seq.setAttribute("segments", allSegments);
+    seq.setAttribute(SEQUENCE_SEGMENTS, allSegments);
   }
 
   private void tmpBugSegments(String msg, List<AntSegment> segs) {
@@ -372,8 +425,6 @@ public class AntCornerFinder implements PenListener {
         if (nomergeError * mergeImprovementMult > mergedErr[i]) { // merging is a sloppy improvement
           bestIndex = i;
           bestMergeError = mergedErr[i];
-          mergeString = "merge at index " + i + " with nomerge/merge errors: " + num(nomergeError)
-              + " vs. " + num(bestMergeError);
         }
       }
     }
