@@ -1,6 +1,5 @@
 package org.six11.util.pen;
 
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -9,8 +8,10 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.six11.util.Debug;
+import static org.six11.util.Debug.num;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Sequence;
+import org.six11.util.tmp.SketchBook;
 
 /**
  * This is a datastructure that stores x,y,t points and may be efficiently searched to locate other
@@ -21,7 +22,7 @@ import org.six11.util.pen.Sequence;
 public class PointGraph {
 
   public transient boolean debugEnabled = false;
-  
+
   List<Pt> byX;
   List<Pt> byY;
   List<Pt> byT;
@@ -30,10 +31,6 @@ public class PointGraph {
     this.byX = new ArrayList<Pt>();
     this.byY = new ArrayList<Pt>();
     this.byT = new ArrayList<Pt>();
-  }
-
-  public int size() {
-    return byX.size();
   }
 
   /**
@@ -65,6 +62,19 @@ public class PointGraph {
       where = (where + 1) * -1;
     }
     byT.add(where, pt);
+  }
+
+  public int size() {
+    if (byX.size() != byY.size()) {
+      bug("byX not same size as byY!");
+    }
+    if (byX.size() != byT.size()) {
+      bug("byX not same size as byT!");
+    }
+    if (byY.size() != byT.size()) {
+      bug("byY not same size as byY!");
+    }
+    return byX.size();
   }
 
   public void remove(Pt pt) {
@@ -101,15 +111,31 @@ public class PointGraph {
     return buf.toString().trim() + "]";
   }
 
+  private void bugByIndex(Collection<Pt> points) {
+    int idx = 0;
+    for (Pt pt : points) {
+      Sequence seq = (Sequence) pt.getAttribute(SketchBook.SEQUENCE);
+      System.out.println(idx + "\t" + num(pt) + (seq != null ? " " + seq.getId() : ""));
+      idx++;
+    }
+  }
+
   private Set<Pt> getNearX(Pt target, double dist) {
+//    bug(" --------");
+//    bug("Searching for " + num(target) + " within " + num(dist) + " in following list (X):");
+//    bugByIndex(byX);
     Set<Pt> xSet = new TreeSet<Pt>(Pt.sortById);
     Pt x1 = new Pt(target.x - dist / 2, Double.MAX_VALUE);
     Pt x2 = new Pt(target.x + dist / 2, Double.MAX_VALUE);
     int idxA = -(Collections.binarySearch(byX, x1, Pt.sortByX) + 1);
     int idxB = -(Collections.binarySearch(byX, x2, Pt.sortByX) + 1);
+//    bug("Index range: " + idxA + " to " + idxB);
     for (int i = idxA; i < idxB; i++) {
       xSet.add(byX.get(i));
     }
+//    bug("Returning X set:");
+//    bugByIndex(xSet);
+//    bug(" --------");
     return xSet;
   }
 

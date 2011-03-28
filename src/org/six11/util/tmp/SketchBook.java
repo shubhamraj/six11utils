@@ -7,11 +7,13 @@ import org.six11.util.Debug;
 import org.six11.util.pen.AngleGraph;
 import org.six11.util.pen.LengthGraph;
 import org.six11.util.pen.PointGraph;
+import org.six11.util.pen.Pt;
 import org.six11.util.pen.Sequence;
 import org.six11.util.pen.TimeGraph;
 
 public class SketchBook {
 
+  public static final String SEQUENCE = "sequence";
   PointGraph allPoints;
   TimeGraph timeGraph;
   LengthGraph lengthGraph;
@@ -46,6 +48,9 @@ public class SketchBook {
   }
 
   private void add(Sequence seq) {
+    for (Pt pt : seq) {
+      pt.setAttribute(SEQUENCE, seq);
+    }
     allPoints.addAll(seq);
     timeGraph.add(seq);
     List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute("segments");
@@ -54,6 +59,22 @@ public class SketchBook {
       angleGraph.add(segment);
     }
     bug("Added sequence " + seq.getId() + " to the sketchbook.");
+  }
+  
+  public PointGraph getAllPoints() {
+    return allPoints;
+  }
+  
+  public TimeGraph getTimeGraph() {
+    return timeGraph;
+  }
+  
+  public LengthGraph getLengthGraph() {
+    return lengthGraph;
+  }
+  
+  public AngleGraph getAngleGraph() {
+    return angleGraph;
   }
 
   private void bug(String what) {
