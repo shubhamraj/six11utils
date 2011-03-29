@@ -1375,20 +1375,22 @@ public abstract class Functions {
    * @return
    */
   public static Pt[] getCurvilinearWindow(Sequence seq, int idx, double dist) {
+    //    Pt[] ret = new Pt[] {
+    //        getCurvilinearWindow(seq, idx, dist, -1), getCurvilinearWindow(seq, idx, dist, 1)
+    //    };
     Pt[] ret = new Pt[] {
-        getCurvilinearWindow(seq, idx, dist, -1), getCurvilinearWindow(seq, idx, dist, 1)
+        getCurvilinearNeighbor(seq, idx, dist, -1), getCurvilinearNeighbor(seq, idx, dist, 1)
     };
     return ret;
   }
 
-  private static Pt getCurvilinearWindow(Sequence seq, int idx, double dist, int dir) {
+  public static Pt getCurvilinearWindow(Sequence seq, int idx, double dist, int dir) {
     double d = 0; // distance travelled so far
     Pt ret = null;
     for (int i = idx; i > 1 && i < seq.size() - 1; i = i + dir) {
       Pt a = seq.get(i);
       Pt b = seq.get(i + dir);
       double patchDist = a.distance(b);
-      //      bug("  " + i + ": Distance from points " + i + " to " + (i + dir) + ": " + Debug.num(patchDist));
       if (patchDist + d > dist) {
         // interpolate and set ret[1]
         double remaining = dist - d;
@@ -1398,12 +1400,40 @@ public abstract class Functions {
         double x = a.x + (fraction * dx);
         double y = a.y + (fraction * dy);
         ret = new Pt(x, y);
-        //        bug("  " + i + ": Interpolated. remaining: " + num(remaining) + ", fraction: " + num(fraction)
-        //            + ", dx: " + num(dx) + ", dy: " + num(dy));
         break;
       } else {
         d = d + patchDist;
       }
+    }
+    return ret;
+  }
+
+  public static Pt getCurvilinearNeighbor(Sequence seq, int start, double targetDist, int dir) {
+    Pt ret = null;
+    Pt prev = null;
+    double soFar = 0;
+    for (int i = start; i >= 0 && i < seq.size(); i += dir) {
+      Pt pt = seq.get(i);
+      if (prev != null) {
+        double dist = prev.distance(pt);
+        if (soFar + dist > targetDist) {
+          double remaining = targetDist - soFar;
+          double fraction = remaining / dist;
+          double dx = pt.x - prev.x;
+          double dy = pt.y - prev.y;
+          long dt = pt.getTime() - prev.getTime();
+          double x = prev.x + fraction * dx;
+          double y = prev.y + fraction * dy;
+          long t = prev.getTime() + (long) (fraction * (double) dt);
+          ret = new Pt(x, y, t);
+          bug("Found it at " + num(ret));
+          break;
+        } else {
+          soFar = soFar + dist;
+          bug(num(soFar));
+        }
+      }
+      prev = pt;
     }
     return ret;
   }
