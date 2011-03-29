@@ -236,7 +236,18 @@ public class AntSegment implements Comparable<AntSegment> {
   public Line createTangentLine(Pt where) {
     Sequence subseq = getRawInkSubsequence();
     int idx = subseq.indexOf(where);
-    bug("Index of " + num(where) + " in subseq(" + subseq.size() + "): " + idx);
+    double windowSize = max(10, subseq.length() / 10);
+    double toEnd = subseq.getPathLength(idx, subseq.size() - 1);
+    double fromStart = subseq.getPathLength(0, idx);
+    if (toEnd > 0 && fromStart > 0) {
+      if (toEnd < windowSize) {
+        idx = subseq.size() - 1;
+      } else if (fromStart < windowSize) {
+        idx = 0;
+      }
+      bug("Changed idx to " + idx
+          + " because we weren't at the start/end and we were too close to an endpoint.");
+    }
     Line ret = null;
     if (idx < 0) {
       warn("Point " + num(where) + " not found in this sequence.");
@@ -247,7 +258,7 @@ public class AntSegment implements Comparable<AntSegment> {
       } else if (idx >= (subseq.size() - 1)) {
         dir = -1;
       }
-      double windowSize = max(10, subseq.length() / 10);
+
       if (dir != 0) {
         Pt other = Functions.getCurvilinearNeighbor(subseq, idx, windowSize, dir);
         if (other == null) {

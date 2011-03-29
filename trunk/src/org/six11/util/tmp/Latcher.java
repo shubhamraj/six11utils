@@ -1,6 +1,7 @@
 package org.six11.util.tmp;
 
 import static java.lang.Math.min;
+import static java.lang.Math.max;
 import static org.six11.util.Debug.num;
 
 import java.awt.Color;
@@ -73,11 +74,9 @@ public class Latcher {
     Set<AntSegment> near = sketchBook.getSegmentsNear(dot, latchRadius);
     List<AntSegment> newSegs = (List<AntSegment>) dot.getAttribute(AntCornerFinder.POINT_SEGMENTS);
     near.removeAll(newSegs);
-    bug("Found " + near.size() + " segments near " + num(dot));
     DrawingBuffer db = layers.getLayer(AntCornerFinder.DB_SEGMENT_DEBUG_LAYER);
     DrawingBufferRoutines.dot(db, dot, 5.0, 0.5, Color.BLACK, Color.RED);
     for (AntSegment seg : near) {
-      bug(" * drawing red segment *");
       acf.drawSegment(seg, db, Color.RED, 5);
     }
     layers.repaint();
@@ -127,6 +126,69 @@ public class Latcher {
         DrawingBuffer db = layers.getLayer(AntCornerFinder.DB_SEGMENT_DEBUG_LAYER);
         DrawingBufferRoutines.cross(db, ix, 5.0, Color.PINK);
         layers.repaint();
+        double smallRadius = min(latchRadius, otherLatchRadius);
+        if (ix.distance(close) <= smallRadius && ix.distance(dot) < smallRadius) {
+          bug("OK, I can perform the co-terminate latch!");
+          performLatchCoterminate(mySeg, dot, neighbor, close);
+        }
+      }
+    }
+  }
+
+  private void performLatchCoterminate(AntSegment mySeg, Pt dot, AntSegment neighbor, Pt close) {
+    bug("performLatchCoterminate");
+    // get the other end of mySeg to use as the fulcrum
+    Sequence subseq = mySeg.getRawInkSubsequence();
+    Pt fulcrum = mySeg.getEarlyPoint();
+    if (mySeg.getEarlyPoint().isSameLocation(dot)) {
+      fulcrum = mySeg.getLatePoint();
+    }
+    int fulcrumIdx = subseq.indexOf(fulcrum);
+    int dotIdx = subseq.indexOf(dot);
+    bug("dot: " + num(dot));
+    bug("dot index: " + dotIdx + " of " + subseq.size());
+    bug("fulcrum: " + num(fulcrum));
+    bug("fulcrum index: " + fulcrumIdx + " of " + subseq.size());
+    
+    double dx = close.x - dot.x;
+    double dy = close.y - dot.y;
+    bug("dx/dy: " + num(dx) + "/" + num(dy));
+
+    double segLen = subseq.length();
+    bug("segLen: " + num(segLen));
+    bug("path length from dot to fulcrum: "
+        + num(subseq.getPathLength(min(fulcrumIdx, dotIdx), max(fulcrumIdx, dotIdx))));
+    int dir = dotIdx > fulcrumIdx ? 1 : -1;
+    Pt prev = null;
+    bug("start/stop/dir: " + fulcrumIdx + "/" + dotIdx + "/" + dir);
+    double dist = 0;
+    if (dir > 0) {
+      for (int i = fulcrumIdx; i <= dotIdx; i++) {
+        Pt pt = subseq.get(i);
+        if (prev != null) {
+          dist = dist + pt.distance(prev);
+          double frac = dist / segLen;
+          double newX = pt.x + frac * dx;
+          double newY = pt.y + frac * dy;
+          bug("(up) Moving " + num(frac * 100) + "%: " + num(pt) + " to " + num(newX) + ", "
+              + num(newY));
+          pt.setLocation(newX, newY);
+        }
+        prev = pt;
+      }
+    } else {
+      for (int i = fulcrumIdx; i >= dotIdx; i--) {
+        Pt pt = subseq.get(i);
+        if (prev != null) {
+          dist = dist + pt.distance(prev);
+          double frac = dist / segLen;
+          double newX = pt.x + frac * dx;
+          double newY = pt.y + frac * dy;
+          bug("(down) Moving " + num(frac * 100) + "%: " + num(pt) + " to " + num(newX) + ", "
+              + num(newY));
+          pt.setLocation(newX, newY);
+        }
+        prev = pt;
       }
     }
   }

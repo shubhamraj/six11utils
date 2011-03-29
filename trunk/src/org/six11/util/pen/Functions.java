@@ -1378,8 +1378,19 @@ public abstract class Functions {
     //    Pt[] ret = new Pt[] {
     //        getCurvilinearWindow(seq, idx, dist, -1), getCurvilinearWindow(seq, idx, dist, 1)
     //    };
+//    bug("Getting curvilinear window in two directions. What say you? Index " + idx + " of "
+//        + seq.size());
+//    double toEnd = seq.getPathLength(idx, seq.size() - 1);
+//    double fromStart = seq.getPathLength(0, idx);
+//    bug("Path lengths should be less than " + num(dist));
+//    bug("  fromStart: " + num(fromStart));
+//    bug("  toEnd: " + num(toEnd));
+    Pt a = getCurvilinearNeighbor(seq, idx, dist, -1);
+    Pt b = getCurvilinearNeighbor(seq, idx, dist, 1);
+//    bug("  a: " + num(a));
+//    bug("  b: " + num(b));
     Pt[] ret = new Pt[] {
-        getCurvilinearNeighbor(seq, idx, dist, -1), getCurvilinearNeighbor(seq, idx, dist, 1)
+        a, b
     };
     return ret;
   }
@@ -1426,15 +1437,14 @@ public abstract class Functions {
           double y = prev.y + fraction * dy;
           long t = prev.getTime() + (long) (fraction * (double) dt);
           ret = new Pt(x, y, t);
-          bug("Found it at " + num(ret));
           break;
         } else {
           soFar = soFar + dist;
-          bug(num(soFar));
         }
       }
       prev = pt;
     }
+
     return ret;
   }
 

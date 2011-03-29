@@ -80,7 +80,6 @@ public class SketchBook {
     for (int idx : cornerIndices) {
       cornerPoints.add(seq.get(idx));
     }
-    bug("Added sequence " + seq.getId() + " to the sketchbook.");
   }
 
   /**
