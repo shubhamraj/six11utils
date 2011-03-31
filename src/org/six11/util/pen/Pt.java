@@ -312,4 +312,9 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
     return (Sequence) getAttribute(name);
   }
 
+  public Pt getTranslated(Vec vec, double len) {
+    Vec resized = vec.getVectorOfMagnitude(len);
+    return getTranslated(resized.getX(), resized.getY());
+  }
+
 }

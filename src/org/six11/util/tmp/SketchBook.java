@@ -64,13 +64,10 @@ public class SketchBook {
     for (AntSegment segment : allSegments) {
       for (int i = segment.getEarlyPointIndex(); i <= segment.getLatePointIndex(); i++) {
         Pt pt = segment.getRawInk().get(i);
-        if (!pt.hasAttribute(AntCornerFinder.POINT_SEGMENTS)) {
-          pt.setAttribute(AntCornerFinder.POINT_SEGMENTS, new ArrayList<AntSegment>());
-        }
-        List<AntSegment> ptSegs = (List<AntSegment>) pt
-            .getAttribute(AntCornerFinder.POINT_SEGMENTS);
+        List<AntSegment> ptSegs = getSegments(pt);
         ptSegs.add(segment); // points can be part of more than one segment, e.g. on corners.
       }
+      segment.bake();
       lengthGraph.add(segment);
       angleGraph.add(segment);
       segments.add(segment);
@@ -80,6 +77,15 @@ public class SketchBook {
     for (int idx : cornerIndices) {
       cornerPoints.add(seq.get(idx));
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<AntSegment> getSegments(Pt pt) {
+    if (!pt.hasAttribute(AntCornerFinder.POINT_SEGMENTS)) {
+      pt.setAttribute(AntCornerFinder.POINT_SEGMENTS, new ArrayList<AntSegment>());
+    }
+    List<AntSegment> ptSegs = (List<AntSegment>) pt.getAttribute(AntCornerFinder.POINT_SEGMENTS);
+    return ptSegs;
   }
 
   /**
@@ -120,4 +126,27 @@ public class SketchBook {
     Debug.out("SketchBook", what);
   }
 
+  @SuppressWarnings("unchecked")
+  public static List<AntSegment> segs(Sequence seq) {
+    return (List<AntSegment>) seq.getAttribute(AntCornerFinder.SEQUENCE_SEGMENTS);
+  }
+
+  public static List<AntSegment> extractSegments(List<Sequence> lastSequences) {
+    List<AntSegment> ret = new ArrayList<AntSegment>();
+    for (Sequence seq : lastSequences) {
+      List<AntSegment> segs = segs(seq);
+      ret.addAll(segs);
+    }
+    return ret;
+  }
+
+  public static List<AntSegment> extractSegments(Set<Pt> points) {
+    List<AntSegment> ret = new ArrayList<AntSegment>();
+    Set<AntSegment> retSet = new HashSet<AntSegment>(); // ensures no duplicates
+    for (Pt pt : points) {
+      retSet.addAll(SketchBook.getSegments(pt));
+    }
+    ret.addAll(retSet);
+    return ret;
+  }
 }

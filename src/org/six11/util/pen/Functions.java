@@ -1230,8 +1230,16 @@ public abstract class Functions {
       prev = pt;
     }
     controlPoints.add(src.get(src.size() - 1));
-    int numPatches = controlPoints.size() - 1;
     int numSteps = (int) Math.ceil((double) curviLengthBetweenControlPoints / targetMinDensity);
+    ret = makeNaturalSpline(numSteps, controlPoints);
+
+    return ret;
+  }
+
+  public static Sequence makeNaturalSpline(int numSteps, List<Pt> controlPoints) {
+    Sequence ret = new Sequence();
+    int numPatches = controlPoints.size() - 1;
+
     int idxA, idxB, idxC, idxD;
     Pt a, b, c, d;
     for (int i = 0; i <= controlPoints.size(); i++) {
@@ -1248,7 +1256,6 @@ public abstract class Functions {
 
       getSplinePatch(a, b, c, d, ret, numSteps);
     }
-
     return ret;
   }
 
@@ -1378,17 +1385,17 @@ public abstract class Functions {
     //    Pt[] ret = new Pt[] {
     //        getCurvilinearWindow(seq, idx, dist, -1), getCurvilinearWindow(seq, idx, dist, 1)
     //    };
-//    bug("Getting curvilinear window in two directions. What say you? Index " + idx + " of "
-//        + seq.size());
-//    double toEnd = seq.getPathLength(idx, seq.size() - 1);
-//    double fromStart = seq.getPathLength(0, idx);
-//    bug("Path lengths should be less than " + num(dist));
-//    bug("  fromStart: " + num(fromStart));
-//    bug("  toEnd: " + num(toEnd));
+    //    bug("Getting curvilinear window in two directions. What say you? Index " + idx + " of "
+    //        + seq.size());
+    //    double toEnd = seq.getPathLength(idx, seq.size() - 1);
+    //    double fromStart = seq.getPathLength(0, idx);
+    //    bug("Path lengths should be less than " + num(dist));
+    //    bug("  fromStart: " + num(fromStart));
+    //    bug("  toEnd: " + num(toEnd));
     Pt a = getCurvilinearNeighbor(seq, idx, dist, -1);
     Pt b = getCurvilinearNeighbor(seq, idx, dist, 1);
-//    bug("  a: " + num(a));
-//    bug("  b: " + num(b));
+    //    bug("  a: " + num(a));
+    //    bug("  b: " + num(b));
     Pt[] ret = new Pt[] {
         a, b
     };
@@ -1707,13 +1714,17 @@ public abstract class Functions {
   }
 
   public static double getLineError(Line line, Sequence sequence) {
+    return getLineError(line, sequence.getPoints(), 0, sequence.size() - 1);
+  }
+
+  public static double getLineError(Line line, List<Pt> points, int startIdx, int endIdxInclusive) {
     double errorSum = 0;
-    for (int i = 0; i < sequence.size(); i++) {
-      Pt pt = sequence.get(i);
+    for (int i = startIdx; i <= endIdxInclusive; i++) {
+      Pt pt = points.get(i);
       double error = Functions.getDistanceBetweenPointAndLine(pt, line);
       errorSum = errorSum + (error * error);
     }
-    return sqrt(errorSum) / (sequence.size() - 2);
+    return sqrt(errorSum) / (endIdxInclusive - startIdx);
   }
 
   /**
@@ -1759,7 +1770,7 @@ public abstract class Functions {
    * timestamp is equal to or greater than the timestamp of the input point. If all the points in
    * the sequence are younger than the input, this returns -1.
    */
-  public static int seekByTime(Pt targetTime, Sequence seq, int idxStart) {
+  public static int seekByTime(Pt targetTime, List<Pt> seq, int idxStart) {
     int ret = -1;
     long target = targetTime.getTime();
     for (int i = idxStart; i < seq.size(); i++) {

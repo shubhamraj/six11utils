@@ -223,36 +223,19 @@ public class AntCornerFinder implements PenListener {
   }
 
   private void drawSegments(Sequence seq) {
-    //    List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
-    //    List<AntSegment> allSegments = new ArrayList<AntSegment>();
-    //    for (Ant ant : ants) {
-    //      SortedSet<AntSegment> segments = ant.getSegments();
-    //      allSegments.addAll(segments);
-    //    }
     @SuppressWarnings("unchecked")
     List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute(SEQUENCE_SEGMENTS);
     DrawingBuffer db = layers.getLayer(DB_SEGMENT_FINAL_LAYER);
-    tmpBugSegments("Drawing segments", allSegments);
     for (AntSegment seg : allSegments) {
       drawSegment(seg, db, Color.BLACK, 3.0);
     }
   }
 
   private void splinify(Sequence seq) {
-    //    List<Ant> ants = (List<Ant>) seq.getAttribute("ants");
-    //    List<AntSegment> allSegments = new ArrayList<AntSegment>();
-    //    for (Ant ant : ants) {
-    //      SortedSet<AntSegment> segments = ant.getSegments();
-    //      allSegments.addAll(segments);
-    //    }
     List<AntSegment> allSegments = (List<AntSegment>) seq.getAttribute(SEQUENCE_SEGMENTS);
     List<Integer> junctions = (List<Integer>) seq.getAttribute(SEGMENT_JUNCTIONS);
     List<AntSegment> arcs = new ArrayList<AntSegment>();
     int junctionCounter = 1;
-    StringBuilder startStopStr = new StringBuilder();
-    for (AntSegment seg : allSegments) {
-      startStopStr.append(seg.getEarlyPointIndex() + "--" + seg.getLatePointIndex() + " ");
-    }
     for (int i = 0; i < allSegments.size(); i++) {
       AntSegment seg = allSegments.get(i);
       if (seg.getType() == Ant.SegType.EllipticalArc) {
@@ -275,8 +258,8 @@ public class AntCornerFinder implements PenListener {
     Sequence raw = arcs.get(0).getRawInk();
     Pt early = arcs.get(0).getEarlyPoint();
     Pt late = arcs.get(arcs.size() - 1).getLatePoint();
-    int earlyIdx = Functions.seekByTime(early, raw, 0);
-    int lateIdx = Functions.seekByTime(late, raw, earlyIdx);
+    int earlyIdx = Functions.seekByTime(early, raw.getPoints(), 0);
+    int lateIdx = Functions.seekByTime(late, raw.getPoints(), earlyIdx);
     Sequence rawRegion = raw.getSubSequence(earlyIdx, lateIdx + 1);
     int numPatches = (int) Math.floor(rawRegion.length() / minSegmentPatchLength);
     double patchLength = rawRegion.length() / (double) numPatches;
@@ -299,7 +282,6 @@ public class AntCornerFinder implements PenListener {
       SortedSet<AntSegment> segments = ant.getSegments();
       allSegments.addAll(segments);
     }
-    int before = allSegments.size();
     while (true) {
       if (mergeSegments(allSegments) == false) {
         break;
@@ -334,8 +316,8 @@ public class AntCornerFinder implements PenListener {
       } else {
         thisErr[i] = Functions.getEllipseError(here.getEllipse(), here.getRawInkSubsequence());
       }
-      int startIdx = Functions.seekByTime(here.getEarlyPoint(), seq, 0);
-      int endIdx = Functions.seekByTime(there.getLatePoint(), seq, startIdx + 1);
+      int startIdx = Functions.seekByTime(here.getEarlyPoint(), seq.getPoints(), 0);
+      int endIdx = Functions.seekByTime(there.getLatePoint(), seq.getPoints(), startIdx + 1);
       Sequence mergeSeq = seq.getSubSequence(startIdx, endIdx + 1);
       Line mergeLine = new Line(seq.get(startIdx), seq.get(endIdx));
       RotatedEllipse mergeEllipse = Functions.createEllipse(mergeSeq.getPoints());
@@ -417,9 +399,6 @@ public class AntCornerFinder implements PenListener {
         if (!splinesDrawn.contains(seg.getSpline())) {
           DrawingBufferRoutines.lines(db, seg.getSpline(), color, thickness);
           splinesDrawn.add(seg.getSpline());
-          int idxStart = Functions.seekByTime(seg.getSpline().get(0), seg.getRawInk(), 0);
-          int idxEnd = Functions.seekByTime(seg.getSpline().get(seg.getSpline().size() - 1),
-              seg.getRawInk(), idxStart);
         }
       } else {
         bug("Drawing ellipse, but I shouldn't because I should use the spline. Fail.");
