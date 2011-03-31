@@ -113,4 +113,13 @@ public class Vec {
   public double cross(Vec other) {
     return Functions.getCrossProduct(this, other);
   }
+
+  /**
+   * Two directions are the same if their x and y components match (within Functions.EQ_TOL)
+   */
+  public boolean isSame(Vec dir) {
+    boolean xSame = Functions.eq(getX(), dir.getX(), Functions.EQ_TOL);
+    boolean ySame = Functions.eq(getY(), dir.getY(), Functions.EQ_TOL);
+    return xSame && ySame;
+  }
 }

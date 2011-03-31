@@ -13,8 +13,73 @@ import org.six11.util.pen.RotatedEllipse;
 import org.six11.util.pen.Sequence;
 import org.six11.util.pen.Vec;
 import org.six11.util.tmp.Ant.SegType;
+import org.six11.util.tmp.AntSegment.Terminal;
 
 public class AntSegment implements Comparable<AntSegment> {
+
+  /**
+   * Describes the ends of a segment when it is one (or both) ends of a stroke. If size is zero, it
+   * means this segment is in the middle of a longer stroke phrase. If size is one, it means it is
+   * one end of a longer stroke phrase. If size is two, it means the entire stroke consists of only
+   * this segment.
+   * 
+   * You may query the terminal point and terminal directions using an index in the range from 0 to
+   * (size() - 1).
+   */
+  public class Terminal {
+
+    private Pt[] points;
+    private Vec[] vecs;
+
+    private Terminal() {
+      int s = 0;
+      if (getEarlyPointIndex() == 0) {
+        s++;
+      }
+      if (getLatePointIndex() == rawInk.size() - 1) {
+        s++;
+      }
+      points = new Pt[s];
+      vecs = new Vec[s];
+      int counter = 0;
+      if (getEarlyPointIndex() == 0) {
+        points[counter] = getEarlyPoint();
+        vecs[counter] = getDirection(getEarlyPointIndex()).getFlip();
+        counter++;
+      }
+      if (getLatePointIndex() == rawInk.size() - 1) {
+        points[counter] = getLatePoint();
+        vecs[counter] = getDirection(getLatePointIndex());
+      }
+      bug("Built a terminal structure for " + this);
+    }
+
+    /**
+     * Tells you how many terminal points this segment has with respect to its raw stroke.
+     */
+    public int size() {
+      return points.length;
+    }
+
+    /**
+     * Gives you a terminal point.
+     */
+    public Pt getPoint(int i) {
+      return points[i];
+    }
+
+    /**
+     * Gives the direction the segment is travelling (away from the middle) at the terminal point.
+     */
+    public Vec getDir(int i) {
+      return vecs[i];
+    }
+
+    public String toString() {
+      return "Segment " + AntSegment.this.hashCode() + " has " + size() + " terminal points.";
+    }
+    
+  }
 
   private Ant.SegType type;
   private Line line;
@@ -28,6 +93,8 @@ public class AntSegment implements Comparable<AntSegment> {
   private double cachedLength;
   private double fixedAngle;
   private Vec fixedVector;
+  private Terminal terminal;
+  private boolean baked = false;
 
   private AntSegment(Ant.SegType type, Pt startPoint, Pt endPoint, Sequence rawInk) {
     this.type = type;
@@ -39,12 +106,65 @@ public class AntSegment implements Comparable<AntSegment> {
     this.cachedLength = -1;
     this.fixedAngle = Double.NaN;
     this.fixedVector = null;
+    this.terminal = null;
 
     if (rawInk.isForward() == false) {
       bug("Sorry, the rawInk argument is not forward. Committing ritualistic suicide (stacktrace first)");
       new RuntimeException("foo").printStackTrace();
       System.exit(0);
     }
+  }
+
+  public String toString() {
+    return type.toString();
+  }
+
+  /**
+   * Removes unnecessary information. Trust me kid, this is for your own good. The longer you have
+   * access to things like the raw ink and the integers that index into it, the longer you can screw
+   * things up. Bake the segment to cause it to only be used as a line, or arc, or whatever segment
+   * type it is.
+   */
+  public void bake() {
+    terminal = new Terminal();
+    bug("Just set terminal: it is: " + terminal);
+    startPt = null;
+    endPt = null;
+    rawInk = null;
+    earlyPointIndex = -1;
+    latePointIndex = -1;
+    cachedLength = -1;
+    fixedAngle = Double.NaN;
+    fixedVector = null;
+
+    if (type == SegType.Line) {
+      ellipse = null;
+      spline = null;
+    } else if (type == SegType.EllipticalArc) {
+      line = null;
+    }
+    bug("Baked a segment of type: " + type + ", hash: " + AntSegment.this.hashCode()
+        + ". Terminal: " + terminal);
+    baked = true;
+  }
+
+  public boolean isBaked() {
+    return baked;
+  }
+
+  public Vec getDirection(int idx) {
+    Vec ret = null;
+    if (type == SegType.Line) {
+      ret = new Vec(startPt, endPt).getUnitVector();
+    } else {
+      int splineIdx = Functions.seekByTime(rawInk.get(idx), spline, 0);
+      if (splineIdx == 0) {
+        ret = new Vec(spline.get(0), spline.get(1)).getUnitVector();
+      } else if (splineIdx == spline.size() - 1) {
+        ret = new Vec(spline.get(splineIdx - 1), spline.get(splineIdx)).getUnitVector();
+      }
+    }
+    return ret;
   }
 
   public static AntSegment makeLineSegment(Pt a, Pt b, Sequence rawInk) {
@@ -87,7 +207,7 @@ public class AntSegment implements Comparable<AntSegment> {
     double ret = cachedLength;
     if (ret < 0) {
       if (type == SegType.Line) {
-        ret = startPt.distance(endPt);
+        ret = line.getLength();
       } else if (type == SegType.EllipticalArc) {
         if (hasSpline()) {
           ret = 0;
@@ -95,6 +215,7 @@ public class AntSegment implements Comparable<AntSegment> {
             ret = ret + spline.get(i - 1).distance(spline.get(i));
           }
         } else {
+          bug("Improper type for segment: " + type);
           ret = rawInk.getPathLength(getEarlyPointIndex(), getLatePointIndex());
         }
       }
@@ -138,8 +259,8 @@ public class AntSegment implements Comparable<AntSegment> {
    */
   public Sequence getRawInkSubsequence() {
     Sequence ret = null;
-    int startIdx = Functions.seekByTime(getEarlyPoint(), rawInk, 0);
-    int endIdx = Functions.seekByTime(getLatePoint(), rawInk, startIdx + 1);
+    int startIdx = Functions.seekByTime(getEarlyPoint(), rawInk.getPoints(), 0);
+    int endIdx = Functions.seekByTime(getLatePoint(), rawInk.getPoints(), startIdx + 1);
     if (startIdx >= 0 && endIdx > startIdx) {
       ret = rawInk.getSubSequence(startIdx, endIdx + 1);
     }
@@ -189,7 +310,7 @@ public class AntSegment implements Comparable<AntSegment> {
   public int getEarlyPointIndex() {
     if (earlyPointIndex < 0) {
       Pt early = getEarlyPoint();
-      earlyPointIndex = Functions.seekByTime(early, rawInk, 0);
+      earlyPointIndex = Functions.seekByTime(early, rawInk.getPoints(), 0);
     }
     return earlyPointIndex;
   }
@@ -201,7 +322,7 @@ public class AntSegment implements Comparable<AntSegment> {
   public int getLatePointIndex() {
     if (latePointIndex < 0) {
       Pt late = getLatePoint();
-      latePointIndex = Functions.seekByTime(late, rawInk, getEarlyPointIndex());
+      latePointIndex = Functions.seekByTime(late, rawInk.getPoints(), getEarlyPointIndex());
     }
     return latePointIndex;
   }
@@ -273,5 +394,24 @@ public class AntSegment implements Comparable<AntSegment> {
       }
     }
     return ret;
+  }
+
+  public Terminal getTerminal() {
+    return terminal;
+  }
+
+  /**
+   * Rotates this segment so that ptA (which should be part of this segment) is at the same location
+   * as ptB. The other points on this segment should rotate about the end point that is farthest
+   * from ptA.
+   * 
+   * @param ptA
+   *          a point on this segment
+   * @param ptB
+   *          a destination point that ptA should rotate to.
+   */
+  public void rotateTo(Pt ptA, Pt ptB) {
+    //    int idxA = rawInk.
+    bug("rotateTo not implemented");
   }
 }
