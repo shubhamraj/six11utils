@@ -173,6 +173,7 @@ public class JunctionFinder implements PenListener {
     } else {
       //      bug("goCount for " + goCount + " not implemented.");
     }
+    bug("clearing recent ink...");
     layers.getLayer(DB_RECENT_INK).clear();
     layers.getLayer(DB_COMPLETE_LAYER).clear();
     debugThing
@@ -350,6 +351,7 @@ public class JunctionFinder implements PenListener {
   }
 
   private void drawCurrentSequence(Sequence seq) {
+    bug("drawing recent ink");
     DrawingBuffer raw = layers.getLayer(DB_RECENT_INK);
     DrawingBufferRoutines.drawShape(raw, seq.getPoints(), DrawingBufferLayers.DEFAULT_COLOR,
         DrawingBufferLayers.DEFAULT_THICKNESS);

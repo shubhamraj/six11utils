@@ -13,7 +13,7 @@ public class Latcher {
 
   private static final double maxLatchDist = 40;
   private static final double minLatchDist = 9;
-  private static final double latchNumerator = 12;
+  private static final double latchNumerator = 9;
 
   JunctionFinder jf;
 
@@ -29,6 +29,7 @@ public class Latcher {
       List<Segment.Terminal> terminals = seg.getTerminals();
       for (Segment.Terminal term : terminals) {
         bug("Thinking about term: " + term);
+        jf.getDebugThing().drawTerm(term, getLatchRadius(term.getSegment()));
         if (!term.isFixed()) {
           List<Segment.Terminal> nearbySegs = jf.getSketchBook().getTerminalsNear(term, latchDist);
           for (Segment.Terminal near : nearbySegs) {
@@ -51,8 +52,8 @@ public class Latcher {
       bug("maybe latch " + term + " to " + near);
       double latchRadiusTerm = getLatchRadius(term.getSegment());
       double latchRadiusNear = getLatchRadius(near.getSegment());
-      jf.getDebugThing().drawTerm(term, latchRadiusTerm);
-      jf.getDebugThing().drawTerm(near, latchRadiusNear);
+      //      jf.getDebugThing().drawTerm(term, latchRadiusTerm);
+      //      jf.getDebugThing().drawTerm(near, latchRadiusNear);
       double distBetwixt = near.getPoint().distance(term.getPoint());
       if ((distBetwixt < latchRadiusNear) && (distBetwixt < latchRadiusTerm)) {
         bug(" ... they are close enough...");
