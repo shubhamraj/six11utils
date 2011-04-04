@@ -392,4 +392,8 @@ public class Debug {
       new RuntimeException(msg).printStackTrace();
     }
   }
+
+  public static void warn(Object source, String what) {
+    out(source.getClass().getSimpleName(), "*** warning *** " + what);
+  }
 }

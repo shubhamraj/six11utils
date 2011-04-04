@@ -69,14 +69,15 @@ public class JunctionFinderDebugThing {
     Color darkGreen = Color.green.darker();
     Color darkBlue = Color.blue.darker();
     Color pc = preferredColor;
-    if (pc != null) {
-      bug("Drawing " + segments.size() + " segments on the formal layer.");
-    }
     for (Segment seg : segments) {
       if (seg.getType() == Segment.Type.Line) {
         DrawingBufferRoutines.line(db, seg.asLine(), pc == null ? darkGreen : pc, 2.0);
       } else if (seg.getType() == Segment.Type.Curve) {
         DrawingBufferRoutines.drawShape(db, seg.asSpline(), pc == null ? darkBlue : pc, 2.0);
+      } else if (seg.getType() == Segment.Type.EllipticalArc) {
+        DrawingBufferRoutines.drawShape(db, seg.asPolyline(), pc == null ? darkBlue : pc, 2.0);
+      } else {
+        Debug.warn(this, "Unknown segment type in drawSegments: " + seg.getType());
       }
     }
   }

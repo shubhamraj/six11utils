@@ -66,6 +66,7 @@ public class JunctionFinder implements PenListener {
   public static final double clusterDistanceThreshold = 6;
   public static final double windowSize = 10;
   public static final double lineErrorThreshold = 1.5;
+  public static final double ellipseErrorThreshold = 0.5; // TODO: change
   public static final double minPatchSize = 10;
 
   //
@@ -163,17 +164,18 @@ public class JunctionFinder implements PenListener {
 
   private void go() {
     if (goCount == 0) {
+      List<Segment> batch = new ArrayList<Segment>();
       for (Sequence seq : unprocessedSequences) {
         findCorners(seq);
+        batch.addAll((List<Segment>) seq.getAttribute(SEGMENTS));
       }
+      sketchBook.record(batch);
       unprocessedSequences.clear();
     } else if (goCount == 1) {
-      bug("Latch maybe");
       latcher.latch();
     } else {
       //      bug("goCount for " + goCount + " not implemented.");
     }
-    bug("clearing recent ink...");
     layers.getLayer(DB_RECENT_INK).clear();
     layers.getLayer(DB_COMPLETE_LAYER).clear();
     debugThing
@@ -220,7 +222,6 @@ public class JunctionFinder implements PenListener {
     debugThing.drawJunctions(seq);
     makeSegments(seq); // sets the SEGMENTS attrib (list of Segments)
     debugThing.drawSegments((List<Segment>) seq.getAttribute(SEGMENTS));
-    sketchBook.record((List<Segment>) seq.getAttribute(SEGMENTS));
   }
 
   private void makeSegments(Sequence seq) {
@@ -246,6 +247,8 @@ public class JunctionFinder implements PenListener {
     double lineError = Functions.getLineError(line, patch, a, b);
     if (lineError < lineErrorThreshold) {
       ret = new LineSegment(patch, i == 0, j == seq.size() - 1);
+    } else if (Functions.getEllipseError(patch) < ellipseErrorThreshold) {
+      ret = new EllipseArcSegment(patch, i == 0, j == seq.size() - 1);
     } else {
       ret = new CurvySegment(patch, i == 0, j == seq.size() - 1);
     }
@@ -351,7 +354,6 @@ public class JunctionFinder implements PenListener {
   }
 
   private void drawCurrentSequence(Sequence seq) {
-    bug("drawing recent ink");
     DrawingBuffer raw = layers.getLayer(DB_RECENT_INK);
     DrawingBufferRoutines.drawShape(raw, seq.getPoints(), DrawingBufferLayers.DEFAULT_COLOR,
         DrawingBufferLayers.DEFAULT_THICKNESS);

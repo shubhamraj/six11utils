@@ -3,6 +3,7 @@ package org.six11.util.tmp2;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.six11.util.Debug;
 import org.six11.util.tmp2.Segment.Terminal;
 
 public class SketchBook {
@@ -20,6 +21,10 @@ public class SketchBook {
     segments.addAll(segs);
   }
 
+  private static void bug(String what) {
+    Debug.out("SketchBook", what);
+  }
+  
   public List<Segment> getLastSegmentBatch() {
     List<Segment> ret = new ArrayList<Segment>();
     if (segmentBatches.size() > 0) {
