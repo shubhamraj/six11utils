@@ -1748,6 +1748,35 @@ public abstract class Functions {
   }
 
   /**
+   * Returns the length of the stroke represented as the point list. This does NOT rely on cached
+   * values.
+   * 
+   * @param points
+   * @return sum of distance of p[i] to p[i+1]
+   */
+  public static double getCurvilinearLength(List<Pt> points) {
+    double ret = 0;
+    for (int i = 0; i < points.size() - 1; i++) {
+      ret = ret + points.get(i).distance(points.get(i + 1));
+    }
+    return ret;
+  }
+
+  public static double getEllipseError(RotatedEllipse ellie, List<Pt> points) {
+    int numPoints = (int) Math.ceil(Functions.getCurvilinearLength(points));
+    double ret = 0;
+    List<Pt> ellipseSurface = ellie.getRestrictedArcPath(numPoints);
+    double errorSum = 0;
+    for (Pt pt : points) {
+      Pt nearest = Functions.getNearestPointOnSequence(pt, ellipseSurface);
+      double error = nearest.distance(pt);
+      errorSum = errorSum + (error * error);
+    }
+    ret = (sqrt(errorSum) / (points.size() - 2));
+    return ret;
+  }
+
+  /**
    * Calculate the error between the ellipse surface and the target sequence. The ellipse is assumed
    * to be a restricted arc.
    */
@@ -1765,6 +1794,17 @@ public abstract class Functions {
     return ret;
   }
 
+  public static double getEllipseError(List<Pt> points) {
+    double ret = Double.MAX_VALUE;
+    RotatedEllipse ellie = createEllipse(points);
+    if (ellie != null) {
+      int n = points.size();
+      ellie.setArcRegion(points.get(0), points.get(n / 2), points.get(n - 1));
+      ret = getEllipseError(ellie, new Sequence(points));
+    }
+    return ret;
+  }
+
   /**
    * Find the first index of the point (beginning at the given start location) in the sequence whose
    * timestamp is equal to or greater than the timestamp of the input point. If all the points in
@@ -1778,6 +1818,46 @@ public abstract class Functions {
         ret = i;
         break;
       }
+    }
+    return ret;
+  }
+
+  /**
+   * Rotate and scale the points about points[idxHinge].
+   * 
+   * @param idxHinge
+   *          the index of the point in points that will remain constant. This should be either 0 or
+   *          points.size() - 1.
+   * @param idxReference
+   *          the index of the reference point. It will be transformed fully to match 'target'. This
+   *          should either be 0 or points.size() - 1 (whichever the hinge is not).
+   * @param target
+   *          the point that the reference point will be transformed to
+   * @param points
+   *          the list of points to use as a source for the transform
+   * @return an affine transformation of the points list. It has the same size as the input list.
+   */
+  public static List<Pt> hinge(int idxHinge, int idxReference, Pt target, List<Pt> points) {
+    Pt ref = points.get(idxReference);
+    double dx = target.getX() - ref.getX();
+    double dy = target.getY() - ref.getY();
+    List<Pt> ret = new ArrayList<Pt>();
+    int dir = idxHinge == 0 ? 1 : -1;
+    double segLength = Functions.getCurvilinearLength(points);
+    double runningDist = 0;
+    Pt prev = null;
+    for (int i = idxHinge; i >= 0 && i < points.size(); i += dir) {
+      Pt pt = points.get(i);
+      if (prev != null) {
+        runningDist = runningDist + prev.distance(pt);
+        double frac = runningDist / segLength;
+        double localDx = frac * dx;
+        double localDy = frac * dy;
+        ret.add(new Pt(pt.getX() + localDx, pt.getY() + localDy, pt.getTime()));
+      } else {
+        ret.add(pt.copyXYT());
+      }
+      prev = pt;
     }
     return ret;
   }

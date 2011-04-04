@@ -18,8 +18,11 @@ import static java.lang.Math.ceil;
 @SuppressWarnings("unused")
 public abstract class Segment {
 
+  int id;
+  private static int ID_COUNTER = 1;
+
   public static enum Type {
-    Line, Curve, Unknown
+    Line, Curve, Unknown, EllipticalArc
   };
 
   List<Pt> points;
@@ -34,6 +37,11 @@ public abstract class Segment {
     terms = new boolean[] {
         termA, termB
     };
+    id = ID_COUNTER++;
+  }
+
+  public int getId() {
+    return id;
   }
 
   public Type getType() {
@@ -64,11 +72,11 @@ public abstract class Segment {
     }
     return ret;
   }
-  
+
   public double ctrlPointLength() {
     double ret = 0;
-    for (int i=0; i < points.size() - 1; i++) {
-      ret += points.get(i).distance(points.get(i+1));
+    for (int i = 0; i < points.size() - 1; i++) {
+      ret += points.get(i).distance(points.get(i + 1));
     }
     return ret;
   }
@@ -114,7 +122,8 @@ public abstract class Segment {
     }
 
     public String toString() {
-      return num(pt) + "/" + num(dir) + "(" + (fixed ? "fixed" : "free") + ")";
+      return "Segment " + id + ", " + num(pt) + "/" + num(dir) + "(" + (fixed ? "fixed" : "free")
+          + ")]";
     }
 
     public Segment getSegment() {
@@ -144,7 +153,7 @@ public abstract class Segment {
 
     if (type == Segment.Type.Line) {
       ret.add(new Terminal(getP1(), new Vec(getP2(), getP1()).getUnitVector(), !terms[0]));
-    } else if (type == Segment.Type.Curve) {
+    } else if (type == Segment.Type.Curve || type == Segment.Type.EllipticalArc) {
       ret.add(new Terminal(getP1(), new Vec(points.get(1), points.get(0)).getUnitVector(),
           !terms[0]));
     } else {
@@ -153,7 +162,7 @@ public abstract class Segment {
 
     if (type == Segment.Type.Line) {
       ret.add(new Terminal(getP2(), new Vec(getP1(), getP2()).getUnitVector(), !terms[1]));
-    } else if (type == Segment.Type.Curve) {
+    } else if (type == Segment.Type.Curve || type == Segment.Type.EllipticalArc) {
       ret.add(new Terminal(getP2(), new Vec(points.get(points.size() - 2),
           points.get(points.size() - 1)).getUnitVector(), !terms[1]));
     } else {
@@ -168,6 +177,10 @@ public abstract class Segment {
    */
   public void setModified() {
     spline = null;
+  }
+
+  public List<Pt> asPolyline() {
+    return points;
   }
 
 }
