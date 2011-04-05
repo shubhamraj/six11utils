@@ -10,12 +10,16 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import static java.lang.Math.*;
 import static java.lang.Math.acos;
 import static java.lang.Math.abs;
 
 import org.six11.util.Debug;
 import static org.six11.util.Debug.num;
+import static org.six11.util.Debug.numTime;
 import org.six11.util.data.Statistics;
 import org.six11.util.math.EllipseFit;
 
@@ -903,10 +907,16 @@ public abstract class Functions {
     Pt nearest = null;
     if (polyline.size() > 1) {
       for (int i = 0; i < polyline.size() - 1; i++) {
+        Pt vert = polyline.get(i);
+        double dist = vert.distance(epicenter);
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = vert;
+        }
         Line line = new Line(polyline.get(i), polyline.get(i + 1));
         Pt pt = getNearestPointWithinSegment(epicenter, line);
         if (pt != null) {
-          double dist = pt.distance(epicenter);
+          dist = pt.distance(epicenter);
           if (dist < minDist) {
             minDist = dist;
             nearest = pt;
@@ -1733,6 +1743,12 @@ public abstract class Functions {
    * value.
    */
   public static RotatedEllipse createEllipse(List<Pt> somePoints) {
+    for (Pt pt : somePoints) {
+      if (pt.getTime() == 0) {
+        Debug.stacktrace("zero time in createEllipse.", 8);
+        System.exit(0);
+      }
+    }
     Sequence somePointsSeq = new Sequence(somePoints);
     RotatedEllipse ret = null;
     if (!Functions.arePointsColinear(somePoints)) {
@@ -1860,6 +1876,71 @@ public abstract class Functions {
       prev = pt;
     }
     return ret;
+  }
+
+  /**
+   * Create two new lists representing the 'overlap' region. 'a' and 'b' are polylines. For each
+   * polyline, the nearest point (vertex, or point along connecting lines) is determined. When that
+   * nearest point is closer than 'thresh' units, it is included in the return list. The values in
+   * retA are found along polyline 'a'; values in retB are found along 'b'. If you are only
+   * interested in finding the overlap at the beginning of each list, set the boolean param to true.
+   * 
+   * @param a
+   * @param b
+   * @param retA
+   * @param retB
+   * @param thresh
+   * @param stopWhenThresholdExceeded
+   */
+  public static void createOverlap(List<Pt> a, List<Pt> b, List<Pt> retA, List<Pt> retB,
+      double thresh, boolean stopWhenThresholdExceeded) {
+    SortedSet<Pt> sorterA = new TreeSet<Pt>(Pt.sortByT);
+    SortedSet<Pt> sorterB = new TreeSet<Pt>(Pt.sortByT);
+//    if (a.size() == b.size()) {
+//      boolean same = true;
+//      bug("List a: " + num(a, " "));
+//      bug("List b: " + num(b, " "));
+//      for (int i=0; i < a.size(); i++) {
+//        bug(num(a.get(i)) + " == " + num(b.get(i)) + "?");
+//        if (a.get(i).isSameLocation(b.get(i))) {
+//          bug("Same so far (" + i + ")...");
+//        } else { 
+//          same = false;
+//          break;
+//        }
+//      }
+//      if (same) {
+//        bug("Doh, same point lists.");
+//      }
+//    }
+    for (Pt pt : a) {
+      Pt near = getNearestPointOnPolyline(pt, b);
+      if (near != null) {
+        double dist = near.distance(pt);
+        if (dist <= thresh) {
+          bug("(1) Dist between " + numTime(near) + " and " + numTime(pt) + ": " + num(dist) + ".");
+          sorterB.add(near.copyXYT());
+          sorterA.add(pt.copyXYT());
+        } else {
+          break;
+        }
+      }
+    }
+    for (Pt pt : b) {
+      Pt near = getNearestPointOnPolyline(pt, a);
+      if (near != null) {
+        double dist = near.distance(pt);
+        if (dist <= thresh) {
+          bug("(2) Dist between " + numTime(near) + " and " + numTime(pt) + ": " + num(dist) + ".");
+          sorterA.add(near.copyXYT());
+          sorterB.add(pt.copyXYT());
+        } else {
+          break;
+        }
+      }
+    }
+    retA.addAll(sorterA);
+    retB.addAll(sorterB);
   }
 
   /**

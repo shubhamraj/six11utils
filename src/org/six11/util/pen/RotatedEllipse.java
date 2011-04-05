@@ -8,6 +8,7 @@ import static java.lang.Math.atan2;
 import static java.lang.Math.toDegrees;
 
 import static org.six11.util.Debug.num;
+import static org.six11.util.Debug.numTime;
 import org.six11.util.Debug;
 import org.six11.util.gui.shape.ShapeFactory;
 
@@ -59,11 +60,20 @@ public class RotatedEllipse {
       PathIterator path = new ShapeFactory.RotatedEllipseShape(this, numPoints)
           .getPathIterator(null);
       restrictedArcPath = new ArrayList<Pt>();
+      long startTime = regionPoints.get(0).getTime();
+      long dt = regionPoints.get(2).getTime() - startTime;
+      bug("start time: " + startTime);
+      bug("dt: " + dt);
       double[] coords = new double[6];
       while (!path.isDone()) {
         path.currentSegment(coords);
         restrictedArcPath.add(new Pt(coords[0], coords[1]));
         path.next();
+      }
+      for (int i = 0; i < restrictedArcPath.size(); i++) {
+        double frac = (double) i / (double) restrictedArcPath.size();
+        long t = startTime + (long) (frac * dt);
+        restrictedArcPath.get(i).setTime(t);
       }
     }
     return restrictedArcPath;
@@ -159,6 +169,7 @@ public class RotatedEllipse {
     double distNeg = xNeg.distance(target);
     double distPos = xPos.distance(target);
     Pt ret = distNeg < distPos ? xNeg : xPos;
+    ret.setTime(target.getTime());
     return ret;
   }
 
