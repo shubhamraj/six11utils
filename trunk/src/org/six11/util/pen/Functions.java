@@ -1918,7 +1918,6 @@ public abstract class Functions {
       if (near != null) {
         double dist = near.distance(pt);
         if (dist <= thresh) {
-          bug("(1) Dist between " + numTime(near) + " and " + numTime(pt) + ": " + num(dist) + ".");
           sorterB.add(near.copyXYT());
           sorterA.add(pt.copyXYT());
         } else {
@@ -1931,7 +1930,6 @@ public abstract class Functions {
       if (near != null) {
         double dist = near.distance(pt);
         if (dist <= thresh) {
-          bug("(2) Dist between " + numTime(near) + " and " + numTime(pt) + ": " + num(dist) + ".");
           sorterA.add(near.copyXYT());
           sorterB.add(pt.copyXYT());
         } else {

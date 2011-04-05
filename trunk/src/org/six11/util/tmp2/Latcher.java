@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import static java.lang.Math.min;
+import static java.lang.Math.abs;
 import static java.lang.Math.toDegrees;
 import static java.lang.Math.max;
 import static org.six11.util.Debug.num;
@@ -84,30 +85,46 @@ public class Latcher {
 
       // 2. Continuation
       if (!latched) {
-        bug("trying to find continuation...");
+        //        bug("trying to find continuation...");
         if (recent == near || recent.getSegment() == near.getSegment()) {
-          bug("Avoiding self-continuation. Silly.");
+          //          bug("Avoiding self-continuation. Silly.");
         } else {
           List<Pt> recentPoints = recent.getSurfacePolyline();
           List<Pt> nearPoints = near.getSurfacePolyline();
-          bug("recentPoints: " + recentPoints.size());
-          bug("nearPoints: " + nearPoints.size());
-          List<Pt> recentPointsOverlap = new ArrayList<Pt>();
-          List<Pt> nearPointsOverlap = new ArrayList<Pt>();
-          Functions.createOverlap(recentPoints, nearPoints, recentPointsOverlap, nearPointsOverlap,
-              continuationNearnessThreshold, true);
-          bug("overlap a: " + recentPointsOverlap.size());
-          bug("overlap b: " + nearPointsOverlap.size());
-          if (recentPointsOverlap.size() > 1 && nearPointsOverlap.size() > 1) {
-            bug("Both lists have more than one point. 'recentPoints' in blue, 'nearPoints' in green.");
-            jf.getDebugThing().drawPoints(JunctionFinder.DB_DOT_LAYER, recentPointsOverlap,
-                Color.BLUE, Color.BLUE);
-            jf.getDebugThing().drawPolyline(JunctionFinder.DB_DOT_LAYER, recentPointsOverlap,
-                Color.BLUE, 6);
-            jf.getDebugThing().drawPoints(JunctionFinder.DB_DOT_LAYER, nearPointsOverlap,
-                Color.GREEN, Color.GREEN);
-            jf.getDebugThing().drawPolyline(JunctionFinder.DB_DOT_LAYER, nearPointsOverlap,
-                Color.GREEN, 6);
+          // see if the terminal points are near the other segment.
+          Pt np = Functions.getNearestPointOnPolyline(recent.getPoint(), nearPoints);
+          Pt rp = Functions.getNearestPointOnPolyline(near.getPoint(), recentPoints);
+          double npDist = np.distance(recent.getPoint());
+          double rpDist = rp.distance(near.getPoint());
+          bug("Distances at term points: " + num(npDist) + ", " + num(rpDist) + " (threshold is "
+              + num(continuationNearnessThreshold) + ")");
+          if (npDist < continuationNearnessThreshold && rpDist < continuationNearnessThreshold) {
+            //          bug("recentPoints: " + recentPoints.size());
+            //          bug("nearPoints: " + nearPoints.size());
+            List<Pt> recentPointsOverlap = new ArrayList<Pt>();
+            List<Pt> nearPointsOverlap = new ArrayList<Pt>();
+            Functions.createOverlap(recentPoints, nearPoints, recentPointsOverlap,
+                nearPointsOverlap, continuationNearnessThreshold, true);
+            //          bug("overlap a: " + recentPointsOverlap.size());
+            //          bug("overlap b: " + nearPointsOverlap.size());
+            if (recentPointsOverlap.size() > 1 && nearPointsOverlap.size() > 1) {
+              Vec recentVec = new Vec(recentPointsOverlap.get(0),
+                  recentPointsOverlap.get(recentPointsOverlap.size() - 1));
+              Vec nearVec = new Vec(nearPointsOverlap.get(0),
+                  nearPointsOverlap.get(nearPointsOverlap.size() - 1));
+              bug("Vector magnitudes: " + num(recentVec.mag()) + ", " + nearVec.mag());
+              double angle = min(abs(Functions.getSignedAngleBetween(recentVec, nearVec)),
+                  abs(Functions.getSignedAngleBetween(recentVec.getFlip(), nearVec)));
+              bug("Angle at continuation: " + num(toDegrees(angle)) + " degrees");
+              jf.getDebugThing().drawPoints(JunctionFinder.DB_DOT_LAYER, recentPointsOverlap,
+                  Color.BLUE, Color.BLUE);
+              jf.getDebugThing().drawPolyline(JunctionFinder.DB_DOT_LAYER, recentPointsOverlap,
+                  Color.BLUE, 6);
+              jf.getDebugThing().drawPoints(JunctionFinder.DB_DOT_LAYER, nearPointsOverlap,
+                  Color.GREEN, Color.GREEN);
+              jf.getDebugThing().drawPolyline(JunctionFinder.DB_DOT_LAYER, nearPointsOverlap,
+                  Color.GREEN, 6);
+            }
           }
         }
       }
