@@ -39,11 +39,16 @@ public class SketchBook {
   public List<Terminal> getTerminalsNear(Terminal term, double dist) {
     List<Terminal> nearby = new ArrayList<Terminal>();
     for (Segment seg : segments) {
-      for (Terminal t : seg.getTerminals()) {
-        if (term != t && term.getPoint().distance(t.getPoint()) < dist) {
+      if (seg.isNear(term.getPoint(), dist)) {
+        for (Terminal t : seg.getTerminals()) {
           nearby.add(t);
         }
       }
+//      for (Terminal t : seg.getTerminals()) {
+//        if (term != t && term.getPoint().distance(t.getPoint()) < dist) {
+//          nearby.add(t);
+//        }
+//      }
     }
     return nearby;
   }

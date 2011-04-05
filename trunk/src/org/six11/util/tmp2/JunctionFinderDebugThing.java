@@ -31,8 +31,12 @@ public class JunctionFinderDebugThing {
   }
 
   public void drawPoints(List<Pt> patch) {
-    DrawingBuffer db = jf.getLayers().getLayer(JunctionFinder.DB_DOT_LAYER);
-    DrawingBufferRoutines.dots(db, patch, 2.5, 0.3, Color.LIGHT_GRAY, Color.white.darker());
+    drawPoints(JunctionFinder.DB_DOT_LAYER, patch, Color.LIGHT_GRAY, Color.white);
+  }
+
+  public void drawPoints(String dbName, List<Pt> patch, Color borderColor, Color fillColor) {
+    DrawingBuffer db = jf.getLayers().getLayer(dbName);
+    DrawingBufferRoutines.dots(db, patch, 2.5, 0.3, borderColor, fillColor);
     jf.getLayers().repaint();
   }
 
@@ -80,5 +84,11 @@ public class JunctionFinderDebugThing {
         Debug.warn(this, "Unknown segment type in drawSegments: " + seg.getType());
       }
     }
+  }
+
+  public void drawPolyline(String dbLayer, List<Pt> points, Color color,
+      double thickness) {
+    DrawingBuffer db = jf.getLayers().getLayer(dbLayer);
+    DrawingBufferRoutines.lines(db, points, color, thickness);
   }
 }

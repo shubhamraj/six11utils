@@ -1,6 +1,7 @@
 package org.six11.util.tmp2;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.six11.util.Debug;
@@ -33,6 +34,11 @@ public abstract class Segment {
 
   public Segment(List<Pt> points, boolean termA, boolean termB) {
     this.points = points;
+    for (Pt pt : points) {
+      if (pt.getTime() == 0) {
+        Debug.stacktrace("point has zero time stamp!", 7);
+      }
+    }
     this.type = Type.Unknown;
     terms = new boolean[] {
         termA, termB
@@ -145,6 +151,44 @@ public abstract class Segment {
     public Pt getOpposingTermPoint() {
       return pt == getP1() ? getP2() : getP1();
     }
+//
+//    /**
+//     * Returns a point list for this segment with the terminal's endpoint as the first element. Use
+//     * this when you need to traverse points along the segment beginning at one end.
+//     * 
+//     * @return
+//     */
+//    public List<Pt> getPointListFromTerm() {
+//      List<Pt> ret = new ArrayList<Pt>();
+//      ret.addAll(points);
+//      if (pt == getP2()) {
+//        Collections.reverse(ret);
+//      }
+//      return ret;
+//    }
+
+    public List<Pt> getSurfacePolyline() {
+      List<Pt> ret = new ArrayList<Pt>();
+      if (type == Segment.Type.Line) {
+        ret.add(getPoint());
+        ret.add(getOpposingTermPoint());
+      } else if (type == Segment.Type.Curve || type == Segment.Type.EllipticalArc) {
+        if (pt == getP1()) { 
+          ret.addAll(asPolyline());
+        } else {
+          ret.addAll(asPolyline());
+          Collections.reverse(ret);
+        }
+      } else {
+        Debug.warn(this, "Unknown seg type in getSurfacePolyline(): " + type);
+      }
+      for (Pt pt : ret) {
+        if (pt.getTime() == 0) {
+          Debug.stacktrace("no time stamp in " + getType(), 8);
+        }
+      }
+      return ret;
+    }
 
   }
 
@@ -181,6 +225,20 @@ public abstract class Segment {
 
   public List<Pt> asPolyline() {
     return points;
+  }
+
+  public boolean isNear(Pt point, double dist) {
+    boolean ret = false;
+    Pt where = null;
+    if (type == Segment.Type.Line) {
+      where = Functions.getNearestPointOnLine(point, asLine());
+    } else if (type == Segment.Type.Curve || type == Segment.Type.EllipticalArc) {
+      where = Functions.getNearestPointOnPolyline(point, points);
+    }
+    if (where != null && where.distance(point) <= dist) {
+      ret = true;
+    }
+    return ret;
   }
 
 }

@@ -240,7 +240,7 @@ public class JunctionFinder implements PenListener {
     int numPatches = (int) ceil(segLength / minPatchSize);
     double patchLength = segLength / (double) numPatches;
     List<Pt> patch = Functions.getCurvilinearNormalizedSequence(seq, i, j, patchLength).getPoints();
-    debugThing.drawPoints(patch);
+    // debugThing.drawPoints(patch);
     int a = 0;
     int b = patch.size() - 1;
     Line line = new Line(patch.get(a), patch.get(b));

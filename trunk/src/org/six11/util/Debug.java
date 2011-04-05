@@ -183,6 +183,12 @@ public class Debug {
     return manyDecimals.format(d);
   }
 
+  public static String numTime(Pt pt) {
+    if (pt == null)
+      return "null";
+    return "(" + Debug.num(pt.getX()) + ", " + Debug.num(pt.getY()) + ", " + pt.getTime() + ")";
+  }
+
   public static String num(Pt pt) {
     if (pt == null)
       return "null";
