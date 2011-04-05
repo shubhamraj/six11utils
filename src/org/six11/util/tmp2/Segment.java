@@ -127,9 +127,10 @@ public abstract class Segment {
       return dir;
     }
 
+    
+    
     public String toString() {
-      return "Segment " + id + ", " + num(pt) + "/" + num(dir) + "(" + (fixed ? "fixed" : "free")
-          + ")]";
+      return "S-" + id + "/T-"+ (pt == getP1() ? "1" : "2");
     }
 
     public Segment getSegment() {

@@ -62,8 +62,6 @@ public class RotatedEllipse {
       restrictedArcPath = new ArrayList<Pt>();
       long startTime = regionPoints.get(0).getTime();
       long dt = regionPoints.get(2).getTime() - startTime;
-      bug("start time: " + startTime);
-      bug("dt: " + dt);
       double[] coords = new double[6];
       while (!path.isDone()) {
         path.currentSegment(coords);
