@@ -21,7 +21,7 @@ public class Latcher {
   private static final double latchNumerator = 9;
 
   JunctionFinder jf;
-  private static final double continuationNearnessThreshold = 30;
+  private static final double continuationNearnessThreshold = 20;
 
   public Latcher(JunctionFinder jf) {
     this.jf = jf;
@@ -77,7 +77,8 @@ public class Latcher {
         Pt ix = Functions.getIntersectionPoint(recent.getLine(), near.getLine());
         if (ix != null && ix.distance(recent.getPoint()) < latchRadiusTerm
             && ix.distance(near.getPoint()) < latchRadiusNear) {
-          performLatch(recent, near);
+          bug("Coterminate latch: " + recent + ", " + near);
+          performCoterminateLatch(recent, near);
           latched = true;
           bug("set latched = true (co-terminate)");
         }
@@ -96,8 +97,6 @@ public class Latcher {
           Pt rp = Functions.getNearestPointOnPolyline(near.getPoint(), recentPoints);
           double npDist = np.distance(recent.getPoint());
           double rpDist = rp.distance(near.getPoint());
-          bug("Distances at term points: " + num(npDist) + ", " + num(rpDist) + " (threshold is "
-              + num(continuationNearnessThreshold) + ")");
           if (npDist < continuationNearnessThreshold && rpDist < continuationNearnessThreshold) {
             //          bug("recentPoints: " + recentPoints.size());
             //          bug("nearPoints: " + nearPoints.size());
@@ -124,6 +123,9 @@ public class Latcher {
                   Color.GREEN, Color.GREEN);
               jf.getDebugThing().drawPolyline(JunctionFinder.DB_DOT_LAYER, nearPointsOverlap,
                   Color.GREEN, 6);
+              bug("Continution latch: " + recent + ", " + near);
+              performContinuationLatch(recent, near);
+              latched = true;
             }
           }
         }
@@ -158,7 +160,12 @@ public class Latcher {
   //    }
   //  }
 
-  private void performLatch(Terminal newTerm, Terminal other) {
+  private void performContinuationLatch(Terminal recent, Terminal near) {
+    // for now just see if the coterminate code does the trick.
+    performCoterminateLatch(recent, near);
+  }
+
+  private void performCoterminateLatch(Terminal newTerm, Terminal other) {
     Segment seg = newTerm.getSegment();
     if (seg.getType() == Segment.Type.Curve || seg.getType() == Segment.Type.Line
         || seg.getType() == Segment.Type.EllipticalArc) {
