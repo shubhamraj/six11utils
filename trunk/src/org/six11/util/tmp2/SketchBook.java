@@ -4,21 +4,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.six11.util.Debug;
+import org.six11.util.spud.ConstraintModel;
 import org.six11.util.tmp2.Segment.Terminal;
 
 public class SketchBook {
 
-  List<Integer> segmentBatches; // holds the indexes into 'segments' where batches begin/end
-  List<Segment> segments;
+  private List<Segment> lastBatch;
+  private List<Segment> segments;
+  private ConstraintModel constraints;
 
   public SketchBook() {
-    segmentBatches = new ArrayList<Integer>();
+    lastBatch = null;
     segments = new ArrayList<Segment>();
+    constraints = new ConstraintModel();
   }
 
   public void record(List<Segment> segs) {
-    segmentBatches.add(segments.size());
+    lastBatch = segs;
     segments.addAll(segs);
+
   }
 
   private static void bug(String what) {
@@ -26,14 +30,7 @@ public class SketchBook {
   }
   
   public List<Segment> getLastSegmentBatch() {
-    List<Segment> ret = new ArrayList<Segment>();
-    if (segmentBatches.size() > 0) {
-      int lastBatchBegin = segmentBatches.get(segmentBatches.size() - 1);
-      for (int i=lastBatchBegin; i < segments.size(); i++) {
-        ret.add(segments.get(i));
-      }
-    }
-    return ret;
+    return lastBatch;
   }
 
   public List<Terminal> getTerminalsNear(Terminal term, double dist) {
