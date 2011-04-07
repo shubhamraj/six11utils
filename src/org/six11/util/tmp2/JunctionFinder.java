@@ -35,6 +35,7 @@ import org.six11.util.pen.Pt;
 import org.six11.util.pen.RotatedEllipse;
 import org.six11.util.pen.Sequence;
 import org.six11.util.pen.Vec;
+import org.six11.util.spud.ConstraintModel;
 
 import static java.lang.Math.acos;
 import static java.lang.Math.ceil;
@@ -46,7 +47,7 @@ import static java.lang.Math.abs;
 public class JunctionFinder implements PenListener {
 
   private Color purple = new Color(160, 32, 240);
-  // instance members
+  // instance members ------------------------------------------------------ - - - -
   private Map<String, Action> actions;
   private Sequence currentSeq;
   private DrawingBufferLayers layers;
@@ -55,11 +56,12 @@ public class JunctionFinder implements PenListener {
   private JunctionFinderDebugThing debugThing;
   private SketchBook sketchBook;
   private Latcher latcher;
+  //------------------------------------------------------------------------ - - - -
 
   //  private List<Sequence> processedSequences;
   //  private SketchBook sketchBook;
 
-  //  ------------------------------------------------------------------------ - - - -
+  //  ---------------------------------------------------------------------- - - - -
   // param block - keep these together - don't mix with non-params
   //
   public static final double highCurvatureThresholdDegrees = 45;
@@ -68,10 +70,9 @@ public class JunctionFinder implements PenListener {
   public static final double lineErrorThreshold = 1.5;
   public static final double ellipseErrorThreshold = 0.5; // TODO: change
   public static final double minPatchSize = 10;
-
   //
   // end param block
-  //  ------------------------------------------------------------------------ - - - -
+  //  ---------------------------------------------------------------------- - - - -
 
   private static final String ACTION_PRINT = "print";
   private static final String ACTION_GO = "go";
