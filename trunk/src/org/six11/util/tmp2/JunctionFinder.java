@@ -120,6 +120,7 @@ public class JunctionFinder implements PenListener {
     af.setVisible(true);
     debugThing = new JunctionFinderDebugThing(this);
   }
+  
 
   public SketchBook getSketchBook() {
     return sketchBook;

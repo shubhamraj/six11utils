@@ -28,6 +28,16 @@ public class CLine extends Geom {
     addSlot("Line"); // <------- Once a composite value is known, store it here.
   }
 
+  /**
+   * Establishes constraints that ensures the given points are on a line. The line is returned.
+   */
+  public static CLine makeLine(ConstraintModel model, CPoint p1, CPoint p2) {
+    CLine ret = new CLine();
+    model.addConstraint(new CPointOnLine(ret, p1));
+    model.addConstraint(new CPointOnLine(ret, p2));
+    return ret;
+  }
+
   public void offer(Pt pt) {
     if (!slots.get("PtA").isValid()) {
       slots.get("PtA").setValue(pt);
@@ -100,7 +110,8 @@ public class CLine extends Geom {
   }
 
   public String getDebugString() {
-    return getName() + " Line; " + slots.get("PtA") + ", " + slots.get("PtB") + ", " + slots.get("Dir");
+    return getName() + " Line; " + slots.get("PtA") + ", " + slots.get("PtB") + ", "
+        + slots.get("Dir");
   }
 
   public String getHumanReadableName() {
@@ -120,5 +131,10 @@ public class CLine extends Geom {
   public boolean isDiscrete() {
     return true;
   }
+
+  public Type getType() {
+    return Type.Line;
+  }
+  
 
 }

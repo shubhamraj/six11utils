@@ -75,6 +75,16 @@ public class ConstraintModel {
     }
   }
 
+  public Set<Geom> getAllGeometry() {
+    Set<Geom> ret = new HashSet<Geom>();
+    for (Constraint c : constraints) {
+      for (Geom var : c.geometry.values()) {
+        ret.add(var);
+      }
+    }
+    return ret;
+  }
+
   private static void bug(String what) {
     Debug.out("ConstraintModel", what);
   }

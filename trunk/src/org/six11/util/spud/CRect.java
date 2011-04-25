@@ -116,4 +116,8 @@ public class CRect extends Geom {
     return "rectangle " + getName();
   }
 
+  public Type getType() {
+    return Type.Rectangle;
+  }
+
 }

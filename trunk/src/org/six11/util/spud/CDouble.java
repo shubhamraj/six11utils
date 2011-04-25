@@ -55,4 +55,8 @@ public class CDouble extends Geom {
     return true;
   }
 
+  public Type getType() {
+    return Type.Number;
+  }
+
 }

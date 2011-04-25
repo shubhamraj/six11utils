@@ -76,4 +76,8 @@ public class CNearPoint extends Geom {
     return "near-point " + getName();
   }
 
+  public Type getType() {
+    return Type.NearPoint;
+  }
+
 }

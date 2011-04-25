@@ -18,11 +18,17 @@ public abstract class Geom extends Node {
   List<Constraint> relatedConstraints;
   Set<Geom> solutionSpace;
 
+  public enum Type {
+    Point, Line, Circle, Number, NearPoint, PointSet, Rectangle, Vector, Infinity, Nothing
+  }
+
   public Geom() {
     this.slots = new HashMap<String, Slot>();
     this.relatedConstraints = new ArrayList<Constraint>();
     this.solutionSpace = new HashSet<Geom>();
   }
+
+  public abstract Type getType();
 
   public String getName() {
     String ret = null;
@@ -165,7 +171,8 @@ public abstract class Geom extends Node {
       ret = intersectPointSet((CPointSet) other);
     } else {
       if (other == null) {
-        warn("Warning: I don't know how to intersect " + getClass().getSimpleName() + " and " + null);
+        warn("Warning: I don't know how to intersect " + getClass().getSimpleName() + " and "
+            + null);
       } else {
         warn("Warning: I don't know how to intersect " + getClass().getSimpleName() + " and "
             + other.getClass().getSimpleName());
