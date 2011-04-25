@@ -76,4 +76,8 @@ public class CPointSet extends Geom {
     return true;
   }
 
+  public Type getType() {
+    return Type.PointSet;
+  }
+
 }

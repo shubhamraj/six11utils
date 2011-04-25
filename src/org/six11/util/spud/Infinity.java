@@ -45,4 +45,8 @@ public class Infinity extends Geom {
     return true;
   }
 
+  public Type getType() {
+    return Type.Infinity;
+  }
+
 }

@@ -56,4 +56,8 @@ public class CVec extends Geom {
   public boolean isDiscrete() {
     return true;
   }
+
+  public Type getType() {
+    return Type.Vector;
+  }
 }

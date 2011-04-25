@@ -41,4 +41,8 @@ public class Nothing extends Geom {
     return true;
   }
 
+  public Type getType() {
+    return Type.Nothing;
+  }
+
 }
