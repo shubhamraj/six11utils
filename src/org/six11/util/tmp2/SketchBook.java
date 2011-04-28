@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.six11.util.Debug;
+
 import org.six11.util.spud.CLine;
 import org.six11.util.spud.CPoint;
 import org.six11.util.spud.ConstraintModel;
@@ -26,6 +27,7 @@ public class SketchBook {
   public void record(List<Segment> segs) {
     lastBatch = segs;
     segments.addAll(segs);
+
     for (Segment seg : segs) {
       switch (seg.getType()) {
         case Line:
