@@ -55,7 +55,7 @@ public class JunctionFinder implements PenListener {
   private List<Sequence> unprocessedSequences;
   private JunctionFinderDebugThing debugThing;
   private SketchBook sketchBook;
-  private Latcher latcher;
+  private Latcher2 latcher;
   //------------------------------------------------------------------------ - - - -
 
   //  private List<Sequence> processedSequences;
@@ -108,7 +108,7 @@ public class JunctionFinder implements PenListener {
       layers.createLayer("" + i, DEBUG_LAYER_PREFIX + i, i + 10, layerVisible);
     }
     unprocessedSequences = new ArrayList<Sequence>();
-    latcher = new Latcher(this);
+    latcher = new Latcher2(this);
     //    processedSequences = new ArrayList<Sequence>();
     sketchBook = new SketchBook();
     currentSeq = new Sequence();
@@ -174,7 +174,7 @@ public class JunctionFinder implements PenListener {
       sketchBook.record(batch);
       unprocessedSequences.clear();
     } else if (goCount == 1) {
-      latcher.latch();
+      //      latcher.latch();
     } else {
       //      bug("goCount for " + goCount + " not implemented.");
     }
