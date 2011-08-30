@@ -36,6 +36,11 @@ public abstract class Strokes {
       BasicStroke.CAP_BUTT, // CAP
       BasicStroke.JOIN_MITER, // JOIN
       1f); // miter limit
+  
+  public static final BasicStroke VERY_THIN_STROKE = new BasicStroke(1f, // pen thickness
+      BasicStroke.CAP_BUTT, // CAP
+      BasicStroke.JOIN_MITER, // JOIN
+      1f); // miter limit
 
   public static BasicStroke get(float thickness) {
     if (!simpleStrokes.containsKey(thickness)) {

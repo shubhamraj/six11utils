@@ -32,6 +32,10 @@ import java.nio.FloatBuffer;
  **/
 public class Debug {
 
+  public enum Direction {
+    Left, Right
+  }
+
   public static final String BLACK = "\033[0;30m"; // Black
   public static final String DARK_GRAY = "\033[1;30m"; // Dark Gray
   public static final String RED = "\033[0;31m"; // Red
@@ -125,19 +129,25 @@ public class Debug {
     return ret;
   }
 
-  public static String pad(int width, String what) {
-    if (what.length() == width)
-      return what;
-    if (what.length() > width)
-      return what.substring(width);
-    else {
-      StringBuffer buf = new StringBuffer(what);
-      for (int i = width; i > what.length(); i++) {
-        buf.append(" ");
+  public static String pad(int width, String what, Direction dir) {
+    String ret = "";
+    if (what.length() == width) { // input exact length, just return it.
+      ret = what;
+    } else if (what.length() > width) { // input too long, just truncate it.
+      ret = what.substring(0, width);
+    } else { // input too short. pad on left or right with spaces.
+      int numSpaces = width - what.length();
+      String sp = spaces(numSpaces);
+      switch (dir) {
+        case Left:
+          ret = sp + what;
+          break;
+        case Right:
+          ret = what + sp;
+          break;
       }
-      return buf.toString();
     }
-
+    return ret;
   }
 
   /**
@@ -348,6 +358,22 @@ public class Debug {
         Debug.log("Debug", "Unable to write to file '" + fileName + "'.");
       }
     }
+  }
+
+  public static void bug(String what) {
+    StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+    String who = stack[2].getClassName();
+    if (who.lastIndexOf('.') >= 0) {
+      who = who.substring(who.lastIndexOf('.') + 1);
+    }
+    int METHOD_NAME_LENGTH = 12;
+    String meth = stack[2].getMethodName();
+    if (meth.length() > METHOD_NAME_LENGTH) {
+      meth = pad(METHOD_NAME_LENGTH - 3, stack[2].getMethodName(), Direction.Right) + "...";
+    }
+    meth = meth + "()";
+    String lineNum = pad(4, "" + stack[2].getLineNumber(), Direction.Right);
+    out(who, "Line " + lineNum + "\t" + meth + "\t" + what);
   }
 
   public static void out(String who, String what) {
