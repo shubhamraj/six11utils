@@ -99,7 +99,7 @@ public class FlowSelectionHandler {
     };
     tickTimerTarget = new ActionListener() {
       public void actionPerformed(ActionEvent ev) {
-        fire(PenEvent.buildFlowEvent(this, ptNewest, fsPhase, flowPt));
+        fire(PenEvent.buildFlowEvent(this, ptNewest, fsPhase, flowPt, null));
       }
     };
     timeoutTimer = new Timer(getCurrentTimeout(), timeoutTimerTarget);
@@ -114,10 +114,10 @@ public class FlowSelectionHandler {
         if (ptDown != null && ptNewest != null && ptDown.distance(ptNewest) < moveThreshold
             && (ptNewest.getTime() - ptDown.getTime()) < tapTimeout) {
 
-          fire(PenEvent.buildTapEvent(this, ptDown));
+          fire(PenEvent.buildTapEvent(this, ptDown, null));
         }
         ptDown = null;
-        fire(PenEvent.buildIdleEvent(this));
+        fire(PenEvent.buildIdleEvent(this, ptNewest));
       }
     }, null, null);
     fsm.addState("Init Draw", new Runnable() {
@@ -279,7 +279,7 @@ public class FlowSelectionHandler {
     if (tooFar) {
       resetDrawingMode();
     } else {
-      fire(PenEvent.buildDragEvent(this, ptNewest, ptOldest, fsPhase, flowPt));
+      fire(PenEvent.buildDragEvent(this, ptNewest, ptOldest, fsPhase, flowPt, null));
     }
   }
 

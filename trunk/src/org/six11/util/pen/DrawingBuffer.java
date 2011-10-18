@@ -33,6 +33,7 @@ public class DrawingBuffer {
 
   private BufferedImage img;
   public Dimension defaultSize = new Dimension(400, 400);
+  private AffineTransform defaultXform;
   private boolean dirty;
   private boolean visible;
   private long lastModified;
@@ -69,6 +70,7 @@ public class DrawingBuffer {
   public DrawingBuffer() {
     img = new BufferedImage(defaultSize.width, defaultSize.height, BufferedImage.TYPE_INT_ARGB_PRE);
     this.turtles = new ArrayList<TurtleOp>();
+    this.defaultXform = new AffineTransform();
     visible = true;
     dirty = true;
     complain = true;
@@ -78,11 +80,12 @@ public class DrawingBuffer {
   }
 
   public void clear() {
-    this.img = new BufferedImage(defaultSize.width, defaultSize.height, BufferedImage.TYPE_INT_ARGB_PRE);
+    this.img = new BufferedImage(defaultSize.width, defaultSize.height,
+        BufferedImage.TYPE_INT_ARGB_PRE);
     this.turtles = new ArrayList<TurtleOp>();
     this.dirty = true;
   }
-  
+
   public void copy(DrawingBuffer src) {
     for (TurtleOp op : src.turtles) {
       addOp(op);
@@ -236,6 +239,36 @@ public class DrawingBuffer {
     }
   }
 
+  /**
+   * Translates the final image by some amount.
+   * 
+   * Note: when using setGraphicsTranslate and setGraphicsScale, it matters which order they are
+   * used. If you scale first, the translated values are then scaled. If you translate first, the
+   * image is moved and then scaled.
+   */
+  public void setGraphicsTranslate(double dx, double dy) {
+    defaultXform.translate(dx, dy);
+  }
+
+  /**
+   * Scales the final image by some amount. It is scaled uniformly in both x and y dimensions.
+   * 
+   * Note: when using setGraphicsTranslate and setGraphicsScale, it matters which order they are
+   * used. If you scale first, the translated values are then scaled. If you translate first, the
+   * image is moved and then scaled.
+   */
+  public void setGraphicsScale(double sx) {
+    defaultXform.scale(sx, sx);
+  }
+
+  /**
+   * Resets the default transformation (translation and scale)---this reverts any effects of calling
+   * setGraphicsTranslate or setGraphicsScale.
+   */
+  public void setGraphicsReset() {
+    defaultXform.setToIdentity();
+  }
+
   private static void bug(String what) {
     Debug.out("DrawingBuffer", what);
   }
@@ -269,6 +302,7 @@ public class DrawingBuffer {
       update();
     }
     if (bb.isValid()) {
+      g.transform(defaultXform);
       g.translate(bb.getX(), bb.getY());
       //      g.drawImage(getImage(), 0, 0, null);
       g.drawImage(getImage(), 1, 1, null);

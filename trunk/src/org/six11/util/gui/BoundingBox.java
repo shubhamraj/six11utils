@@ -22,9 +22,9 @@ public class BoundingBox {
   boolean hasY = false;
   double minY;
   double maxY;
-  
+
   public BoundingBox() {
-    
+
   }
 
   public BoundingBox(Collection<Pt> points) {
@@ -32,7 +32,25 @@ public class BoundingBox {
       add(pt);
     }
   }
-  
+
+  public BoundingBox copy() {
+    BoundingBox ret = new BoundingBox();
+    ret.hasX = hasX;
+    ret.minX = minX;
+    ret.maxX = maxX;
+    ret.hasY = hasY;
+    ret.minY = minY;
+    ret.maxY = maxY;
+    return ret;
+  }
+
+  public void translate(double dx, double dy) {
+    minX = minX + dx;
+    maxX = maxX + dx;
+    minY = minY + dy;
+    maxY = maxY + dy;
+  }
+
   public String toString() {
     StringBuilder buf = new StringBuilder();
     buf.append("BoundingBox[");
@@ -64,22 +82,22 @@ public class BoundingBox {
     }
     return minX;
   }
-  
+
   public double getMinX() {
     return getX();
   }
-  
+
   public double getMaxX() {
     if (!hasX) {
       Debug.stacktrace("There's no real x value yet!", 4);
     }
     return maxX;
   }
-  
+
   public double getMinY() {
     return getY();
   }
-  
+
   public double getMaxY() {
     if (!hasY) {
       Debug.stacktrace("There's no real y value yet!", 4);
