@@ -10,6 +10,12 @@ import org.six11.util.Debug;
 
 import java.io.FileWriter;
 
+/**
+ * Implements the Graham Scan convex hull finder for a point set.
+ * 
+ *
+ * @author Gabe Johnson <johnsogg@cmu.edu>
+ */
 public class Graham {
 
   public static void main(String[] args) {

@@ -62,6 +62,16 @@ public class Vec {
       }
     };
   }
+  
+  public static Vec sum(Vec... vectors) {
+    double sumX = 0;
+    double sumY = 0;
+    for (Vec v : vectors) {
+      sumX = sumX + v.getX();
+      sumY = sumY + v.getY();
+    }
+    return new Vec(sumX, sumY);
+  }
 
   public double getX() {
     return x;

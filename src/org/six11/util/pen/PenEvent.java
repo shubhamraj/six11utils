@@ -2,6 +2,7 @@
 
 package org.six11.util.pen;
 
+import java.awt.event.MouseEvent;
 import java.util.EventObject;
 
 import org.six11.util.Debug;
@@ -16,13 +17,8 @@ import org.six11.util.Debug;
 public class PenEvent extends EventObject {
 
   public enum Type {
-    Flow, Tap, Drag, Idle, Down
+    Flow, Tap, Drag, Idle, Down, Enter, Exit, Hover
   }
-
-  //  public final static int TYPE_FLOW = 1;
-  //  public final static int TYPE_TAP = 2;
-  //  public final static int TYPE_DRAG = 3;
-  //  public final static int TYPE_IDLE = 4;
 
   private Type type; // type of event (on of the constants above)
 
@@ -30,6 +26,8 @@ public class PenEvent extends EventObject {
   private Pt pt; // most recent pen location
   private Pt ptPrevious; // previous pen location (e.g. for drawing)
   private Pt ptFlow; // flow selection center point
+
+  private MouseEvent mouseEvent; // the AWT mouse event that started this
 
   private long timestamp; // timestamp of when the event was created
 
@@ -40,6 +38,10 @@ public class PenEvent extends EventObject {
   private PenEvent(Object source) {
     super(source);
     timestamp = System.currentTimeMillis();
+  }
+
+  public MouseEvent getMouseEvent() {
+    return mouseEvent;
   }
 
   /**
@@ -89,56 +91,127 @@ public class PenEvent extends EventObject {
   }
 
   public static PenEvent buildDownEvent(Object source, Pt pt) {
+    return buildDownEvent(source, pt, null);
+  }
+
+  public static PenEvent buildDownEvent(Object source, Pt pt, MouseEvent ev) {
     PenEvent ret = new PenEvent(source);
     ret.type = Type.Down;
     ret.pt = pt;
+    ret.mouseEvent = ev;
     return ret;
   }
-  
+
   /**
    * Make a new flow selection event for Type.Flow.
    */
-  public static PenEvent buildFlowEvent(Object source, Pt pt, int fsPhase, Pt flowPt) {
+  public static PenEvent buildFlowEvent(Object source, Pt pt, int fsPhase, Pt flowPt, MouseEvent ev) {
     PenEvent ret = new PenEvent(source);
     ret.type = Type.Flow;
     ret.pt = pt;
     ret.ptFlow = flowPt;
     ret.fsPhase = fsPhase;
+    ret.mouseEvent = ev;
     return ret;
   }
 
   /**
    * Make a new flow selection event for Type.Tap.
    */
-  public static PenEvent buildTapEvent(Object source, Pt pt) {
+  public static PenEvent buildTapEvent(Object source, Pt pt, MouseEvent ev) {
     PenEvent ret = new PenEvent(source);
     ret.type = Type.Tap;
     ret.pt = pt;
+    ret.mouseEvent = ev;
     return ret;
+  }
+
+  public static PenEvent buildTapEvent(Object source, Pt pt) {
+    return buildTapEvent(source, pt, null);
   }
 
   /**
    * Make a new flow selection event for Type.Drag.
    */
-  public static PenEvent buildDragEvent(Object source, Pt pt, Pt ptPrevious, int fsPhase, Pt flowPt) {
+  public static PenEvent buildDragEvent(Object source, Pt pt, Pt ptPrevious, int fsPhase,
+      Pt flowPt, MouseEvent ev) {
     PenEvent ret = new PenEvent(source);
     ret.type = Type.Drag;
     ret.pt = pt;
     ret.ptPrevious = ptPrevious;
     ret.ptFlow = flowPt;
     ret.fsPhase = fsPhase;
+    ret.mouseEvent = ev;
     return ret;
+  }
+
+  public static PenEvent buildDragEvent(Object source, Pt pt) {
+    return buildDragEvent(source, pt, null, 0, null, null);
+  }
+
+  public static PenEvent buildHoverEvent(Object source, MouseEvent ev) {
+    PenEvent ret = buildHoverEvent(source, new Pt(ev));
+    ret.mouseEvent = ev;
+    return ret;
+  }
+
+  public static PenEvent buildHoverEvent(Object source, Pt pt) {
+    PenEvent ret = new PenEvent(source);
+    ret.type = Type.Hover;
+    ret.pt = pt;
+    return ret;
+
   }
 
   /**
    * Make a new flow selection event for Type.Idle.
    */
-  public static PenEvent buildIdleEvent(Object source) {
+  public static PenEvent buildIdleEvent(Object source, MouseEvent ev) {
     PenEvent ret = new PenEvent(source);
     ret.type = Type.Idle;
     ret.pt = null;
     ret.ptPrevious = null;
     ret.ptFlow = null;
+    ret.mouseEvent = ev;
+    return ret;
+  }
+  
+  public static PenEvent buildIdleEvent(Object source, Pt pt) {
+    PenEvent ret = new PenEvent(source);
+    ret.type = Type.Idle;
+    ret.pt = pt;
+    ret.ptPrevious = null;
+    ret.ptFlow = null;
+    return ret;
+  }
+
+  public static PenEvent buildExitEvent(Object source, MouseEvent ev) {
+    PenEvent ret = new PenEvent(source);
+    ret.type = Type.Exit;
+    ret.mouseEvent = ev;
+    return ret;
+  }
+  
+  public static PenEvent buildExitEvent(Object source, Pt pt) {
+    PenEvent ret = new PenEvent(source);
+    ret.type = Type.Exit;
+    ret.pt = pt;
+    ret.mouseEvent = null;
+    return ret;
+  }
+
+  public static PenEvent buildEnterEvent(Object source, MouseEvent ev) {
+    PenEvent ret = new PenEvent(source);
+    ret.type = Type.Enter;
+    ret.mouseEvent = ev;
+    return ret;
+  }
+  
+  public static PenEvent buildEnterEvent(Object source, Pt pt) {
+    PenEvent ret = new PenEvent(source);
+    ret.type = Type.Enter;
+    ret.pt = pt;
+    ret.mouseEvent = null;
     return ret;
   }
 
