@@ -3,13 +3,10 @@ package org.six11.util.solve;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
 import javax.swing.JComponent;
-import javax.swing.Timer;
 
 import org.six11.util.gui.ApplicationFrame;
 import org.six11.util.pen.DrawingBuffer;
@@ -18,6 +15,8 @@ import org.six11.util.pen.MouseThing;
 import org.six11.util.pen.Pt;
 
 import static org.six11.util.Debug.bug;
+import static org.six11.util.Debug.num;
+import static java.lang.Math.toDegrees;
 
 public class TestSolveUI {
 
@@ -51,6 +50,7 @@ public class TestSolveUI {
           canvas.repaint();
         }
       }
+
       public void mouseDragged(MouseEvent ev) {
         if (dragPt != null) {
           dragPt.setLocation(ev.getX(), ev.getY());
@@ -65,6 +65,7 @@ public class TestSolveUI {
         dragPt = who;
         canvas.repaint();
       }
+
       public void mouseReleased(MouseEvent ev) {
         dragPt = null;
         main.run();
@@ -90,7 +91,6 @@ public class TestSolveUI {
   }
 
   private void drawBuffer() {
-    bug("Drawing...");
     buf.clear();
     List<Constraint> constraints = main.getConstraints();
     for (Constraint c : constraints) {
@@ -102,7 +102,7 @@ public class TestSolveUI {
       if (pt.hasAttribute("stable") && pt.getBoolean("stable")) {
         fillColor = Color.LIGHT_GRAY;
       }
-      DrawingBufferRoutines.text(buf, pt.getTranslated(0, -10), pt.getString("name"), Color.GREEN);
+      DrawingBufferRoutines.text(buf, pt.getTranslated(0, -10), pt.getString("name"), Color.GREEN.darker());
       double radius = 5;
       if (pt == nearPt) {
         radius = 10;
@@ -115,10 +115,14 @@ public class TestSolveUI {
     if (c instanceof DistanceConstraint) {
       DistanceConstraint dc = (DistanceConstraint) c;
       DrawingBufferRoutines.line(buf, dc.getCurrentSegment(), Color.RED, 2);
+      Pt mid = dc.getCurrentSegment().getMidpoint();
+      DrawingBufferRoutines.text(buf, mid.getTranslated(0, 10), num(dc.d) + " length", Color.GRAY);
     } else if (c instanceof AngleConstraint) {
       AngleConstraint ac = (AngleConstraint) c;
       DrawingBufferRoutines.line(buf, ac.getSegment1(), Color.RED.darker(), 2);
       DrawingBufferRoutines.line(buf, ac.getSegment2(), Color.RED.brighter(), 2);
+      DrawingBufferRoutines.text(buf, ac.f.getTranslated(0, 10), num(toDegrees(ac.angle)) + " deg",
+          Color.GRAY);
     }
   }
 }

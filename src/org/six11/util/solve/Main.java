@@ -21,6 +21,7 @@ public class Main {
   List<Constraint> constraints;
   boolean finished = false;
   int fps;
+
   /**
    * @param args
    */
@@ -37,12 +38,12 @@ public class Main {
       ui = new TestSolveUI(this);
     }
     Debug.useColor = args.hasFlag("use-color");
-    this.fps = 10;
+    this.fps = 30;
     if (args.hasValue("fps")) {
       this.fps = Integer.parseInt(args.getValue("fps"));
     }
     Entropy.setSeed(System.currentTimeMillis());
-    String test = "angleTest";
+    String test = "destAndAngleTest";
     if (args.hasValue("test")) {
       test = args.getValue("test");
     }
@@ -50,14 +51,38 @@ public class Main {
       initDistanceTest();
     } else if ("angleTest".equals(test)) {
       initAngleTest();
+    } else if ("destAndAngleTest".equals(test)) {
+      initDestAndAngleTest();
     }
     run();
+  }
+
+  private void initDestAndAngleTest() {
+    // TODO Auto-generated method stub
+    bug("Four points, three of which are part of a square, and the other is dragged away a bit. There");
+    bug("are two topographic solutions to this depending on the start conditions. The weird angle must");
+    bug("be 45 degrees, but it could be close to the opposite corner, or far from it.");
+    Pt ptA = mkRandomPoint(800, 600);
+    Pt ptB = mkRandomPoint(800, 600);
+    Pt ptC = mkRandomPoint(800, 600);
+    Pt ptD = mkRandomPoint(800, 600);
+    addPoint("A", ptA);
+    addPoint("B", ptB);
+    addPoint("C", ptC);
+    addPoint("D", ptD);
+    Constraint ab = new DistanceConstraint(ptA, ptB, 300.0);
+    Constraint bc = new DistanceConstraint(ptB, ptC, 300.0);
+    Constraint abc = new AngleConstraint(ptA, ptB, ptC, toRadians(90.0));
+    Constraint adc = new AngleConstraint(ptA, ptD, ptC, toRadians(45.0));
+    addConstraint(ab);
+    addConstraint(bc);
+    addConstraint(abc);
+    addConstraint(adc);
   }
 
   private void initDistanceTest() {
     bug("This test establishes three points at random locations and enforces three distance constraints.");
     bug("An equilateral triangle should emerge.");
-
     Pt ptA = mkRandomPoint(800, 600);
     Pt ptB = mkRandomPoint(800, 600);
     Pt ptC = mkRandomPoint(800, 600);
@@ -97,14 +122,17 @@ public class Main {
         if (fps > 0) {
           naptime = (long) (1000.0 / (double) fps);
         }
+        //      naptime = naptime + 800;
+        if (naptime > 0) {
+          bug("Loop will sleep for " + naptime + " ms between steps.");
+        } else {
+          bug("Loop going full blast.");
+        }
 
-        bug("Loop is using " + naptime + " sleepy time");
-        //    naptime = naptime + 800;
-        long start = System.currentTimeMillis();
+        //        long start = System.currentTimeMillis();
         while (!finished) {
           step();
           if (ui != null) {
-            bug("telling canvas to redraw...");
             ui.canvas.repaint();
           }
           try {
@@ -113,8 +141,8 @@ public class Main {
             ;
           }
         }
-        long elapsed = System.currentTimeMillis() - start;
-        bug("System solved in " + elapsed + " ms");               
+        //        long elapsed = System.currentTimeMillis() - start;
+        //        bug("System solved in " + elapsed + " ms");               
       }
     };
     if (EventQueue.isDispatchThread()) {

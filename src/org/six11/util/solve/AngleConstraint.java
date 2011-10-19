@@ -6,14 +6,15 @@ import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 
 import static org.six11.util.Debug.bug;
-import static org.six11.util.Debug.num;
-import static java.lang.Math.toDegrees;
+import static java.lang.Math.abs;
 
 public class AngleConstraint extends Constraint {
 
+  public static double TOLERANCE = 0.0001;
+
   Pt a, f, b;
   double angle;
-  
+
   public AngleConstraint(Pt a, Pt fulcrum, Pt b, double radians) {
     this.a = a;
     this.f = fulcrum;
@@ -27,16 +28,22 @@ public class AngleConstraint extends Constraint {
 
   public void accumulateCorrection() {
     double e = measureError();
+    if (abs(e) > TOLERANCE) {
+      // Rotate a and b about f by e/2 and -e/2 radians.
+      Pt rotatedA = Functions.rotatePointAboutPivot(a, f, e / 2);
+      Pt rotatedB = Functions.rotatePointAboutPivot(b, f, -e / 2);
+      Vec vecA = new Vec(rotatedA.x - a.x, rotatedA.y - a.y);
+      Vec vecB = new Vec(rotatedB.x - b.x, rotatedB.y - b.y);
+      accumulate(a, vecA);
+      accumulate(b, vecB);
+    }
   }
 
   public double measureError() {
-    double ret = 0;
     Vec fa = new Vec(a, f);
     Vec fb = new Vec(b, f);
-    ret = Functions.getSignedAngleBetween(fa, fb);
-    double alt = Functions.getSignedAngleBetween(fb, fa);
-    bug("Angle (fa, fb): " + a.getString("name") + "-" + f.getString("name") + "-" + b.getString("name") + ": " + num(ret) + " (" + num(toDegrees(ret)) + " deg)");
-    bug("Angle (fb, fa): " + a.getString("name") + "-" + f.getString("name") + "-" + b.getString("name") + ": " + num(alt) + " (" + num(toDegrees(alt)) + " deg)");
+    double currentAngle = Functions.getSignedAngleBetween(fa, fb);
+    double ret = Math.signum(currentAngle) * (Math.abs(currentAngle) - angle);
     return ret;
   }
 

@@ -62,7 +62,7 @@ public class Vec {
       }
     };
   }
-  
+
   public static Vec sum(Vec... vectors) {
     double sumX = 0;
     double sumY = 0;
@@ -103,7 +103,7 @@ public class Vec {
   public Vec getUnitVector() {
     return getVectorOfMagnitude(1d);
   }
-  
+
   public Vec getScaled(double scale) {
     return new Vec(x * scale, y * scale);
   }
@@ -119,9 +119,16 @@ public class Vec {
   public double dot(Vec other) {
     return getX() * other.getX() + getY() * other.getY();
   }
-  
+
   public double cross(Vec other) {
     return Functions.getCrossProduct(this, other);
+  }
+
+  /**
+   * Returns the vector pointing from this to the other vector: [other.x - x, other.y - y]
+   */
+  public Vec subtract(Vec other) {
+    return new Vec(other.x - x, other.y - y);
   }
 
   /**
