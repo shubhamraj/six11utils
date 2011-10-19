@@ -1,5 +1,6 @@
 package org.six11.util.solve;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -7,12 +8,17 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 
 import javax.swing.JComponent;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import org.six11.util.gui.ApplicationFrame;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.MouseThing;
 import org.six11.util.pen.Pt;
+import org.six11.util.solve.Main.Demo;
 
 import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
@@ -32,12 +38,25 @@ public class TestSolveUI {
     af = new ApplicationFrame("Test Solve UI");
     af.setSize(800, 600);
     buf = new DrawingBuffer();
+    JList options = new JList(m.getDemos().toArray());
+    options.addListSelectionListener(new ListSelectionListener() {
+      public void valueChanged(ListSelectionEvent ev) {
+        bug("Demo list: ");
+        int idx = 0;
+        for (Demo d : main.getDemos()) {
+          bug("  " + idx + ": "+ d);
+          idx++;
+        }
+        bug("Invoking index " + ev.getFirstIndex() + ": " + main.getDemos().get(ev.getFirstIndex()));
+        main.getDemos().get(ev.getFirstIndex()).go();
+      }
+    });
     canvas = new JComponent() {
       @Override
       protected void paintComponent(Graphics g1) {
         Graphics2D g = (Graphics2D) g1;
         g.setColor(Color.WHITE);
-        g.fill(getBounds());
+        g.fill(getVisibleRect());
         drawBuffer();
         buf.paste(g);
       }
@@ -72,7 +91,11 @@ public class TestSolveUI {
         canvas.repaint();
       }
     });
-    af.add(canvas);
+    af.setLayout(new BorderLayout());
+    JPanel utils = new JPanel();
+    utils.add(options);
+    af.add(utils, BorderLayout.NORTH);
+    af.add(canvas, BorderLayout.CENTER);
     af.center();
     af.setVisible(true);
   }
@@ -93,10 +116,17 @@ public class TestSolveUI {
   private void drawBuffer() {
     buf.clear();
     List<Constraint> constraints = main.getConstraints();
-    for (Constraint c : constraints) {
-      drawConstraint(c);
-    }
     List<Pt> points = main.getPoints();
+    Pt msgCursor = new Pt(12, 12);
+    for (Constraint c : constraints) {
+      String msg = c.getMessages();
+      if (msg.length() > 0) {
+        DrawingBufferRoutines.text(buf, msgCursor, msg, Color.BLACK);
+        msgCursor.setLocation(msgCursor.x, msgCursor.y + 20);
+      }
+      c.draw(buf);
+    }
+
     for (Pt pt : points) {
       Color fillColor = Color.BLUE;
       if (pt.hasAttribute("stable") && pt.getBoolean("stable")) {
@@ -111,18 +141,4 @@ public class TestSolveUI {
     }
   }
 
-  private void drawConstraint(Constraint c) {
-    if (c instanceof DistanceConstraint) {
-      DistanceConstraint dc = (DistanceConstraint) c;
-      DrawingBufferRoutines.line(buf, dc.getCurrentSegment(), Color.RED, 2);
-      Pt mid = dc.getCurrentSegment().getMidpoint();
-      DrawingBufferRoutines.text(buf, mid.getTranslated(0, 10), num(dc.d) + " length", Color.GRAY);
-    } else if (c instanceof AngleConstraint) {
-      AngleConstraint ac = (AngleConstraint) c;
-      DrawingBufferRoutines.line(buf, ac.getSegment1(), Color.RED.darker(), 2);
-      DrawingBufferRoutines.line(buf, ac.getSegment2(), Color.RED.brighter(), 2);
-      DrawingBufferRoutines.text(buf, ac.f.getTranslated(0, 10), num(toDegrees(ac.angle)) + " deg",
-          Color.GRAY);
-    }
-  }
 }

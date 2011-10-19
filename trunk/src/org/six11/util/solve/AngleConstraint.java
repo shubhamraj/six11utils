@@ -1,12 +1,18 @@
 package org.six11.util.solve;
 
+import java.awt.Color;
+
+import org.six11.util.pen.DrawingBuffer;
+import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
 import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 
 import static org.six11.util.Debug.bug;
+import static org.six11.util.Debug.num;
 import static java.lang.Math.abs;
+import static java.lang.Math.toDegrees;
 
 public class AngleConstraint extends Constraint {
 
@@ -53,6 +59,13 @@ public class AngleConstraint extends Constraint {
 
   public Line getSegment2() {
     return new Line(f, b);
+  }
+
+  public void draw(DrawingBuffer buf) {
+    DrawingBufferRoutines.line(buf, getSegment1(), Color.RED.darker(), 2);
+    DrawingBufferRoutines.line(buf, getSegment2(), Color.RED.brighter(), 2);
+    DrawingBufferRoutines.text(buf, f.getTranslated(0, 10), num(toDegrees(angle)) + " deg",
+        Color.GRAY);
   }
 
 }

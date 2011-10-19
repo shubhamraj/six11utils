@@ -1,5 +1,9 @@
 package org.six11.util.solve;
 
+import java.awt.Color;
+
+import org.six11.util.pen.DrawingBuffer;
+import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
@@ -43,6 +47,13 @@ public class DistanceConstraint extends Constraint {
     double ret = 0;
     ret = (a.distance(b) - d);
     return ret;
+  }
+
+  @Override
+  public void draw(DrawingBuffer buf) {
+    DrawingBufferRoutines.line(buf, getCurrentSegment(), Color.RED, 2);
+    Pt mid = getCurrentSegment().getMidpoint();
+    DrawingBufferRoutines.text(buf, mid.getTranslated(0, 10), num(d) + " length", Color.GRAY);
   }
 
 }
