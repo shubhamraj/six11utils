@@ -1,6 +1,8 @@
 package org.six11.util.solve;
 
 import java.awt.EventQueue;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,53 +13,125 @@ import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 
 import static org.six11.util.Debug.bug;
+import static org.six11.util.Debug.num;
 import static java.lang.Math.toRadians;
 
 public class Main {
 
+  public class Demo {
+    String label;
+    Method method;
+    public Demo(String label, Method method) {
+      this.label = label;
+      this.method = method;
+    }
+    public void go() {
+      try {
+        points.clear();
+        constraints.clear();
+        finished = false;
+        bug("Executing " + label + " = " + method.getName());
+        method.invoke(Main.this);
+        ui.canvas.repaint();
+      } catch (Exception ex) {
+        ex.printStackTrace();
+      } 
+    }
+    
+    public String toString() {
+      return label;
+    }
+
+  }
+
   public static final String ACCUM_CORRECTION = "accumulated correction";
+  List<Demo> demos;
   TestSolveUI ui = null;
   List<Pt> points;
   List<Constraint> constraints;
   boolean finished = false;
   int fps;
 
-  /**
-   * @param args
-   */
-  public static void main(String[] in) {
+  public static void main(String[] in) throws Exception {
     new Main(in);
   }
 
-  public Main(String[] in) {
+  public Main(String[] in) throws SecurityException, NoSuchMethodException {
     points = new ArrayList<Pt>();
     constraints = new ArrayList<Constraint>();
     Arguments args = new Arguments();
     args.parseArguments(in);
-    if (args.hasFlag("ui")) {
-      ui = new TestSolveUI(this);
-    }
+    demos = new ArrayList<Demo>();
+
     Debug.useColor = args.hasFlag("use-color");
     this.fps = 30;
     if (args.hasValue("fps")) {
       this.fps = Integer.parseInt(args.getValue("fps"));
     }
     Entropy.setSeed(System.currentTimeMillis());
-    String test = "destAndAngleTest";
+    String test = "pinTest";
     if (args.hasValue("test")) {
       test = args.getValue("test");
     }
-    if ("distanceTest".equals(test)) {
-      initDistanceTest();
-    } else if ("angleTest".equals(test)) {
-      initAngleTest();
-    } else if ("destAndAngleTest".equals(test)) {
-      initDestAndAngleTest();
+    demos.add(new Demo("distanceTest", this.getClass().getMethod("initDistanceTest")));
+    demos.add(new Demo("angleTest", this.getClass().getMethod("initAngleTest")));
+    demos.add(new Demo("destAndAngleTest", this.getClass().getMethod("initDestAndAngleTest")));
+    demos.add(new Demo("orientationTest", this.getClass().getMethod("initOrientationTest")));
+    demos.add(new Demo("pinTest", this.getClass().getMethod("initPinTest")));
+//    if ("distanceTest".equals(test)) {
+//      initDistanceTest();
+//    } else if ("angleTest".equals(test)) {
+//      initAngleTest();
+//    } else if ("destAndAngleTest".equals(test)) {
+//      initDestAndAngleTest();
+//    } else if ("orientationTest".equals(test)) {
+//      double degrees = 45;
+//      if (args.hasValue("degrees")) {
+//        degrees = Double.parseDouble(args.getValue("degrees"));
+//      }
+//      initOrientationTest(degrees);
+//    } else if ("pinTest".equals(test)) {
+//      initPinTest();
+//    }
+    if (args.hasFlag("ui")) {
+      ui = new TestSolveUI(this);
     }
     run();
   }
+  
+  public List<Demo> getDemos() {
+    return demos;
+  }
 
-  private void initDestAndAngleTest() {
+  public void initPinTest() {
+    Pt ptA = mkRandomPoint(800, 600);
+    Pt ptB = mkRandomPoint(800, 600);
+    Pt ptC = mkRandomPoint(800, 600);
+    Pt ptD = mkRandomPoint(800, 600);
+    addPoint("A", ptA);
+    addPoint("B", ptB);
+    addPoint("C", ptC);
+    addPoint("D", ptD);
+    addConstraint(new PinConstraint(ptA, new Pt(200, 200)));
+    addConstraint(new PinConstraint(ptB, new Pt(600, 200)));
+    addConstraint(new PinConstraint(ptC, new Pt(600, 400)));
+    addConstraint(new PinConstraint(ptD, new Pt(200, 400)));
+  }
+
+  public void initOrientationTest() {
+    Pt ptA = mkRandomPoint(800, 600);
+    Pt ptB = mkRandomPoint(800, 600);
+    Pt ptC = mkRandomPoint(800, 600);
+    Pt ptD = mkRandomPoint(800, 600);
+    addPoint("A", ptA);
+    addPoint("B", ptB);
+    addPoint("C", ptC);
+    addPoint("D", ptD);
+    Constraint orient = new OrientationConstraint(ptA, ptB, ptC, ptD, toRadians(90));
+    addConstraint(orient);
+  }
+
+  public void initDestAndAngleTest() {
     // TODO Auto-generated method stub
     bug("Four points, three of which are part of a square, and the other is dragged away a bit. There");
     bug("are two topographic solutions to this depending on the start conditions. The weird angle must");
@@ -80,9 +154,7 @@ public class Main {
     addConstraint(adc);
   }
 
-  private void initDistanceTest() {
-    bug("This test establishes three points at random locations and enforces three distance constraints.");
-    bug("An equilateral triangle should emerge.");
+  public void initDistanceTest() {
     Pt ptA = mkRandomPoint(800, 600);
     Pt ptB = mkRandomPoint(800, 600);
     Pt ptC = mkRandomPoint(800, 600);
@@ -102,7 +174,7 @@ public class Main {
     return new Pt(rand.getIntBetween(0, i), rand.getIntBetween(0, j));
   }
 
-  private void initAngleTest() {
+  public void initAngleTest() {
     Pt ptA = mkRandomPoint(800, 600);
     Pt ptB = mkRandomPoint(800, 600);
     Pt ptC = mkRandomPoint(800, 600);
@@ -123,11 +195,11 @@ public class Main {
           naptime = (long) (1000.0 / (double) fps);
         }
         //      naptime = naptime + 800;
-        if (naptime > 0) {
-          bug("Loop will sleep for " + naptime + " ms between steps.");
-        } else {
-          bug("Loop going full blast.");
-        }
+//        if (naptime > 0) {
+//          bug("Loop will sleep for " + naptime + " ms between steps.");
+//        } else {
+//          bug("Loop going full blast.");
+//        }
 
         //        long start = System.currentTimeMillis();
         while (!finished) {
@@ -165,6 +237,7 @@ public class Main {
 
     // 2: poll all constraints and have them add correction vectors to each point
     for (Constraint c : constraints) {
+      c.clearMessages();
       c.accumulateCorrection();
     }
 
