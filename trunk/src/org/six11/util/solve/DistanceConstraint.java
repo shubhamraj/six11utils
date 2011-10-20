@@ -34,12 +34,20 @@ public class DistanceConstraint extends Constraint {
   }
 
   public void accumulateCorrection() {
-    double e = measureError();
-    if (abs(e) > TOLERANCE) {
-      Vec aToB = new Vec(a, b).getUnitVector().getScaled(e / 2);
-      Vec bToA = aToB.getFlip();
-      accumulate(a, aToB);
-      accumulate(b, bToA);
+    int free = 2 - countPinned(a, b);
+    if (free > 0) {
+      double e = measureError();
+      if (abs(e) > TOLERANCE) {
+        double shift = e / free; // move each free point its fair share of the way to the goal
+        if (!isPinned(a)) {
+          Vec aToB = new Vec(a, b).getUnitVector().getScaled(shift);
+          accumulate(a, aToB);
+        }
+        if (!isPinned(b)) {
+          Vec bToA = new Vec(b, a).getUnitVector().getScaled(shift);
+          accumulate(b, bToA);
+        }
+      }
     }
   }
 

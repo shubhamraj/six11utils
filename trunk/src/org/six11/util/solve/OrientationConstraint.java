@@ -21,7 +21,7 @@ public class OrientationConstraint extends Constraint {
   double angle;
 
   /**
-   * This constrains two lines to some angle. 
+   * This constrains two lines to some angle.
    */
   public OrientationConstraint(Pt lineA1, Pt lineA2, Pt lineB1, Pt lineB2, double radians) {
     this.lineA1 = lineA1;
@@ -30,32 +30,53 @@ public class OrientationConstraint extends Constraint {
     this.lineB2 = lineB2;
     this.angle = radians;
   }
-  
+
   public String getType() {
     return "Orientation";
   }
 
   public void accumulateCorrection() {
     double e = measureError();
-    addMessage("Error is " + num(e) + " (" + num(toDegrees(e)) + " deg) Orientation: " + num(angle) + " (" + num(toDegrees(angle)) + ")");
+    addMessage("Error is " + num(e) + " (" + num(toDegrees(e)) + " deg) Orientation: " + num(angle)
+        + " (" + num(toDegrees(angle)) + ")");
     if (abs(e) > TOLERANCE) {
-      Line lineA = new Line(lineA1, lineA2);
-      Line lineB = new Line(lineB1, lineB2);
-      Pt midA = lineA.getMidpoint();
-      Pt midB = lineB.getMidpoint();
-      Pt rotatedA1 = Functions.rotatePointAboutPivot(lineA1, midA, e / 2);
-      Pt rotatedA2 = Functions.rotatePointAboutPivot(lineA2, midA, e / 2);
-      Pt rotatedB1 = Functions.rotatePointAboutPivot(lineB1, midB, - e / 2);
-      Pt rotatedB2 = Functions.rotatePointAboutPivot(lineB2, midB, - e / 2);
-      Vec vecA1 = new Vec(rotatedA1.x - lineA1.x, rotatedA1.y - lineA1.y);
-      Vec vecA2 = new Vec(rotatedA2.x - lineA2.x, rotatedA2.y - lineA2.y);
-      Vec vecB1 = new Vec(rotatedB1.x - lineB1.x, rotatedB1.y - lineB1.y);
-      Vec vecB2 = new Vec(rotatedB2.x - lineB2.x, rotatedB2.y - lineB2.y);
-      accumulate(lineA1, vecA1);
-      accumulate(lineA2, vecA2);
-      accumulate(lineB1, vecB1);
-      accumulate(lineB2, vecB2);
+      rotate(lineA1, lineA2, e);
+      rotate(lineB1, lineB2, -e);
+//      Line lineB = new Line(lineB1, lineB2);
+//      Pt midB = lineB.getMidpoint();
+//      Pt rotatedB1 = Functions.rotatePointAboutPivot(lineB1, midB, -e / 2);
+//      Pt rotatedB2 = Functions.rotatePointAboutPivot(lineB2, midB, -e / 2);
+//      Vec vecB1 = new Vec(rotatedB1.x - lineB1.x, rotatedB1.y - lineB1.y);
+//      Vec vecB2 = new Vec(rotatedB2.x - lineB2.x, rotatedB2.y - lineB2.y);
+//      accumulate(lineB1, vecB1);
+//      accumulate(lineB2, vecB2);
     }
+  }
+
+  private void rotate(Pt pt1, Pt pt2, double amt) {
+    // three cases: 
+    // both points are free = rotate about mid by (amt / 2)
+    // one point free = rotate free point about pinned point by amt
+    // both points are pinned = do nothing
+    Line line = new Line(pt1, pt2);
+    int free = 2 - countPinned(pt1, pt2);
+    if (free == 2) {
+      Pt pivot = line.getMidpoint();
+      Pt rotated1 = Functions.rotatePointAboutPivot(pt1, pivot, amt / 2);
+      Vec vec1 = new Vec(rotated1.x - pt1.x, rotated1.y - pt1.y);
+      accumulate(pt1, vec1);
+      Pt rotated2 = Functions.rotatePointAboutPivot(pt2, pivot, amt / 2);
+      Vec vec2 = new Vec(rotated2.x - pt2.x, rotated2.y - pt2.y);
+      accumulate(pt2, vec2);
+    } else if (free == 1) {
+      Pt pivot = isPinned(pt1) ? pt1 : pt2;
+      Pt moveMe = isPinned(pt1) ? pt2 : pt1;
+//      double signedAmt = isPinned(pt1) ? amt : -amt;
+      Pt rotated = Functions.rotatePointAboutPivot(moveMe, pivot, amt / 2);
+      Vec vec = new Vec(rotated.x - moveMe.x, rotated.y - moveMe.y);
+      accumulate(moveMe, vec);
+    }
+
   }
 
   public double measureError() {

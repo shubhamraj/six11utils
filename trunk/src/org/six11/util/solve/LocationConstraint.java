@@ -8,13 +8,13 @@ import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 import static org.six11.util.Debug.num;
 
-public class PinConstraint extends Constraint {
+public class LocationConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
 
   Pt p, target;
 
-  public PinConstraint(Pt p, Pt target) {
+  public LocationConstraint(Pt p, Pt target) {
     this.p = p;
     this.target = target;
   }

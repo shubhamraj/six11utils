@@ -19,8 +19,10 @@ import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.MouseThing;
 import org.six11.util.pen.Pt;
 import org.six11.util.solve.Main.Demo;
+import static org.six11.util.solve.Constraint.setPinned;
+import static org.six11.util.solve.Constraint.isPinned;
 
-//import static org.six11.util.Debug.bug;
+import static org.six11.util.Debug.bug;
 //import static org.six11.util.Debug.num;
 //import static java.lang.Math.toDegrees;
 
@@ -79,6 +81,12 @@ public class TestSolveUI {
         dragPt = who;
         canvas.repaint();
       }
+      
+      public void mouseClicked(MouseEvent ev) {
+        Pt who = findPoint(new Pt(ev));
+        setPinned(who, !isPinned(who)); // toggle
+        canvas.repaint();
+      }
 
       public void mouseReleased(MouseEvent ev) {
         dragPt = null;
@@ -131,13 +139,21 @@ public class TestSolveUI {
       Color fillColor = Color.BLUE;
       if (pt.hasAttribute("stable") && pt.getBoolean("stable")) {
         fillColor = Color.LIGHT_GRAY;
+      } else if (isPinned(pt)) {
+        fillColor = Color.GREEN;
       }
       DrawingBufferRoutines.text(buf, pt.getTranslated(0, -10), pt.getString("name"), Color.GREEN.darker());
       double radius = 5;
       if (pt == nearPt) {
         radius = 10;
       }
-      DrawingBufferRoutines.dot(buf, pt, radius, 0.8, Color.BLACK, fillColor);
+      double borderThickness = 0.8;
+      Color borderColor = Color.BLACK;
+      if (isPinned(pt)) {
+        borderThickness = 3.0;
+        borderColor = Color.GREEN;
+      }
+      DrawingBufferRoutines.dot(buf, pt, radius, borderThickness, borderColor, fillColor);
     }
   }
 

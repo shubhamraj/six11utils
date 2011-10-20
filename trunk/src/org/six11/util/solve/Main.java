@@ -11,6 +11,7 @@ import org.six11.util.args.Arguments;
 import org.six11.util.pen.Entropy;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
+import org.six11.util.solve.Main.Demo;
 
 import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
@@ -21,23 +22,45 @@ public class Main {
   public class Demo {
     String label;
     Method method;
+    boolean initialized = false;
+    List<Pt> demoPoints;
+    List<Constraint> demoConstraints;
+
     public Demo(String label, Method method) {
       this.label = label;
       this.method = method;
+      this.demoPoints = new ArrayList<Pt>();
+      this.demoConstraints = new ArrayList<Constraint>();
     }
+
     public void go() {
+      // I'm aware this business with the reflection is wonky.
+      // It evolved from something else. If I were to rewrite this,
+      // obviously things would be cleaner.
       try {
         points.clear();
         constraints.clear();
+        if (initialized) {
+          for (Pt pt : demoPoints) {
+            Pt rand = mkRandomPoint(800, 600);
+            pt.setLocation(rand.x, rand.y);
+          }
+          points.addAll(demoPoints);
+          constraints.addAll(demoConstraints);
+        } else {
+          method.invoke(Main.this);
+          demoPoints.addAll(points);
+          demoConstraints.addAll(constraints);
+          initialized = true;
+        }
         finished = false;
         bug("Executing " + label + " = " + method.getName());
-        method.invoke(Main.this);
         ui.canvas.repaint();
       } catch (Exception ex) {
         ex.printStackTrace();
-      } 
+      }
     }
-    
+
     public String toString() {
       return label;
     }
@@ -51,6 +74,7 @@ public class Main {
   List<Constraint> constraints;
   boolean finished = false;
   int fps;
+  Demo currentDemo;
 
   public static void main(String[] in) throws Exception {
     new Main(in);
@@ -78,27 +102,29 @@ public class Main {
     demos.add(new Demo("destAndAngleTest", this.getClass().getMethod("initDestAndAngleTest")));
     demos.add(new Demo("orientationTest", this.getClass().getMethod("initOrientationTest")));
     demos.add(new Demo("pinTest", this.getClass().getMethod("initPinTest")));
-//    if ("distanceTest".equals(test)) {
-//      initDistanceTest();
-//    } else if ("angleTest".equals(test)) {
-//      initAngleTest();
-//    } else if ("destAndAngleTest".equals(test)) {
-//      initDestAndAngleTest();
-//    } else if ("orientationTest".equals(test)) {
-//      double degrees = 45;
-//      if (args.hasValue("degrees")) {
-//        degrees = Double.parseDouble(args.getValue("degrees"));
-//      }
-//      initOrientationTest(degrees);
-//    } else if ("pinTest".equals(test)) {
-//      initPinTest();
-//    }
+    currentDemo = demos.get(0);
+    //    if ("distanceTest".equals(test)) {
+    //      initDistanceTest();
+    //    } else if ("angleTest".equals(test)) {
+    //      initAngleTest();
+    //    } else if ("destAndAngleTest".equals(test)) {
+    //      initDestAndAngleTest();
+    //    } else if ("orientationTest".equals(test)) {
+    //      double degrees = 45;
+    //      if (args.hasValue("degrees")) {
+    //        degrees = Double.parseDouble(args.getValue("degrees"));
+    //      }
+    //      initOrientationTest(degrees);
+    //    } else if ("pinTest".equals(test)) {
+    //      initPinTest();
+    //    }
     if (args.hasFlag("ui")) {
       ui = new TestSolveUI(this);
     }
-    run();
+    currentDemo.go();
+    //    run();
   }
-  
+
   public List<Demo> getDemos() {
     return demos;
   }
@@ -112,10 +138,10 @@ public class Main {
     addPoint("B", ptB);
     addPoint("C", ptC);
     addPoint("D", ptD);
-    addConstraint(new PinConstraint(ptA, new Pt(200, 200)));
-    addConstraint(new PinConstraint(ptB, new Pt(600, 200)));
-    addConstraint(new PinConstraint(ptC, new Pt(600, 400)));
-    addConstraint(new PinConstraint(ptD, new Pt(200, 400)));
+    addConstraint(new LocationConstraint(ptA, new Pt(200, 200)));
+    addConstraint(new LocationConstraint(ptB, new Pt(600, 200)));
+    addConstraint(new LocationConstraint(ptC, new Pt(600, 400)));
+    addConstraint(new LocationConstraint(ptD, new Pt(200, 400)));
   }
 
   public void initOrientationTest() {
@@ -132,7 +158,6 @@ public class Main {
   }
 
   public void initDestAndAngleTest() {
-    // TODO Auto-generated method stub
     bug("Four points, three of which are part of a square, and the other is dragged away a bit. There");
     bug("are two topographic solutions to this depending on the start conditions. The weird angle must");
     bug("be 45 degrees, but it could be close to the opposite corner, or far from it.");
@@ -195,11 +220,11 @@ public class Main {
           naptime = (long) (1000.0 / (double) fps);
         }
         //      naptime = naptime + 800;
-//        if (naptime > 0) {
-//          bug("Loop will sleep for " + naptime + " ms between steps.");
-//        } else {
-//          bug("Loop going full blast.");
-//        }
+        //        if (naptime > 0) {
+        //          bug("Loop will sleep for " + naptime + " ms between steps.");
+        //        } else {
+        //          bug("Loop going full blast.");
+        //        }
 
         //        long start = System.currentTimeMillis();
         while (!finished) {
