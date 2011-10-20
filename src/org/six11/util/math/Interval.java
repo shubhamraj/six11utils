@@ -8,12 +8,11 @@ import static java.lang.Math.min;
 import static java.lang.Math.max;
 
 /**
- * A simple class for representing a numeric range that supports
- * interval arithmetic.
+ * A simple class for representing a numeric range that supports interval arithmetic.
  **/
 public class Interval {
   private double a, b;
-  
+
   public Interval(double a, double b) {
     this.a = min(a, b);
     this.b = max(a, b);
@@ -35,8 +34,9 @@ public class Interval {
 
   public Interval divideBy(Interval o) {
     if (o.includesZero()) {
-      throw new ArithmeticException("The interval " + o + " includes zero and may not appear in the denominator of a division expression.");
-    } 
+      throw new ArithmeticException("The interval " + o
+          + " includes zero and may not appear in the denominator of a division expression.");
+    }
     double newA = minimum(a / o.a, a / o.b, b / o.a, b / o.b);
     double newB = maximum(a / o.a, a / o.b, b / o.a, b / o.b);
     return new Interval(newA, newB);

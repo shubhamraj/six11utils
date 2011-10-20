@@ -140,18 +140,18 @@ public class TestSolveUI {
       if (pt.hasAttribute("stable") && pt.getBoolean("stable")) {
         fillColor = Color.LIGHT_GRAY;
       } else if (isPinned(pt)) {
-        fillColor = Color.GREEN;
+        fillColor = Color.GREEN.darker();
       }
       DrawingBufferRoutines.text(buf, pt.getTranslated(0, -10), pt.getString("name"), Color.GREEN.darker());
       double radius = 5;
       if (pt == nearPt) {
         radius = 10;
       }
-      double borderThickness = 0.8;
+      double borderThickness = 1.8;
       Color borderColor = Color.BLACK;
       if (isPinned(pt)) {
         borderThickness = 3.0;
-        borderColor = Color.GREEN;
+        borderColor = Color.GREEN.darker().darker();
       }
       DrawingBufferRoutines.dot(buf, pt, radius, borderThickness, borderColor, fillColor);
     }
