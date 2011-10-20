@@ -97,11 +97,12 @@ public class Main {
     if (args.hasValue("test")) {
       test = args.getValue("test");
     }
-    demos.add(new Demo("distanceTest", this.getClass().getMethod("initDistanceTest")));
-    demos.add(new Demo("angleTest", this.getClass().getMethod("initAngleTest")));
-    demos.add(new Demo("destAndAngleTest", this.getClass().getMethod("initDestAndAngleTest")));
-    demos.add(new Demo("orientationTest", this.getClass().getMethod("initOrientationTest")));
-    demos.add(new Demo("pinTest", this.getClass().getMethod("initPinTest")));
+    demos.add(new Demo("Distance", this.getClass().getMethod("initDistanceTest")));
+    demos.add(new Demo("Angle", this.getClass().getMethod("initAngleTest")));
+    demos.add(new Demo("Distance and Angle", this.getClass().getMethod("initDestAndAngleTest")));
+    demos.add(new Demo("Orientation", this.getClass().getMethod("initOrientationTest")));
+    demos.add(new Demo("Location", this.getClass().getMethod("initPinTest")));
+    
     currentDemo = demos.get(0);
     //    if ("distanceTest".equals(test)) {
     //      initDistanceTest();
