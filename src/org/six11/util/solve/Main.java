@@ -254,7 +254,6 @@ public class Main {
     }
     if (numFinished == points.size()) {
       finished = true;
-      bug("All points are in satisfactory locations!");
     }
   }
 

@@ -4,14 +4,14 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import org.six11.util.gui.ApplicationFrame;
 import org.six11.util.pen.DrawingBuffer;
@@ -20,9 +20,9 @@ import org.six11.util.pen.MouseThing;
 import org.six11.util.pen.Pt;
 import org.six11.util.solve.Main.Demo;
 
-import static org.six11.util.Debug.bug;
-import static org.six11.util.Debug.num;
-import static java.lang.Math.toDegrees;
+//import static org.six11.util.Debug.bug;
+//import static org.six11.util.Debug.num;
+//import static java.lang.Math.toDegrees;
 
 public class TestSolveUI {
 
@@ -33,22 +33,17 @@ public class TestSolveUI {
   Pt nearPt;
   Pt dragPt;
 
+  @SuppressWarnings("serial")
   public TestSolveUI(Main m) {
     this.main = m;
     af = new ApplicationFrame("Test Solve UI");
     af.setSize(800, 600);
     buf = new DrawingBuffer();
-    JList options = new JList(m.getDemos().toArray());
-    options.addListSelectionListener(new ListSelectionListener() {
-      public void valueChanged(ListSelectionEvent ev) {
-        bug("Demo list: ");
-        int idx = 0;
-        for (Demo d : main.getDemos()) {
-          bug("  " + idx + ": "+ d);
-          idx++;
-        }
-        bug("Invoking index " + ev.getFirstIndex() + ": " + main.getDemos().get(ev.getFirstIndex()));
-        main.getDemos().get(ev.getFirstIndex()).go();
+    final JComboBox options = new JComboBox(m.getDemos().toArray());
+    options.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ev) {
+        Demo item = (Demo) options.getSelectedItem();
+        item.go();
       }
     });
     canvas = new JComponent() {
@@ -126,7 +121,12 @@ public class TestSolveUI {
       }
       c.draw(buf);
     }
-
+    if (main.finished) {
+      DrawingBufferRoutines.text(buf, msgCursor, "Solved", Color.GREEN.darker().darker());
+    } else {
+      DrawingBufferRoutines.text(buf, msgCursor, "Working...", Color.RED.darker());
+    }
+    
     for (Pt pt : points) {
       Color fillColor = Color.BLUE;
       if (pt.hasAttribute("stable") && pt.getBoolean("stable")) {
