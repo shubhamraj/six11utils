@@ -18,13 +18,14 @@ import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.MouseThing;
 import org.six11.util.pen.Pt;
+import org.six11.util.pen.Vec;
 import org.six11.util.solve.Main.Demo;
 import static org.six11.util.solve.Constraint.setPinned;
 import static org.six11.util.solve.Constraint.isPinned;
 
 import static org.six11.util.Debug.bug;
-//import static org.six11.util.Debug.num;
-//import static java.lang.Math.toDegrees;
+// import static org.six11.util.Debug.num;
+// import static java.lang.Math.toDegrees;
 
 public class TestSolveUI {
 
@@ -34,6 +35,7 @@ public class TestSolveUI {
   Main main;
   Pt nearPt;
   Pt dragPt;
+  Pt mousePt;
 
   @SuppressWarnings("serial")
   public TestSolveUI(Main m) {
@@ -61,10 +63,11 @@ public class TestSolveUI {
     canvas.addMouseMotionListener(new MouseThing() {
       public void mouseMoved(MouseEvent ev) {
         Pt who = findPoint(new Pt(ev));
+        mousePt = new Pt(ev);
         if (nearPt != who) {
           nearPt = who;
-          canvas.repaint();
         }
+        canvas.repaint();
       }
 
       public void mouseDragged(MouseEvent ev) {
@@ -73,15 +76,17 @@ public class TestSolveUI {
           canvas.repaint();
         }
       }
+
     });
     canvas.addMouseListener(new MouseThing() {
       @Override
       public void mousePressed(MouseEvent ev) {
         Pt who = findPoint(new Pt(ev));
+        mousePt.setLocation(who);
         dragPt = who;
         canvas.repaint();
       }
-      
+
       public void mouseClicked(MouseEvent ev) {
         Pt who = findPoint(new Pt(ev));
         setPinned(who, !isPinned(who)); // toggle
@@ -90,6 +95,7 @@ public class TestSolveUI {
 
       public void mouseReleased(MouseEvent ev) {
         dragPt = null;
+        mousePt = null;
         main.run();
         canvas.repaint();
       }
@@ -118,6 +124,14 @@ public class TestSolveUI {
 
   private void drawBuffer() {
     buf.clear();
+    // if there is a mouse point and a near point, it means the user has moved the mouse and 
+    // a nearby point is activated. Draw an arrow between them.
+    if (mousePt != null && nearPt != null && mousePt.distance(nearPt) > 40) {
+      Vec mToN = new Vec(mousePt, nearPt).getUnitVector();
+      DrawingBufferRoutines.arrow(buf, mousePt,
+          mousePt.getTranslated(mToN, mousePt.distance(nearPt) - 20), 2, Color.magenta);
+    }
+
     List<Constraint> constraints = main.getConstraints();
     List<Pt> points = main.getPoints();
     Pt msgCursor = new Pt(12, 12);
@@ -134,15 +148,16 @@ public class TestSolveUI {
     } else {
       DrawingBufferRoutines.text(buf, msgCursor, "Working...", Color.RED.darker());
     }
-    
+
     for (Pt pt : points) {
       Color fillColor = Color.BLUE;
-      if (pt.hasAttribute("stable") && pt.getBoolean("stable")) {
-        fillColor = Color.LIGHT_GRAY;
-      } else if (isPinned(pt)) {
+      if (isPinned(pt)) {
         fillColor = Color.GREEN.darker();
+      } else if (pt.hasAttribute("stable") && pt.getBoolean("stable")) {
+        fillColor = Color.LIGHT_GRAY;
       }
-      DrawingBufferRoutines.text(buf, pt.getTranslated(0, -10), pt.getString("name"), Color.GREEN.darker());
+      DrawingBufferRoutines.text(buf, pt.getTranslated(0, -10), pt.getString("name"),
+          Color.GREEN.darker());
       double radius = 5;
       if (pt == nearPt) {
         radius = 10;
