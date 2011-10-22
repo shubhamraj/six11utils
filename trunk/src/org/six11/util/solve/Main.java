@@ -21,13 +21,15 @@ public class Main {
 
   public class Demo {
     String label;
+    String about;
     Method method;
     boolean initialized = false;
     List<Pt> demoPoints;
     List<Constraint> demoConstraints;
 
-    public Demo(String label, Method method) {
+    public Demo(String label, String about, Method method) {
       this.label = label;
+      this.about = about;
       this.method = method;
       this.demoPoints = new ArrayList<Pt>();
       this.demoConstraints = new ArrayList<Constraint>();
@@ -40,6 +42,7 @@ public class Main {
       try {
         points.clear();
         constraints.clear();
+        msg = about;
         if (initialized) {
           for (Pt pt : demoPoints) {
             Pt rand = mkRandomPoint(800, 600);
@@ -72,6 +75,7 @@ public class Main {
   TestSolveUI ui = null;
   List<Pt> points;
   List<Constraint> constraints;
+  String msg = null;
   boolean finished = false;
   int fps;
   Demo currentDemo;
@@ -93,20 +97,37 @@ public class Main {
       this.fps = Integer.parseInt(args.getValue("fps"));
     }
     Entropy.setSeed(System.currentTimeMillis());
-    
-    demos.add(new Demo("Distance", this.getClass().getMethod("initDistanceTest")));
-    demos.add(new Demo("Angle", this.getClass().getMethod("initAngleTest")));
-    demos.add(new Demo("Distance and Angle", this.getClass().getMethod("initDestAndAngleTest")));
-    demos.add(new Demo("Orientation", this.getClass().getMethod("initOrientationTest")));
-    demos.add(new Demo("Location", this.getClass().getMethod("initPinTest")));
-    demos.add(new Demo("Point On Line", this.getClass().getMethod("initPointOnLineTest")));
-    
+
+    demos.add(new Demo("Distance", "Points constrained to be a constant distance apart.", this
+        .getClass().getMethod("initDistanceTest")));
+    demos.add(new Demo("Angle",
+        "Two lines co-terminate and are constrained to be at right angles. The fulcrum is static.",
+        this.getClass().getMethod("initAngleTest")));
+    demos.add(new Demo("Distance and Angle",
+        "Two constant-length segments, a 90-degree angle, and a 45-degree angle", this.getClass()
+            .getMethod("initDestAndAngleTest")));
+    demos.add(new Demo("Orientation", "Line segments try to remain perpendicular to each other.",
+        this.getClass().getMethod("initOrientationTest")));
+    demos.add(new Demo("Location",
+        "Points constrained to specific locations. Pin them to override.", this.getClass()
+            .getMethod("initPinTest")));
+    demos.add(new Demo("Point On Line",
+        "Inner points are between the endpoints, using different parameters (0.5 is midpoint)",
+        this.getClass().getMethod("initPointOnLineTest")));
+    demos.add(new Demo("Quadrilateral",
+        "Outer points (NW, NE etc) use midpoints to define inner points (N, E, etc), and are "
+            + "connected. Note: inner lines form a parallelogram.", this.getClass().getMethod(
+            "initQuadrilateralTest")));
+    demos.add(new Demo("SkruiFab Video",
+        "All constraints necessary to build the system from my SkruiFab video mockup", this
+            .getClass().getMethod("initSkruiFabVideoTest")));
+
     currentDemo = demos.get(0);
 
     if (args.hasFlag("ui")) {
       ui = new TestSolveUI(this);
     }
-    
+
     currentDemo.go();
   }
 
@@ -114,43 +135,69 @@ public class Main {
     return demos;
   }
 
+  public void initSkruiFabVideoTest() {
+
+  }
+
+  public void initQuadrilateralTest() {
+    Pt nw = new Pt(200, 200);
+    Pt sw = new Pt(230, 520);
+    Pt se = new Pt(500, 460);
+    Pt ne = new Pt(475, 180);
+    Pt n = new Pt(0, 0);
+    Pt s = new Pt(0, 0);
+    Pt e = new Pt(0, 0);
+    Pt w = new Pt(0, 0);
+    Pt innerNW = new Pt(0, 0);
+    Pt innerSW = new Pt(0, 0);
+    Pt innerNE = new Pt(0, 0);
+    Pt innerSE = new Pt(0, 0);
+    addPoint("NW", nw);
+    addPoint("SW", sw);
+    addPoint("SE", se);
+    addPoint("NE", ne);
+    addPoint("N", n);
+    addPoint("S", s);
+    addPoint("E", e);
+    addPoint("W", w);
+    addPoint("InnerNW", innerNW);
+    addPoint("InnerSW", innerSW);
+    addPoint("InnerSE", innerSE);
+    addPoint("InnerNE", innerNE);
+    addConstraint(new PointOnLineConstraint(nw, ne, 0.5, n));
+    addConstraint(new PointOnLineConstraint(nw, sw, 0.5, w));
+    addConstraint(new PointOnLineConstraint(se, sw, 0.5, s));
+    addConstraint(new PointOnLineConstraint(se, ne, 0.5, e));
+
+    addConstraint(new PointOnLineConstraint(n, e, 0.5, innerNE));
+    addConstraint(new PointOnLineConstraint(e, s, 0.5, innerSE));
+    addConstraint(new PointOnLineConstraint(s, w, 0.5, innerSW));
+    addConstraint(new PointOnLineConstraint(w, n, 0.5, innerNW));
+  }
+
   public void initPointOnLineTest() {
-    String[] names = new String[] { 
-          "A", "B", // line 0 
-          "C", "D", // line 1
-          "E", "F", // line 2
-          "G", "H", // line 3
-          "I", "J", // line 4
-          "K", "L"  // line 5
+    String[] names = new String[] {
+        "A", "B", // line 0 
+        "C", "D", // line 1
+        "E", "F", // line 2
+        "G", "H", // line 3
+        "I", "J", // line 4
+        "K", "L" // line 5
     };
     double factor = 0.2;
     double factorIncr = 0.8 / ((double) names.length / 2.0);
-    for (int i=0; i < names.length; i = i+2) {
+    for (int i = 0; i < names.length; i = i + 2) {
       Pt one = mkRandomPoint(800, 600);
       Pt two = mkRandomPoint(800, 600);
       Pt mid = new Pt(0, 0);
       addPoint(names[i], one);
-      addPoint(names[i+1], two);
-      addPoint(names[i] + "-" + names[i+1], mid);
+      addPoint(names[i + 1], two);
+      addPoint(names[i] + "-" + names[i + 1], mid);
       addConstraint(new PointOnLineConstraint(one, two, factor, mid));
       factor = factor + factorIncr;
     }
-//    Pt ptA = mkRandomPoint(800, 600);
-//    Pt ptB = mkRandomPoint(800, 600);
-//    Pt ptC = mkRandomPoint(800, 600);
-//    Pt ptD = mkRandomPoint(800, 600);
-//    Pt midAB = new Pt((ptA.x + ptB.x) / 2, (ptA.y + ptB.y) / 2);
-//    Pt midCD = new Pt((ptC.x + ptD.x) / 2, (ptC.y + ptD.y) / 2);
-//    addPoint("A", ptA);
-//    addPoint("B", ptB);
-//    addPoint("C", ptC);
-//    addPoint("D", ptD);
-//    addPoint("midAB", midAB);
-//    addPoint("midCD", midCD);
-//    addConstraint(new PointOnLineConstraint(ptA, ptB, 0.5, midAB));
-//    addConstraint(new PointOnLineConstraint(ptC, ptD, 0.5, midCD));
   }
-  
+
   public void initPinTest() {
     Pt ptA = mkRandomPoint(800, 600);
     Pt ptB = mkRandomPoint(800, 600);

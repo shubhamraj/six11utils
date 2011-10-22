@@ -304,8 +304,7 @@ public class DrawingBuffer {
     if (bb.isValid()) {
       g.transform(defaultXform);
       g.translate(bb.getX(), bb.getY());
-      //      g.drawImage(getImage(), 0, 0, null);
-      g.drawImage(getImage(), 1, 1, null);
+      g.drawImage(getImage(), 1, 1, null); // I don't understand how this can be right. should be 0, 0... but it gives weird behavior
     }
     g.setTransform(before);
   }
