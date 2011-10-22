@@ -312,6 +312,13 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
     return (Sequence) getAttribute(name);
   }
 
+  /**
+   * Sets this points location by translating it the given amount: this.x + v.x, this.y + v.y.
+   */
+  public void move(Vec v) {
+    setLocation(x + v.getX(), y + v.getY());
+  }
+  
   public Pt getTranslated(Vec vec, double len) {
     Vec resized = vec.getVectorOfMagnitude(len);
     return getTranslated(resized.getX(), resized.getY());
