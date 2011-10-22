@@ -93,43 +93,64 @@ public class Main {
       this.fps = Integer.parseInt(args.getValue("fps"));
     }
     Entropy.setSeed(System.currentTimeMillis());
-    String test = "pinTest";
-    if (args.hasValue("test")) {
-      test = args.getValue("test");
-    }
+    
     demos.add(new Demo("Distance", this.getClass().getMethod("initDistanceTest")));
     demos.add(new Demo("Angle", this.getClass().getMethod("initAngleTest")));
     demos.add(new Demo("Distance and Angle", this.getClass().getMethod("initDestAndAngleTest")));
     demos.add(new Demo("Orientation", this.getClass().getMethod("initOrientationTest")));
     demos.add(new Demo("Location", this.getClass().getMethod("initPinTest")));
+    demos.add(new Demo("Point On Line", this.getClass().getMethod("initPointOnLineTest")));
     
     currentDemo = demos.get(0);
-    //    if ("distanceTest".equals(test)) {
-    //      initDistanceTest();
-    //    } else if ("angleTest".equals(test)) {
-    //      initAngleTest();
-    //    } else if ("destAndAngleTest".equals(test)) {
-    //      initDestAndAngleTest();
-    //    } else if ("orientationTest".equals(test)) {
-    //      double degrees = 45;
-    //      if (args.hasValue("degrees")) {
-    //        degrees = Double.parseDouble(args.getValue("degrees"));
-    //      }
-    //      initOrientationTest(degrees);
-    //    } else if ("pinTest".equals(test)) {
-    //      initPinTest();
-    //    }
+
     if (args.hasFlag("ui")) {
       ui = new TestSolveUI(this);
     }
+    
     currentDemo.go();
-    //    run();
   }
 
   public List<Demo> getDemos() {
     return demos;
   }
 
+  public void initPointOnLineTest() {
+    String[] names = new String[] { 
+          "A", "B", // line 0 
+          "C", "D", // line 1
+          "E", "F", // line 2
+          "G", "H", // line 3
+          "I", "J", // line 4
+          "K", "L"  // line 5
+    };
+    double factor = 0.2;
+    double factorIncr = 0.8 / ((double) names.length / 2.0);
+    for (int i=0; i < names.length; i = i+2) {
+      Pt one = mkRandomPoint(800, 600);
+      Pt two = mkRandomPoint(800, 600);
+      Pt mid = new Pt(0, 0);
+      addPoint(names[i], one);
+      addPoint(names[i+1], two);
+      addPoint(names[i] + "-" + names[i+1], mid);
+      addConstraint(new PointOnLineConstraint(one, two, factor, mid));
+      factor = factor + factorIncr;
+    }
+//    Pt ptA = mkRandomPoint(800, 600);
+//    Pt ptB = mkRandomPoint(800, 600);
+//    Pt ptC = mkRandomPoint(800, 600);
+//    Pt ptD = mkRandomPoint(800, 600);
+//    Pt midAB = new Pt((ptA.x + ptB.x) / 2, (ptA.y + ptB.y) / 2);
+//    Pt midCD = new Pt((ptC.x + ptD.x) / 2, (ptC.y + ptD.y) / 2);
+//    addPoint("A", ptA);
+//    addPoint("B", ptB);
+//    addPoint("C", ptC);
+//    addPoint("D", ptD);
+//    addPoint("midAB", midAB);
+//    addPoint("midCD", midCD);
+//    addConstraint(new PointOnLineConstraint(ptA, ptB, 0.5, midAB));
+//    addConstraint(new PointOnLineConstraint(ptC, ptD, 0.5, midCD));
+  }
+  
   public void initPinTest() {
     Pt ptA = mkRandomPoint(800, 600);
     Pt ptB = mkRandomPoint(800, 600);
@@ -276,7 +297,7 @@ public class Main {
         numFinished = numFinished + 1;
       }
       Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
-      pt.setLocation(pt.getX() + delta.getX(), pt.getY() + delta.getY());
+      pt.move(delta); // pt.setLocation(pt.getX() + delta.getX(), pt.getY() + delta.getY());
     }
     if (numFinished == points.size()) {
       finished = true;
