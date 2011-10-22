@@ -58,6 +58,7 @@ public class TestSolveUI {
         g.fill(getVisibleRect());
         drawBuffer();
         buf.paste(g);
+        bug("Pasted Buffer at " + buf.getBoundingBox());
       }
     };
     canvas.addMouseMotionListener(new MouseThing() {
@@ -82,6 +83,9 @@ public class TestSolveUI {
       @Override
       public void mousePressed(MouseEvent ev) {
         Pt who = findPoint(new Pt(ev));
+        if (mousePt == null) {
+          mousePt = new Pt();
+        }
         mousePt.setLocation(who);
         dragPt = who;
         canvas.repaint();
@@ -129,12 +133,16 @@ public class TestSolveUI {
     if (mousePt != null && nearPt != null && mousePt.distance(nearPt) > 40) {
       Vec mToN = new Vec(mousePt, nearPt).getUnitVector();
       DrawingBufferRoutines.arrow(buf, mousePt,
-          mousePt.getTranslated(mToN, mousePt.distance(nearPt) - 20), 2, Color.magenta);
+          mousePt.getTranslated(mToN, mousePt.distance(nearPt) - 20), 1.4, Color.magenta);
     }
 
     List<Constraint> constraints = main.getConstraints();
     List<Pt> points = main.getPoints();
     Pt msgCursor = new Pt(12, 12);
+    if (main.msg != null && main.msg.length() > 0) {
+      DrawingBufferRoutines.text(buf, msgCursor, main.msg, Color.BLACK);
+      msgCursor.setLocation(msgCursor.x, msgCursor.y + 20);
+    }
     for (Constraint c : constraints) {
       String msg = c.getMessages();
       if (msg.length() > 0) {

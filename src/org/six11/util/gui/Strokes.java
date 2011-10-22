@@ -41,6 +41,15 @@ public abstract class Strokes {
       BasicStroke.CAP_BUTT, // CAP
       BasicStroke.JOIN_MITER, // JOIN
       1f); // miter limit
+  
+  public static final BasicStroke THIN_DASHED_STROKE = new BasicStroke(2f, // pen thickness
+      BasicStroke.CAP_BUTT, // cap
+      BasicStroke.JOIN_MITER, // join
+      1f, // miter limit
+      new float[] {
+          3.5f, 3.5f
+      }, // dash
+      3.5f); // dash phase)
 
   public static BasicStroke get(float thickness) {
     if (!simpleStrokes.containsKey(thickness)) {
