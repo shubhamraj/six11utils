@@ -98,9 +98,9 @@ public class Main {
     }
     Entropy.setSeed(System.currentTimeMillis());
 
-    demos.add(new Demo("SkruiFab Video",
-        "All constraints necessary to build the system from my SkruiFab video mockup", this
-            .getClass().getMethod("initSkruiFabVideoTest")));
+    demos.add(new Demo("Playground",
+        "Add points and constraints using the interface above", this
+            .getClass().getMethod("initBlank")));
     demos.add(new Demo("Distance", "Points constrained to be a constant distance apart.", this
         .getClass().getMethod("initDistanceTest")));
     demos.add(new Demo("Angle",
@@ -121,7 +121,9 @@ public class Main {
         "Outer points (NW, NE etc) use midpoints to define inner points (N, E, etc), and are "
             + "connected. Note: inner lines form a parallelogram.", this.getClass().getMethod(
             "initQuadrilateralTest")));
-    
+    demos.add(new Demo("SkruiFab Video",
+        "All constraints necessary to build the system from my SkruiFab video mockup", this
+            .getClass().getMethod("initSkruiFabVideoTest")));
 
     currentDemo = demos.get(0);
 
@@ -137,6 +139,10 @@ public class Main {
   }
 
   public void initSkruiFabVideoTest() {
+
+  }
+  
+  public void initBlank() {
 
   }
 
@@ -356,7 +362,7 @@ public class Main {
     return points;
   }
 
-  private void addPoint(String name, Pt pt) {
+  public void addPoint(String name, Pt pt) {
     pt.setAttribute("name", name);
     points.add(pt);
   }
@@ -365,7 +371,7 @@ public class Main {
     return constraints;
   }
 
-  private void addConstraint(Constraint c) {
+  public void addConstraint(Constraint c) {
     constraints.add(c);
   }
 }
