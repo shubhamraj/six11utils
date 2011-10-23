@@ -18,7 +18,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import org.six11.util.Debug;
+import static org.six11.util.Debug.bug;
+import static org.six11.util.Debug.num;
 import org.six11.util.gui.BoundingBox;
 import org.six11.util.gui.Components;
 import org.six11.util.gui.Strokes;
@@ -269,10 +270,6 @@ public class DrawingBuffer {
     defaultXform.setToIdentity();
   }
 
-  private static void bug(String what) {
-    Debug.out("DrawingBuffer", what);
-  }
-
   /**
    * Returns a cached Image object of this buffer so you don't have to re-draw everything all the
    * time. It will create an Image if necessary.
@@ -305,6 +302,7 @@ public class DrawingBuffer {
       g.transform(defaultXform);
       g.translate(bb.getX(), bb.getY());
       g.drawImage(getImage(), 1, 1, null); // I don't understand how this can be right. should be 0, 0... but it gives weird behavior
+      Point2D newOrigin = g.getTransform().transform(new Pt(0, 0), null);
     }
     g.setTransform(before);
   }
@@ -432,7 +430,7 @@ public class DrawingBuffer {
       this.circleStart = start;
       this.circleMid = mid;
       this.circleEnd = end;
-      bugString = "circle: " + Debug.num(start) + ", " + Debug.num(mid) + ", " + Debug.num(end);
+      bugString = "circle: " + num(start) + ", " + num(mid) + ", " + num(end);
     }
 
     public TurtleOp(Shape s) {
@@ -524,13 +522,15 @@ public class DrawingBuffer {
         double x1, y1, x2, y2;
         x1 = xform.getTranslateX();
         y1 = xform.getTranslateY();
-        bb.add(new Point2D.Double(x1, y1), (double) pen.thickness);
+        //bb.add(new Point2D.Double(x1, y1), (double) pen.thickness);
+        bb.add(new Point2D.Double(x1, y1));
         if (pen.filling) {
           regions.get(regions.size() - 1).addPoint(x1, y1);
         }
         x2 = change.getTranslateX();
         y2 = change.getTranslateY();
-        bb.add(new Point2D.Double(x2, y2), (double) pen.thickness);
+//        bb.add(new Point2D.Double(x2, y2), (double) pen.thickness);
+        bb.add(new Point2D.Double(x2, y2));
         if (pen.filling) {
           regions.get(regions.size() - 1).addPoint(x2, y2);
         }
@@ -568,7 +568,7 @@ public class DrawingBuffer {
           shape = arbitraryShape;
         }
 
-        bb.add(shape.getBounds2D(), (double) pen.thickness);
+        bb.add(shape.getBounds2D());
         if (pen.filling) {
           regions.get(regions.size() - 1).addShape(shape);
         }
@@ -577,11 +577,6 @@ public class DrawingBuffer {
         }
       }
       return change;
-    }
-
-    @SuppressWarnings("unused")
-    private static void bug(String what) {
-      Debug.out("TurtleOp", what);
     }
   }
 
@@ -702,11 +697,6 @@ public class DrawingBuffer {
 
     public Color getColor() {
       return color;
-    }
-
-    @SuppressWarnings("unused")
-    private static void bug(String what) {
-      Debug.out("FilledRegion", what);
     }
 
     public PathIterator getPathIterator() {

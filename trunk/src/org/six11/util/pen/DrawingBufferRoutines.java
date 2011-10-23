@@ -295,7 +295,7 @@ public abstract class DrawingBufferRoutines {
 
   public static void arrow(DrawingBuffer db, Pt start, Pt tip, double thick, Color color) {
     double length = start.distance(tip);
-    double headLength = length / 10;
+    double headLength = length / 10.0;
     Vec tipToStart = new Vec(tip, start).getVectorOfMagnitude(headLength);
     Pt cross = tip.getTranslated(tipToStart.getX(), tipToStart.getY());
     Vec outward = tipToStart.getNormal();
