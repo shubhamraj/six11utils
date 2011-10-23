@@ -98,6 +98,9 @@ public class Main {
     }
     Entropy.setSeed(System.currentTimeMillis());
 
+    demos.add(new Demo("SkruiFab Video",
+        "All constraints necessary to build the system from my SkruiFab video mockup", this
+            .getClass().getMethod("initSkruiFabVideoTest")));
     demos.add(new Demo("Distance", "Points constrained to be a constant distance apart.", this
         .getClass().getMethod("initDistanceTest")));
     demos.add(new Demo("Angle",
@@ -118,9 +121,7 @@ public class Main {
         "Outer points (NW, NE etc) use midpoints to define inner points (N, E, etc), and are "
             + "connected. Note: inner lines form a parallelogram.", this.getClass().getMethod(
             "initQuadrilateralTest")));
-    demos.add(new Demo("SkruiFab Video",
-        "All constraints necessary to build the system from my SkruiFab video mockup", this
-            .getClass().getMethod("initSkruiFabVideoTest")));
+    
 
     currentDemo = demos.get(0);
 

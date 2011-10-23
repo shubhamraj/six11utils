@@ -166,7 +166,8 @@ public class BoundingBox {
    * Forces the bounding box to include the extents of the given rectangle.
    */
   public void add(Rectangle2D rec) {
-    add(rec, 0);
+    add(new Point2D.Double(rec.getX(), rec.getY()));
+    add(new Point2D.Double(rec.getX() + rec.getWidth(), rec.getY() + rec.getHeight()));
   }
 
   public void add(Rectangle2D rec, double padding) {

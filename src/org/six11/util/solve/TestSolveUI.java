@@ -58,7 +58,6 @@ public class TestSolveUI {
         g.fill(getVisibleRect());
         drawBuffer();
         buf.paste(g);
-        bug("Pasted Buffer at " + buf.getBoundingBox());
       }
     };
     canvas.addMouseMotionListener(new MouseThing() {
