@@ -16,6 +16,7 @@ import org.six11.util.solve.Main.Demo;
 import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
 import static java.lang.Math.toRadians;
+import static java.lang.Math.sqrt;
 
 public class Main {
 
@@ -98,9 +99,8 @@ public class Main {
     }
     Entropy.setSeed(System.currentTimeMillis());
 
-    demos.add(new Demo("Playground",
-        "Add points and constraints using the interface above", this
-            .getClass().getMethod("initBlank")));
+    demos.add(new Demo("Playground", "Add points and constraints using the interface above", this
+        .getClass().getMethod("initBlank")));
     demos.add(new Demo("Distance", "Points constrained to be a constant distance apart.", this
         .getClass().getMethod("initDistanceTest")));
     demos.add(new Demo("Angle",
@@ -141,7 +141,7 @@ public class Main {
   public void initSkruiFabVideoTest() {
 
   }
-  
+
   public void initBlank() {
 
   }
@@ -351,7 +351,14 @@ public class Main {
         numFinished = numFinished + 1;
       }
       Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
-      pt.move(delta); // pt.setLocation(pt.getX() + delta.getX(), pt.getY() + delta.getY());
+      double mag = delta.mag();
+      if (mag > 1.0) {
+        pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
+      } else if (mag > 0.0) {
+        if (Entropy.getEntropy().getBoolean()) {
+          pt.move(delta);
+        }
+      }
     }
     if (numFinished == points.size()) {
       finished = true;
