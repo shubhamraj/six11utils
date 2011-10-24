@@ -1,5 +1,6 @@
 package org.six11.util.solve;
 
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -46,7 +47,7 @@ public class Main {
         msg = about;
         if (initialized) {
           for (Pt pt : demoPoints) {
-            Pt rand = mkRandomPoint(800, 600);
+            Pt rand = mkRandomPoint(ui.canvas);
             pt.setLocation(rand.x, rand.y);
           }
           points.addAll(demoPoints);
@@ -114,16 +115,18 @@ public class Main {
     demos.add(new Demo("Location",
         "Points constrained to specific locations. Pin them to override.", this.getClass()
             .getMethod("initPinTest")));
-    demos.add(new Demo("Point On Line",
+    demos.add(new Demo("Point As Line Parameter",
         "Inner points are between the endpoints, using different parameters (0.5 is midpoint)",
         this.getClass().getMethod("initPointOnLineTest")));
     demos.add(new Demo("Quadrilateral",
         "Outer points (NW, NE etc) use midpoints to define inner points (N, E, etc), and are "
             + "connected. Note: inner lines form a parallelogram.", this.getClass().getMethod(
             "initQuadrilateralTest")));
-    demos.add(new Demo("SkruiFab Video",
-        "All constraints necessary to build the system from my SkruiFab video mockup", this
-            .getClass().getMethod("initSkruiFabVideoTest")));
+    demos
+        .add(new Demo(
+            "Point on line",
+            "Constrains a point to appear somewhere on a line. It does not have to be between the endpoints.",
+            this.getClass().getMethod("initPointOnLine")));
 
     currentDemo = demos.get(0);
 
@@ -138,8 +141,14 @@ public class Main {
     return demos;
   }
 
-  public void initSkruiFabVideoTest() {
-
+  public void initPointOnLine() {
+    Pt a = mkRandomPoint(ui.canvas);
+    Pt b = mkRandomPoint(ui.canvas);
+    Pt m = mkRandomPoint(ui.canvas);
+    addPoint("A", a);
+    addPoint("B", b);
+    addPoint("M", m);
+    addConstraint(new PointOnLineConstraint(a, b, m));
   }
 
   public void initBlank() {
@@ -171,15 +180,15 @@ public class Main {
     addPoint("InnerSW", innerSW);
     addPoint("InnerSE", innerSE);
     addPoint("InnerNE", innerNE);
-    addConstraint(new PointOnLineConstraint(nw, ne, 0.5, n));
-    addConstraint(new PointOnLineConstraint(nw, sw, 0.5, w));
-    addConstraint(new PointOnLineConstraint(se, sw, 0.5, s));
-    addConstraint(new PointOnLineConstraint(se, ne, 0.5, e));
+    addConstraint(new PointAsLineParamConstraint(nw, ne, 0.5, n));
+    addConstraint(new PointAsLineParamConstraint(nw, sw, 0.5, w));
+    addConstraint(new PointAsLineParamConstraint(se, sw, 0.5, s));
+    addConstraint(new PointAsLineParamConstraint(se, ne, 0.5, e));
 
-    addConstraint(new PointOnLineConstraint(n, e, 0.5, innerNE));
-    addConstraint(new PointOnLineConstraint(e, s, 0.5, innerSE));
-    addConstraint(new PointOnLineConstraint(s, w, 0.5, innerSW));
-    addConstraint(new PointOnLineConstraint(w, n, 0.5, innerNW));
+    addConstraint(new PointAsLineParamConstraint(n, e, 0.5, innerNE));
+    addConstraint(new PointAsLineParamConstraint(e, s, 0.5, innerSE));
+    addConstraint(new PointAsLineParamConstraint(s, w, 0.5, innerSW));
+    addConstraint(new PointAsLineParamConstraint(w, n, 0.5, innerNW));
   }
 
   public void initPointOnLineTest() {
@@ -194,22 +203,22 @@ public class Main {
     double factor = 0.2;
     double factorIncr = 0.8 / ((double) names.length / 2.0);
     for (int i = 0; i < names.length; i = i + 2) {
-      Pt one = mkRandomPoint(800, 600);
-      Pt two = mkRandomPoint(800, 600);
+      Pt one = mkRandomPoint(ui.canvas);
+      Pt two = mkRandomPoint(ui.canvas);
       Pt mid = new Pt(0, 0);
       addPoint(names[i], one);
       addPoint(names[i + 1], two);
       addPoint(names[i] + "-" + names[i + 1], mid);
-      addConstraint(new PointOnLineConstraint(one, two, factor, mid));
+      addConstraint(new PointAsLineParamConstraint(one, two, factor, mid));
       factor = factor + factorIncr;
     }
   }
 
   public void initPinTest() {
-    Pt ptA = mkRandomPoint(800, 600);
-    Pt ptB = mkRandomPoint(800, 600);
-    Pt ptC = mkRandomPoint(800, 600);
-    Pt ptD = mkRandomPoint(800, 600);
+    Pt ptA = mkRandomPoint(ui.canvas);
+    Pt ptB = mkRandomPoint(ui.canvas);
+    Pt ptC = mkRandomPoint(ui.canvas);
+    Pt ptD = mkRandomPoint(ui.canvas);
     addPoint("A", ptA);
     addPoint("B", ptB);
     addPoint("C", ptC);
@@ -221,10 +230,10 @@ public class Main {
   }
 
   public void initOrientationTest() {
-    Pt ptA = mkRandomPoint(800, 600);
-    Pt ptB = mkRandomPoint(800, 600);
-    Pt ptC = mkRandomPoint(800, 600);
-    Pt ptD = mkRandomPoint(800, 600);
+    Pt ptA = mkRandomPoint(ui.canvas);
+    Pt ptB = mkRandomPoint(ui.canvas);
+    Pt ptC = mkRandomPoint(ui.canvas);
+    Pt ptD = mkRandomPoint(ui.canvas);
     addPoint("A", ptA);
     addPoint("B", ptB);
     addPoint("C", ptC);
@@ -237,10 +246,10 @@ public class Main {
     bug("Four points, three of which are part of a square, and the other is dragged away a bit. There");
     bug("are two topographic solutions to this depending on the start conditions. The weird angle must");
     bug("be 45 degrees, but it could be close to the opposite corner, or far from it.");
-    Pt ptA = mkRandomPoint(800, 600);
-    Pt ptB = mkRandomPoint(800, 600);
-    Pt ptC = mkRandomPoint(800, 600);
-    Pt ptD = mkRandomPoint(800, 600);
+    Pt ptA = mkRandomPoint(ui.canvas);
+    Pt ptB = mkRandomPoint(ui.canvas);
+    Pt ptC = mkRandomPoint(ui.canvas);
+    Pt ptD = mkRandomPoint(ui.canvas);
     addPoint("A", ptA);
     addPoint("B", ptB);
     addPoint("C", ptC);
@@ -256,9 +265,9 @@ public class Main {
   }
 
   public void initDistanceTest() {
-    Pt ptA = mkRandomPoint(800, 600);
-    Pt ptB = mkRandomPoint(800, 600);
-    Pt ptC = mkRandomPoint(800, 600);
+    Pt ptA = mkRandomPoint(ui.canvas);
+    Pt ptB = mkRandomPoint(ui.canvas);
+    Pt ptC = mkRandomPoint(ui.canvas);
     addPoint("A", ptA);
     addPoint("B", ptB);
     addPoint("C", ptC);
@@ -270,15 +279,19 @@ public class Main {
     addConstraint(ca);
   }
 
+  private Pt mkRandomPoint(Component comp) {
+    return mkRandomPoint(comp.getWidth(), comp.getHeight());
+  }
+
   private Pt mkRandomPoint(int i, int j) {
     Entropy rand = Entropy.getEntropy();
     return new Pt(rand.getIntBetween(0, i), rand.getIntBetween(0, j));
   }
 
   public void initAngleTest() {
-    Pt ptA = mkRandomPoint(800, 600);
-    Pt ptB = mkRandomPoint(800, 600);
-    Pt ptC = mkRandomPoint(800, 600);
+    Pt ptA = mkRandomPoint(ui.canvas);
+    Pt ptB = mkRandomPoint(ui.canvas);
+    Pt ptC = mkRandomPoint(ui.canvas);
     addPoint("A", ptA);
     addPoint("B", ptB);
     addPoint("C", ptC);
@@ -288,21 +301,12 @@ public class Main {
 
   void run() {
     Runnable runner = new Runnable() {
-      @Override
       public void run() {
         finished = false;
         long naptime = 0;
         if (fps > 0) {
           naptime = (long) (1000.0 / (double) fps);
         }
-        //      naptime = naptime + 800;
-        //        if (naptime > 0) {
-        //          bug("Loop will sleep for " + naptime + " ms between steps.");
-        //        } else {
-        //          bug("Loop going full blast.");
-        //        }
-
-        //        long start = System.currentTimeMillis();
         while (!finished) {
           step();
           if (ui != null) {
@@ -314,12 +318,16 @@ public class Main {
             ;
           }
         }
-        //        long elapsed = System.currentTimeMillis() - start;
-        //        bug("System solved in " + elapsed + " ms");               
+        bug("Iterative solver finished in thread " + Thread.currentThread().getId());
       }
     };
     if (EventQueue.isDispatchThread()) {
-      new Thread(runner).start();
+      // TODO: this is dumb. Should have a single thread handle all of this. It is possible
+      // for two or more threads to be solving the system at the same time. This leads
+      // to race conditions and concurrent modification issues.
+      Thread thread = new Thread(runner);
+      bug("Starting thread: " + thread.getId());
+      thread.start();
     } else {
       runner.run();
     }

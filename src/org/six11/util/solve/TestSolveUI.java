@@ -199,13 +199,20 @@ public class TestSolveUI {
       if (pA1 != null && pA2 != null && pB1 != null && pB2 != null) {
         main.addConstraint(new OrientationConstraint(pA1, pA2, pB1, pB2, toRadians(angle)));
       }
-    } else if (label.equals(Manipulator.ADD_POINT_ON_LINE)) {
+    } else if (label.equals(Manipulator.ADD_POINT_AS_LINE_PARAM)) {
       Pt p1 = getPointWithName(currentManipulator.getValue("pointA"));
       Pt p2 = getPointWithName(currentManipulator.getValue("pointB"));
       double prop = Double.parseDouble(currentManipulator.getValue("proportion"));
       Pt pT = getPointWithName(currentManipulator.getValue("target"));
       if (p1 != null && p2 != null && pT != null) {
-        main.addConstraint(new PointOnLineConstraint(p1, p2, prop, pT));
+        main.addConstraint(new PointAsLineParamConstraint(p1, p2, prop, pT));
+      }
+    } else if (label.equals(Manipulator.ADD_POINT_ON_LINE)) {
+      Pt p1 = getPointWithName(currentManipulator.getValue("pointA"));
+      Pt p2 = getPointWithName(currentManipulator.getValue("pointB"));
+      Pt pT = getPointWithName(currentManipulator.getValue("target"));
+      if (p1 != null && p2 != null && pT != null) {
+        main.addConstraint(new PointOnLineConstraint(p1, p2, pT));
       }
     }
     canvas.repaint();
@@ -257,11 +264,16 @@ public class TestSolveUI {
         new Manipulator.Param("line2start", "Line B Start", true), //
         new Manipulator.Param("line2end", "Line B End", true), //
         new Manipulator.Param("angle", "Angle (degrees)", true)));
+    // ------------------------------------------------------ point as line param constraint
+    out.add(new Manipulator(Manipulator.ADD_POINT_AS_LINE_PARAM, //
+        new Manipulator.Param("pointA", "Line Start", true), //
+        new Manipulator.Param("pointB", "Line End", true), //
+        new Manipulator.Param("proportion", "Proportion (0..1)", true), //
+        new Manipulator.Param("target", "Target (\"midpoint\")", true)));
     // ------------------------------------------------------ point on line constraint
     out.add(new Manipulator(Manipulator.ADD_POINT_ON_LINE, //
         new Manipulator.Param("pointA", "Line Start", true), //
         new Manipulator.Param("pointB", "Line End", true), //
-        new Manipulator.Param("proportion", "Proportion (0..1)", true), //
         new Manipulator.Param("target", "Target (\"midpoint\")", true)));
     return out.toArray(new Manipulator[0]);
   }
