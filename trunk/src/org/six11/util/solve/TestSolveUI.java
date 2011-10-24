@@ -177,7 +177,7 @@ public class TestSolveUI {
     } else if (label.equals(Manipulator.ADD_DISTANCE)) {
       Pt p1 = getPointWithName(currentManipulator.getValue("pointA"));
       Pt p2 = getPointWithName(currentManipulator.getValue("pointB"));
-      double dist = Double.parseDouble(currentManipulator.getValue("dist"));
+      NumericValue dist = new NumericValue(Double.parseDouble(currentManipulator.getValue("dist")));
       if (p1 != null && p2 != null) {
         main.addConstraint(new DistanceConstraint(p1, p2, dist));
       }
@@ -187,7 +187,7 @@ public class TestSolveUI {
       Pt pF = getPointWithName(currentManipulator.getValue("fulcrum"));
       double angle = Double.parseDouble(currentManipulator.getValue("angle"));
       if (p1 != null && p2 != null && pF != null) {
-        main.addConstraint(new AngleConstraint(p1, pF, p2, toRadians(angle)));
+        main.addConstraint(new AngleConstraint(p1, pF, p2, new NumericValue(toRadians(angle))));
       }
     } else if (label.equals(Manipulator.ADD_ORIENTATION)) {
       //  line1start line1end line2start line2end angle
@@ -197,12 +197,12 @@ public class TestSolveUI {
       Pt pB2 = getPointWithName(currentManipulator.getValue("line2end"));
       double angle = Double.parseDouble(currentManipulator.getValue("angle"));
       if (pA1 != null && pA2 != null && pB1 != null && pB2 != null) {
-        main.addConstraint(new OrientationConstraint(pA1, pA2, pB1, pB2, toRadians(angle)));
+        main.addConstraint(new OrientationConstraint(pA1, pA2, pB1, pB2, new NumericValue(toRadians(angle))));
       }
     } else if (label.equals(Manipulator.ADD_POINT_AS_LINE_PARAM)) {
       Pt p1 = getPointWithName(currentManipulator.getValue("pointA"));
       Pt p2 = getPointWithName(currentManipulator.getValue("pointB"));
-      double prop = Double.parseDouble(currentManipulator.getValue("proportion"));
+      NumericValue prop = new NumericValue(Double.parseDouble(currentManipulator.getValue("proportion")));
       Pt pT = getPointWithName(currentManipulator.getValue("target"));
       if (p1 != null && p2 != null && pT != null) {
         main.addConstraint(new PointAsLineParamConstraint(p1, p2, prop, pT));

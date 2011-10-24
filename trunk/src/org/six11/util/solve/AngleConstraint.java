@@ -19,9 +19,9 @@ public class AngleConstraint extends Constraint {
   public static double TOLERANCE = 0.0001;
 
   Pt a, f, b;
-  double angle;
+  NumericValue angle;
 
-  public AngleConstraint(Pt a, Pt fulcrum, Pt b, double radians) {
+  public AngleConstraint(Pt a, Pt fulcrum, Pt b, NumericValue radians) {
     this.a = a;
     this.f = fulcrum;
     this.b = b;
@@ -57,7 +57,7 @@ public class AngleConstraint extends Constraint {
     Vec fa = new Vec(a, f);
     Vec fb = new Vec(b, f);
     double currentAngle = Functions.getSignedAngleBetween(fa, fb);
-    double ret = Math.signum(currentAngle) * (Math.abs(currentAngle) - angle);
+    double ret = Math.signum(currentAngle) * (Math.abs(currentAngle) - angle.getValue());
     return ret;
   }
 
@@ -70,10 +70,12 @@ public class AngleConstraint extends Constraint {
   }
 
   public void draw(DrawingBuffer buf) {
-    DrawingBufferRoutines.line(buf, getSegment1(), Color.RED.darker(), 2);
-    DrawingBufferRoutines.line(buf, getSegment2(), Color.RED.brighter(), 2);
-    DrawingBufferRoutines.text(buf, f.getTranslated(0, 10), num(toDegrees(angle)) + " deg",
-        Color.GRAY);
+    double e = measureError();
+    Color col = (e > TOLERANCE) ? Color.RED : Color.GREEN;
+    DrawingBufferRoutines.line(buf, getSegment1(), col, 2);
+    DrawingBufferRoutines.line(buf, getSegment2(), col, 2);
+    DrawingBufferRoutines.text(buf, f.getTranslated(0, 10), num(toDegrees(angle.getValue())) + " deg",
+        col.darker());
   }
 
 }

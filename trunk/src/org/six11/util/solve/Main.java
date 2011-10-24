@@ -180,15 +180,16 @@ public class Main {
     addPoint("InnerSW", innerSW);
     addPoint("InnerSE", innerSE);
     addPoint("InnerNE", innerNE);
-    addConstraint(new PointAsLineParamConstraint(nw, ne, 0.5, n));
-    addConstraint(new PointAsLineParamConstraint(nw, sw, 0.5, w));
-    addConstraint(new PointAsLineParamConstraint(se, sw, 0.5, s));
-    addConstraint(new PointAsLineParamConstraint(se, ne, 0.5, e));
+    NumericValue amt = new NumericValue(0.5);
+    addConstraint(new PointAsLineParamConstraint(nw, ne, amt, n));
+    addConstraint(new PointAsLineParamConstraint(nw, sw, amt, w));
+    addConstraint(new PointAsLineParamConstraint(se, sw, amt, s));
+    addConstraint(new PointAsLineParamConstraint(se, ne, amt, e));
 
-    addConstraint(new PointAsLineParamConstraint(n, e, 0.5, innerNE));
-    addConstraint(new PointAsLineParamConstraint(e, s, 0.5, innerSE));
-    addConstraint(new PointAsLineParamConstraint(s, w, 0.5, innerSW));
-    addConstraint(new PointAsLineParamConstraint(w, n, 0.5, innerNW));
+    addConstraint(new PointAsLineParamConstraint(n, e, amt, innerNE));
+    addConstraint(new PointAsLineParamConstraint(e, s, amt, innerSE));
+    addConstraint(new PointAsLineParamConstraint(s, w, amt, innerSW));
+    addConstraint(new PointAsLineParamConstraint(w, n, amt, innerNW));
   }
 
   public void initPointOnLineTest() {
@@ -200,7 +201,7 @@ public class Main {
         "I", "J", // line 4
         "K", "L" // line 5
     };
-    double factor = 0.2;
+    NumericValue factor = new NumericValue(0.2);
     double factorIncr = 0.8 / ((double) names.length / 2.0);
     for (int i = 0; i < names.length; i = i + 2) {
       Pt one = mkRandomPoint(ui.canvas);
@@ -210,7 +211,7 @@ public class Main {
       addPoint(names[i + 1], two);
       addPoint(names[i] + "-" + names[i + 1], mid);
       addConstraint(new PointAsLineParamConstraint(one, two, factor, mid));
-      factor = factor + factorIncr;
+      factor = new NumericValue(factor.getValue() + factorIncr);
     }
   }
 
@@ -238,7 +239,7 @@ public class Main {
     addPoint("B", ptB);
     addPoint("C", ptC);
     addPoint("D", ptD);
-    Constraint orient = new OrientationConstraint(ptA, ptB, ptC, ptD, toRadians(90));
+    Constraint orient = new OrientationConstraint(ptA, ptB, ptC, ptD, new NumericValue(toRadians(90)));
     addConstraint(orient);
   }
 
@@ -254,10 +255,12 @@ public class Main {
     addPoint("B", ptB);
     addPoint("C", ptC);
     addPoint("D", ptD);
-    Constraint ab = new DistanceConstraint(ptA, ptB, 300.0);
-    Constraint bc = new DistanceConstraint(ptB, ptC, 300.0);
-    Constraint abc = new AngleConstraint(ptA, ptB, ptC, toRadians(90.0));
-    Constraint adc = new AngleConstraint(ptA, ptD, ptC, toRadians(45.0));
+    NumericValue amt = new NumericValue(300.0);
+    amt.setVariableName("x");
+    Constraint ab = new DistanceConstraint(ptA, ptB, amt);
+    Constraint bc = new DistanceConstraint(ptB, ptC, amt);
+    Constraint abc = new AngleConstraint(ptA, ptB, ptC, new NumericValue(toRadians(90.0)));
+    Constraint adc = new AngleConstraint(ptA, ptD, ptC, new NumericValue(toRadians(45.0)));
     addConstraint(ab);
     addConstraint(bc);
     addConstraint(abc);
@@ -271,9 +274,11 @@ public class Main {
     addPoint("A", ptA);
     addPoint("B", ptB);
     addPoint("C", ptC);
-    Constraint ab = new DistanceConstraint(ptA, ptB, 350.0);
-    Constraint bc = new DistanceConstraint(ptB, ptC, 350.0);
-    Constraint ca = new DistanceConstraint(ptC, ptA, 350.0);
+    NumericValue amt = new NumericValue(350.0);
+    amt.setVariableName("sideLen");
+    Constraint ab = new DistanceConstraint(ptA, ptB, amt);
+    Constraint bc = new DistanceConstraint(ptB, ptC, amt);
+    Constraint ca = new DistanceConstraint(ptC, ptA, amt);
     addConstraint(ab);
     addConstraint(bc);
     addConstraint(ca);
@@ -295,7 +300,7 @@ public class Main {
     addPoint("A", ptA);
     addPoint("B", ptB);
     addPoint("C", ptC);
-    Constraint abc = new AngleConstraint(ptA, ptB, ptC, toRadians(90.0));
+    Constraint abc = new AngleConstraint(ptA, ptB, ptC, new NumericValue(toRadians(90.0)));
     addConstraint(abc);
   }
 
