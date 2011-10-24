@@ -3,6 +3,9 @@
 package org.six11.util.pen;
 
 import java.util.Random;
+import static org.six11.util.Debug.bug;
+import static org.six11.util.Debug.num;
+
 
 /**
  * A source of entropy. Use it before it changes!
@@ -64,6 +67,10 @@ public class Entropy {
       random = new Random(System.currentTimeMillis());
     }
   }
+  
+  public boolean getBoolean() {
+    return random.nextBoolean();
+  }
 
   /**
    * Returns an integer between the two values. It doesn't matter if a
@@ -73,6 +80,12 @@ public class Entropy {
   public int getIntBetween(int a, int b) {
     int spread = 1 + Math.abs(a - b);
     return Math.min(a,b) + random.nextInt(spread);
+  }
+  
+  public double getNearbyDouble(double mean, double standardDev) {
+    double d = (random.nextGaussian() * standardDev) + mean;
+    bug("Value near " + num(mean) + ": " + num(d));
+    return d;
   }
 
   
