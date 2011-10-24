@@ -17,9 +17,9 @@ public class DistanceConstraint extends Constraint {
   public static double TOLERANCE = 0.0001;
 
   Pt a, b;
-  double d;
+  NumericValue d;
 
-  public DistanceConstraint(Pt a, Pt b, double d) {
+  public DistanceConstraint(Pt a, Pt b, NumericValue d) {
     this.a = a;
     this.b = b;
     this.d = d;
@@ -53,15 +53,16 @@ public class DistanceConstraint extends Constraint {
 
   public double measureError() {
     double ret = 0;
-    ret = (a.distance(b) - d);
+    ret = (a.distance(b) - d.getValue());
     return ret;
   }
 
-  @Override
   public void draw(DrawingBuffer buf) {
-    DrawingBufferRoutines.line(buf, getCurrentSegment(), Color.RED, 2);
+    double e = measureError();
+    Color col = (e > TOLERANCE) ? Color.RED : Color.GREEN;
+    DrawingBufferRoutines.line(buf, getCurrentSegment(), col, 2);
     Pt mid = getCurrentSegment().getMidpoint();
-    DrawingBufferRoutines.text(buf, mid.getTranslated(0, 10), num(d) + " length", Color.GRAY);
+    DrawingBufferRoutines.text(buf, mid.getTranslated(0, 10), "length: " + d, col.darker());
   }
 
 }

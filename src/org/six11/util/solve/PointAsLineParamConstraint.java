@@ -17,9 +17,9 @@ public class PointAsLineParamConstraint extends Constraint {
   public static double TOLERANCE = 0.0001;
 
   Pt lineA, lineB, target;
-  double dist;
+  NumericValue dist;
 
-  public PointAsLineParamConstraint(Pt lineA, Pt lineB, double proportionFromAToB, Pt target) {
+  public PointAsLineParamConstraint(Pt lineA, Pt lineB, NumericValue proportionFromAToB, Pt target) {
     this.lineA = lineA;
     this.lineB = lineB;
     this.target = target;
@@ -47,14 +47,15 @@ public class PointAsLineParamConstraint extends Constraint {
 
   private Pt getAuthority() {
     double len = lineA.distance(lineB);
-    double authDist = len * dist;
+    double authDist = len * dist.getValue();
     Vec v = new Vec(lineA, lineB).getUnitVector().getScaled(authDist);
     return new Pt(lineA.x + v.getX(), lineA.y + v.getY());
   }
 
   public void draw(DrawingBuffer buf) {
     // only need to draw a line. the points should be taken care of elsewhere.
-    DrawingBufferRoutines.line(buf, lineA, lineB, Color.BLACK, 1.0);
+    Color col = (measureError() > TOLERANCE) ? Color.RED : Color.GREEN;
+    DrawingBufferRoutines.line(buf, lineA, lineB, col, 1.0);
   }
 
   public Pt getTarget() {

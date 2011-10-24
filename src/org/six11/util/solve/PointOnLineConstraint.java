@@ -2,7 +2,6 @@ package org.six11.util.solve;
 
 import java.awt.Color;
 
-import org.six11.util.gui.Strokes;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
@@ -13,7 +12,7 @@ import org.six11.util.pen.Vec;
 public class PointOnLineConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
-
+  
   Pt a, b, m;
 
   public PointOnLineConstraint(Pt a, Pt b, Pt m) {
@@ -52,7 +51,8 @@ public class PointOnLineConstraint extends Constraint {
 
   @Override
   public void draw(DrawingBuffer buf) {
-    DrawingBufferRoutines.line(buf, new Line(a, b), Color.red, 1.0);
+    Color col = (measureError() > TOLERANCE) ? Color.RED : Color.GREEN;
+    DrawingBufferRoutines.line(buf, new Line(a, b), col, 1.0);
   }
 
 }

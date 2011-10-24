@@ -18,12 +18,12 @@ public class OrientationConstraint extends Constraint {
   public static double TOLERANCE = 0.0001;
 
   Pt lineA1, lineA2, lineB1, lineB2;
-  double angle;
+  NumericValue angle;
 
   /**
    * This constrains two lines to some angle.
    */
-  public OrientationConstraint(Pt lineA1, Pt lineA2, Pt lineB1, Pt lineB2, double radians) {
+  public OrientationConstraint(Pt lineA1, Pt lineA2, Pt lineB1, Pt lineB2, NumericValue radians) {
     this.lineA1 = lineA1;
     this.lineA2 = lineA2;
     this.lineB1 = lineB1;
@@ -37,8 +37,8 @@ public class OrientationConstraint extends Constraint {
 
   public void accumulateCorrection() {
     double e = measureError();
-    addMessage("Error is " + num(e) + " (" + num(toDegrees(e)) + " deg) Orientation: " + num(angle)
-        + " (" + num(toDegrees(angle)) + ")");
+    addMessage("Error is " + num(e) + " (" + num(toDegrees(e)) + " deg) Orientation: " + num(angle.getValue())
+        + " (" + num(toDegrees(angle.getValue())) + ")");
     if (abs(e) > TOLERANCE) {
       rotate(lineA1, lineA2, e);
       rotate(lineB1, lineB2, -e);
@@ -84,18 +84,19 @@ public class OrientationConstraint extends Constraint {
     Vec vA = new Vec(lineA1, lineA2);
     Vec vB = new Vec(lineB1, lineB2);
     double currentAngle = Functions.getSignedAngleBetween(vA, vB);
-    ret = Math.signum(currentAngle) * (Math.abs(currentAngle) - angle);
+    ret = Math.signum(currentAngle) * (Math.abs(currentAngle) - angle.getValue());
     return ret;
   }
 
   @Override
   public void draw(DrawingBuffer buf) {
+    Color col = (measureError() > TOLERANCE) ? Color.RED : Color.GREEN;
     Line lineA = new Line(lineA1, lineA2);
     Line lineB = new Line(lineB1, lineB2);
     DrawingBufferRoutines.cross(buf, lineA.getMidpoint(), 6, Color.LIGHT_GRAY);
     DrawingBufferRoutines.cross(buf, lineB.getMidpoint(), 6, Color.LIGHT_GRAY);
-    DrawingBufferRoutines.line(buf, lineA, Color.CYAN, 2);
-    DrawingBufferRoutines.line(buf, lineB, Color.CYAN.darker(), 2);
+    DrawingBufferRoutines.line(buf, lineA, col, 1);
+    DrawingBufferRoutines.line(buf, lineB, col, 1);
   }
 
 }
