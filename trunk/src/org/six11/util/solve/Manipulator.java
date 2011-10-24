@@ -20,7 +20,8 @@ public class Manipulator {
   public static final String ADD_DISTANCE = "Add Distance Constraint";
   public static final String ADD_ANGLE = "Add Angle Constraint";
   public static final String ADD_ORIENTATION = "Add Orientation Constraint";
-  public static final String ADD_POINT_ON_LINE = "Add Point-On-Line Constraint";
+  public static final String ADD_POINT_AS_LINE_PARAM = "Add Point-As-Line-Param Constraint";
+  public static final String ADD_POINT_ON_LINE = "Add point on line Constraint";
 
   String label;
   Param[] params;

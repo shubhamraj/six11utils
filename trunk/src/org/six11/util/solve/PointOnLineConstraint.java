@@ -2,58 +2,57 @@ package org.six11.util.solve;
 
 import java.awt.Color;
 
+import org.six11.util.gui.Strokes;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
+import org.six11.util.pen.Functions;
+import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 
 public class PointOnLineConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
-  
-  Pt lineA, lineB, target;
-  double dist;
 
-  public PointOnLineConstraint(Pt lineA, Pt lineB, double proportionFromAToB, Pt target) {
-    this.lineA = lineA;
-    this.lineB = lineB;
-    this.target = target;
-    this.dist = proportionFromAToB;
-    setPinned(target, true);
+  Pt a, b, m;
+
+  public PointOnLineConstraint(Pt a, Pt b, Pt m) {
+    this.a = a;
+    this.b = b;
+    this.m = m;
   }
 
   public String getType() {
-    return "Point-On-Line";
+    return "Point On Line";
   }
 
   public void accumulateCorrection() {
     double e = measureError();
     if (e > TOLERANCE) {
-      Pt auth = getAuthority();
-      Vec v = new Vec(target, auth);
-      target.move(v);
+      int pins = countPinned(a, b, m);
+      maybeMove(pins, a, b, m); // possible move a towards the line formed by b and m
+      maybeMove(pins, b, a, m); // b --> a-m
+      maybeMove(pins, m, a, b); // m --> a-b
     }
   }
 
+  private void maybeMove(int pins, Pt move, Pt pt1, Pt pt2) {
+    if (!isPinned(move)) {
+      Pt near = Functions.getNearestPointOnLine(move, new Line(pt1, pt2));
+      double shift = near.distance(move) / (3 - pins);
+      Vec delta = new Vec(move, near).getVectorOfMagnitude(shift);
+      accumulate(move, delta);
+    }
+  }
+
+  @Override
   public double measureError() {
-    Pt auth = getAuthority();
-    return auth.distance(target);
+    return Functions.getDistanceBetweenPointAndLine(m, new Line(a, b));
   }
 
-  private Pt getAuthority() {
-    double len = lineA.distance(lineB);
-    double authDist = len * dist;
-    Vec v = new Vec(lineA, lineB).getUnitVector().getScaled(authDist);
-    return new Pt(lineA.x + v.getX(), lineA.y + v.getY());
-  }
-
+  @Override
   public void draw(DrawingBuffer buf) {
-    // only need to draw a line. the points should be taken care of elsewhere.
-    DrawingBufferRoutines.line(buf, lineA, lineB, Color.BLACK, 1.0);
-  }
-
-  public Pt getTarget() {
-    return target;
+    DrawingBufferRoutines.line(buf, new Line(a, b), Color.red, 1.0);
   }
 
 }
