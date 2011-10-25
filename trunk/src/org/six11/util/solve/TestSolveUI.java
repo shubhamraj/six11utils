@@ -2,8 +2,8 @@ package org.six11.util.solve;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dialog.ModalityType;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -14,24 +14,33 @@ import java.util.ArrayList;
 import java.util.List;
 import static java.lang.Math.toRadians;
 
-import javax.swing.ButtonGroup;
-import javax.swing.ComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
 
 import org.six11.util.gui.ApplicationFrame;
+import org.six11.util.gui.Components;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Entropy;
 import org.six11.util.pen.MouseThing;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
-import org.six11.util.solve.Main.Demo;
+import org.six11.util.solve.Manipulator.Param;
+
 import static org.six11.util.solve.Constraint.setPinned;
 import static org.six11.util.solve.Constraint.isPinned;
 import static org.six11.util.Debug.bug;
@@ -44,13 +53,17 @@ public class TestSolveUI {
   ApplicationFrame af;
   DrawingBuffer buf;
   JComponent canvas;
-  JPanel paramBox;
-  JPanel utils;
+  JDialog toolBox;
+  JPanel editPane;
   Main main;
   Pt nearPt;
   Pt dragPt;
   Pt mousePt;
-  private Manipulator currentManipulator;
+  Manipulator currentManipulator;
+  ActionListener saveManipulatorAction;
+  JDialog showAddPointsDialog;
+  JTable table;
+  MyTableModel tableModel;
 
   @SuppressWarnings("serial")
   public TestSolveUI(Main m) {
@@ -58,15 +71,8 @@ public class TestSolveUI {
     af = new ApplicationFrame("Test Solve UI");
     af.setSize(800, 600);
     buf = new DrawingBuffer();
-    final JComboBox options = new JComboBox(m.getDemos().toArray());
-    options.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ev) {
-        Demo item = (Demo) options.getSelectedItem();
-        item.go();
-      }
-    });
+    toolBox = buildToolBox();
     canvas = new JComponent() {
-      @Override
       protected void paintComponent(Graphics g1) {
         Graphics2D g = (Graphics2D) g1;
         g.setColor(Color.WHITE);
@@ -94,7 +100,6 @@ public class TestSolveUI {
 
     });
     canvas.addMouseListener(new MouseThing() {
-      @Override
       public void mousePressed(MouseEvent ev) {
         Pt who = findPoint(new Pt(ev));
         if (mousePt == null) {
@@ -115,41 +120,136 @@ public class TestSolveUI {
         dragPt = null;
         mousePt = null;
         main.run();
+        tableModel.fireTableDataChanged();
         canvas.repaint();
       }
     });
     af.setLayout(new BorderLayout());
-    paramBox = new JPanel();
-    paramBox.setLayout(new GridLayout(0, 1));
-    utils = new JPanel();
-    utils.setLayout(new GridLayout(0, 1));
-    JButton go = new JButton("Go");
-    ActionListener doYerThing = new ActionListener() {
-      public void actionPerformed(ActionEvent arg0) {
-        activateManipulator();
-      }
-    };
-    go.addActionListener(doYerThing);
-    Manipulator[] manymani = makeManipulators();
-    for (Manipulator man : manymani) {
-      for (Manipulator.Param p : man.params) {
-        p.editBox.addActionListener(doYerThing);
-      }
-    }
-    final JComboBox manipulators = new JComboBox(manymani);
-    manipulators.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ev) {
-        setManipulator((Manipulator) manipulators.getSelectedItem());
-      }
-    });
-    utils.add(options);
-    utils.add(manipulators);
-    utils.add(paramBox);
-    utils.add(go);
-    af.add(utils, BorderLayout.EAST);
     af.add(canvas, BorderLayout.CENTER);
     af.center();
     af.setVisible(true);
+    toolBox.setVisible(true);
+  }
+
+  private JDialog buildToolBox() {
+    JDialog ret = new JDialog(af, ModalityType.MODELESS);
+    JPanel buttonPane = new JPanel();
+    JButton addPointsButton = new JButton("Add Points...");
+    addPointsButton.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ev) {
+        showAddPointsDialog();
+      }
+    });
+    buttonPane.add(addPointsButton);
+    final JComboBox addConstraintBox = new JComboBox(createManipulators());
+    addConstraintBox.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ev) {
+        setManipulator((Manipulator) addConstraintBox.getSelectedItem());
+      }
+    });
+
+    buttonPane.add(addConstraintBox);
+    table = new JTable(2, 0);
+    tableModel = new MyTableModel();
+    table.setModel(tableModel);
+    JScrollPane tablePane = new JScrollPane(table);
+    table.setFillsViewportHeight(true);
+    saveManipulatorAction = new ActionListener() {
+      public void actionPerformed(ActionEvent ev) {
+        if (currentManipulator != null) {
+          if (currentManipulator.isNew()) {
+            currentManipulator = currentManipulator.makeInstance(main.vars);
+            if (currentManipulator.isConstraint()) {
+              main.vars.constraints.add(currentManipulator.getConstraint());
+              bug("Added constraint to list.");
+            }
+          }
+        }
+      }
+    };
+    editPane = new JPanel();
+    editPane.setLayout(new BorderLayout());
+    JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tablePane, editPane);
+    ret.setLayout(new BorderLayout());
+    ret.add(buttonPane, BorderLayout.NORTH);
+    ret.add(splitPane, BorderLayout.CENTER);
+    ret.setPreferredSize(new Dimension(300, 600));
+    ret.pack();
+    return ret;
+  }
+
+  protected void showAddPointsDialog() {
+    if (showAddPointsDialog == null) {
+      showAddPointsDialog = new JDialog(af, ModalityType.MODELESS);
+      JPanel content = new JPanel();
+      JLabel instructions = new JLabel("Point Name:");
+      final JTextField ptName = new JTextField(6);
+      ptName.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent ev) {
+          String val = ptName.getText();
+          Pt p = main.mkRandomPoint(canvas);
+          main.addPoint(val, p);
+          ptName.selectAll();
+          canvas.repaint();
+        }
+      });
+      content.add(instructions);
+      content.add(ptName);
+      showAddPointsDialog.add(content);
+      showAddPointsDialog.pack();
+      Components.centerComponent(showAddPointsDialog);
+    }
+    showAddPointsDialog.setVisible(true);
+  }
+
+  private void setManipulator(Manipulator manip) {
+    this.currentManipulator = manip;
+    editPane.removeAll();
+    editPane.add(new JLabel("Editor for " + manip.label), BorderLayout.NORTH);
+    JPanel paramBox = new JPanel();
+    paramBox.setLayout(new GridLayout(0, 2));
+    for (Manipulator.Param p : manip.params) {
+      paramBox.add(new JLabel(p.helpText));
+      JTextField textbox = makeAutosaveTextbox(p);
+      textbox.addActionListener(saveManipulatorAction);
+      paramBox.add(textbox);
+    }
+    JScrollPane paramScroller = new JScrollPane(paramBox,
+        ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+        ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    editPane.add(paramScroller, BorderLayout.CENTER);
+    editPane.revalidate();
+  }
+
+  private JTextField makeAutosaveTextbox(final Param p) {
+    final JTextField ret = new JTextField(6);
+    ret.getDocument().addDocumentListener(new DocumentListener() {
+      public void changedUpdate(DocumentEvent ev) {
+        whack();
+      }
+
+      public void insertUpdate(DocumentEvent ev) {
+        whack();
+      }
+
+      public void removeUpdate(DocumentEvent ev) {
+        whack();
+      }
+
+      void whack() {
+        p.value = ret.getText();
+      }
+    });
+    return ret;
+  }
+
+  private Manipulator[] createManipulators() {
+    List<Manipulator> men = new ArrayList<Manipulator>();
+    men.add(DistanceConstraint.getManipulator());
+    men.add(OrientationConstraint.getManipulator());
+    men.add(PointOnLineConstraint.getManipulator());
+    Manipulator[] ret = men.toArray(new Manipulator[men.size()]);
+    return ret;
   }
 
   protected void activateManipulator() {
@@ -175,42 +275,44 @@ public class TestSolveUI {
       bug("uh " + num(loc));
       main.addPoint(name, loc);
     } else if (label.equals(Manipulator.ADD_DISTANCE)) {
-      Pt p1 = getPointWithName(currentManipulator.getValue("pointA"));
-      Pt p2 = getPointWithName(currentManipulator.getValue("pointB"));
+      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
+      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
       NumericValue dist = new NumericValue(Double.parseDouble(currentManipulator.getValue("dist")));
       if (p1 != null && p2 != null) {
         main.addConstraint(new DistanceConstraint(p1, p2, dist));
       }
     } else if (label.equals(Manipulator.ADD_ANGLE)) {
-      Pt p1 = getPointWithName(currentManipulator.getValue("pointA"));
-      Pt p2 = getPointWithName(currentManipulator.getValue("pointB"));
-      Pt pF = getPointWithName(currentManipulator.getValue("fulcrum"));
+      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
+      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
+      Pt pF = main.vars.getPointWithName(currentManipulator.getValue("fulcrum"));
       double angle = Double.parseDouble(currentManipulator.getValue("angle"));
       if (p1 != null && p2 != null && pF != null) {
         main.addConstraint(new AngleConstraint(p1, pF, p2, new NumericValue(toRadians(angle))));
       }
     } else if (label.equals(Manipulator.ADD_ORIENTATION)) {
       //  line1start line1end line2start line2end angle
-      Pt pA1 = getPointWithName(currentManipulator.getValue("line1start"));
-      Pt pA2 = getPointWithName(currentManipulator.getValue("line1end"));
-      Pt pB1 = getPointWithName(currentManipulator.getValue("line2start"));
-      Pt pB2 = getPointWithName(currentManipulator.getValue("line2end"));
+      Pt pA1 = main.vars.getPointWithName(currentManipulator.getValue("line1start"));
+      Pt pA2 = main.vars.getPointWithName(currentManipulator.getValue("line1end"));
+      Pt pB1 = main.vars.getPointWithName(currentManipulator.getValue("line2start"));
+      Pt pB2 = main.vars.getPointWithName(currentManipulator.getValue("line2end"));
       double angle = Double.parseDouble(currentManipulator.getValue("angle"));
       if (pA1 != null && pA2 != null && pB1 != null && pB2 != null) {
-        main.addConstraint(new OrientationConstraint(pA1, pA2, pB1, pB2, new NumericValue(toRadians(angle))));
+        main.addConstraint(new OrientationConstraint(pA1, pA2, pB1, pB2, new NumericValue(
+            toRadians(angle))));
       }
     } else if (label.equals(Manipulator.ADD_POINT_AS_LINE_PARAM)) {
-      Pt p1 = getPointWithName(currentManipulator.getValue("pointA"));
-      Pt p2 = getPointWithName(currentManipulator.getValue("pointB"));
-      NumericValue prop = new NumericValue(Double.parseDouble(currentManipulator.getValue("proportion")));
-      Pt pT = getPointWithName(currentManipulator.getValue("target"));
+      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
+      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
+      NumericValue prop = new NumericValue(Double.parseDouble(currentManipulator
+          .getValue("proportion")));
+      Pt pT = main.vars.getPointWithName(currentManipulator.getValue("target"));
       if (p1 != null && p2 != null && pT != null) {
         main.addConstraint(new PointAsLineParamConstraint(p1, p2, prop, pT));
       }
     } else if (label.equals(Manipulator.ADD_POINT_ON_LINE)) {
-      Pt p1 = getPointWithName(currentManipulator.getValue("pointA"));
-      Pt p2 = getPointWithName(currentManipulator.getValue("pointB"));
-      Pt pT = getPointWithName(currentManipulator.getValue("target"));
+      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
+      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
+      Pt pT = main.vars.getPointWithName(currentManipulator.getValue("target"));
       if (p1 != null && p2 != null && pT != null) {
         main.addConstraint(new PointOnLineConstraint(p1, p2, pT));
       }
@@ -220,62 +322,13 @@ public class TestSolveUI {
 
   private Pt getPointWithName(String n) {
     Pt ret = null;
-    for (Pt pt : main.points) {
+    for (Pt pt : main.vars.points) {
       if (pt.getString("name").equals(n)) {
         ret = pt;
         break;
       }
     }
     return ret;
-  }
-
-  protected void setManipulator(Manipulator man) {
-    paramBox.removeAll();
-    for (Manipulator.Param p : man.params) {
-      paramBox.add(p.editBox);
-    }
-    paramBox.revalidate();
-    this.currentManipulator = man;
-    af.repaint();
-  }
-
-  private Manipulator[] makeManipulators() {
-    List<Manipulator> out = new ArrayList<Manipulator>();
-    // ------------------------------------------------------ add point
-    out.add(new Manipulator(Manipulator.ADD_POINT, //
-        new Manipulator.Param("pointName", "Point Name", true), //
-        new Manipulator.Param("initialX", "Initial X Coordinate", false), //
-        new Manipulator.Param("initialY", "Initial Y Coordinate", false)));
-    // ------------------------------------------------------ distance constraint
-    out.add(new Manipulator(Manipulator.ADD_DISTANCE, //
-        new Manipulator.Param("pointA", "First Point Name", true), //
-        new Manipulator.Param("pointB", "Second Point Name", true), //
-        new Manipulator.Param("dist", "Distance", true)));
-    // ------------------------------------------------------ angle constraint
-    out.add(new Manipulator(Manipulator.ADD_ANGLE, //
-        new Manipulator.Param("pointA", "First Point Name", true), //
-        new Manipulator.Param("pointB", "Second Point Name", true), //
-        new Manipulator.Param("fulcrum", "Fulcrum Point Name", true), //
-        new Manipulator.Param("angle", "Angle (degrees)", true)));
-    // ------------------------------------------------------ orientation constraint
-    out.add(new Manipulator(Manipulator.ADD_ORIENTATION, //
-        new Manipulator.Param("line1start", "Line A Start", true), //
-        new Manipulator.Param("line1end", "Line A End", true), //
-        new Manipulator.Param("line2start", "Line B Start", true), //
-        new Manipulator.Param("line2end", "Line B End", true), //
-        new Manipulator.Param("angle", "Angle (degrees)", true)));
-    // ------------------------------------------------------ point as line param constraint
-    out.add(new Manipulator(Manipulator.ADD_POINT_AS_LINE_PARAM, //
-        new Manipulator.Param("pointA", "Line Start", true), //
-        new Manipulator.Param("pointB", "Line End", true), //
-        new Manipulator.Param("proportion", "Proportion (0..1)", true), //
-        new Manipulator.Param("target", "Target (\"midpoint\")", true)));
-    // ------------------------------------------------------ point on line constraint
-    out.add(new Manipulator(Manipulator.ADD_POINT_ON_LINE, //
-        new Manipulator.Param("pointA", "Line Start", true), //
-        new Manipulator.Param("pointB", "Line End", true), //
-        new Manipulator.Param("target", "Target (\"midpoint\")", true)));
-    return out.toArray(new Manipulator[0]);
   }
 
   private Pt findPoint(Pt cursor) {
@@ -343,6 +396,29 @@ public class TestSolveUI {
       }
       DrawingBufferRoutines.dot(buf, pt, radius, borderThickness, borderColor, fillColor);
     }
+  }
+  
+  class MyTableModel extends AbstractTableModel {
+
+    public int getColumnCount() {
+      return 2;
+    }
+
+    public int getRowCount() {
+      return main.vars.constraints.size();
+    }
+
+    public Object getValueAt(int row, int col) {
+      Object ret = null;
+      Constraint c = main.vars.constraints.get(row);
+      if (col == 0) {
+        ret = c.getType();
+      } else if (col == 1) {
+        ret = num(c.measureError());
+      }
+      return ret;
+    }
+  
   }
 
 }

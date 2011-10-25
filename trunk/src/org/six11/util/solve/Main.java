@@ -42,20 +42,19 @@ public class Main {
       // It evolved from something else. If I were to rewrite this,
       // obviously things would be cleaner.
       try {
-        points.clear();
-        constraints.clear();
+        vars.clear();
         msg = about;
         if (initialized) {
           for (Pt pt : demoPoints) {
             Pt rand = mkRandomPoint(ui.canvas);
             pt.setLocation(rand.x, rand.y);
           }
-          points.addAll(demoPoints);
-          constraints.addAll(demoConstraints);
+          vars.points.addAll(demoPoints);
+          vars.constraints.addAll(demoConstraints);
         } else {
           method.invoke(Main.this);
-          demoPoints.addAll(points);
-          demoConstraints.addAll(constraints);
+          demoPoints.addAll(vars.points);
+          demoConstraints.addAll(vars.constraints);
           initialized = true;
         }
         finished = false;
@@ -75,20 +74,19 @@ public class Main {
   public static final String ACCUM_CORRECTION = "accumulated correction";
   List<Demo> demos;
   TestSolveUI ui = null;
-  List<Pt> points;
-  List<Constraint> constraints;
+  
   String msg = null;
   boolean finished = false;
   int fps;
   Demo currentDemo;
+  VariableBank vars;
 
   public static void main(String[] in) throws Exception {
     new Main(in);
   }
 
   public Main(String[] in) throws SecurityException, NoSuchMethodException {
-    points = new ArrayList<Pt>();
-    constraints = new ArrayList<Constraint>();
+    vars = new VariableBank();
     Arguments args = new Arguments();
     args.parseArguments(in);
     demos = new ArrayList<Demo>();
@@ -284,11 +282,11 @@ public class Main {
     addConstraint(ca);
   }
 
-  private Pt mkRandomPoint(Component comp) {
+  public Pt mkRandomPoint(Component comp) {
     return mkRandomPoint(comp.getWidth(), comp.getHeight());
   }
 
-  private Pt mkRandomPoint(int i, int j) {
+  public Pt mkRandomPoint(int i, int j) {
     Entropy rand = Entropy.getEntropy();
     return new Pt(rand.getIntBetween(0, i), rand.getIntBetween(0, j));
   }
@@ -340,7 +338,7 @@ public class Main {
 
   private void step() {
     // 1: clear any current correction values
-    for (Pt pt : points) {
+    for (Pt pt : vars.points) {
       List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
       if (corrections == null) {
         pt.setAttribute(ACCUM_CORRECTION, new ArrayList<Vec>());
@@ -350,14 +348,14 @@ public class Main {
     }
 
     // 2: poll all constraints and have them add correction vectors to each point
-    for (Constraint c : constraints) {
+    for (Constraint c : vars.constraints) {
       c.clearMessages();
       c.accumulateCorrection();
     }
 
     // 3: now all points have some accumulated correction. sum them and update the point's location.
     int numFinished = 0;
-    for (Pt pt : points) {
+    for (Pt pt : vars.points) {
       List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
       pt.setBoolean("stable", corrections.size() == 0);
       if (corrections.size() == 0) {
@@ -373,25 +371,29 @@ public class Main {
         }
       }
     }
-    if (numFinished == points.size()) {
+    if (numFinished == vars.points.size()) {
       finished = true;
     }
   }
 
   public List<Pt> getPoints() {
-    return points;
+    return vars.points;
   }
 
   public void addPoint(String name, Pt pt) {
     pt.setAttribute("name", name);
-    points.add(pt);
+    vars.points.add(pt);
   }
 
   public List<Constraint> getConstraints() {
-    return constraints;
+    return vars.constraints;
+  }
+  
+  public VariableBank getVars() {
+    return vars;
   }
 
   public void addConstraint(Constraint c) {
-    constraints.add(c);
+    vars.constraints.add(c);
   }
 }

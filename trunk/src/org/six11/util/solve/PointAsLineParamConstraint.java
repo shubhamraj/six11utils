@@ -63,4 +63,10 @@ public class PointAsLineParamConstraint extends Constraint {
     return target;
   }
 
+  @Override
+  public void assume(Manipulator m, VariableBank vars) {
+    // TODO Auto-generated method stub
+    
+  }
+
 }

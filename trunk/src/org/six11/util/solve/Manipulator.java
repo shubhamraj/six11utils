@@ -6,11 +6,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
+import org.six11.util.pen.Pt;
 
 import static org.six11.util.Debug.bug;
 
@@ -23,12 +28,48 @@ public class Manipulator {
   public static final String ADD_POINT_AS_LINE_PARAM = "Add Point-As-Line-Param Constraint";
   public static final String ADD_POINT_ON_LINE = "Add point on line Constraint";
 
+  Class ptOrConstraint;
   String label;
   Param[] params;
+  boolean newThing;
+  Constraint myConstraint;
+  Pt myPoint;
 
-  public Manipulator(String label, Param... params) {
+  public Manipulator(Class ptOrConstraint, String label, Param... params) {
+    this.ptOrConstraint = ptOrConstraint;
     this.label = label;
     this.params = params;
+    newThing = true;
+    myConstraint = null;
+    myPoint = null;
+  }
+
+  public Manipulator(Manipulator other, VariableBank vars) {
+    this.ptOrConstraint = other.ptOrConstraint;
+    this.label = other.label;
+    this.params = new Param[other.params.length];
+    for (int i = 0; i < params.length; i++) {
+      Param o = other.params[i];
+      params[i] = new Param(o.key, o.helpText, o.required);
+      params[i].value = o.value; // copy value, not reference to value
+    }
+    try {
+      if (Constraint.class.isAssignableFrom(ptOrConstraint)) {
+        bug("Yes I can assign " + ptOrConstraint);
+        Constraint c = (Constraint) ptOrConstraint.newInstance();
+        bug("Made a constraint: " + c);
+        c.assume(this, vars);
+        bug("... and made it assume my values.");
+        this.myConstraint = c;
+        this.newThing = false;
+      } else {
+        bug("No I can't assign " + ptOrConstraint);
+      }
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
   }
 
   public String toString() {
@@ -40,79 +81,115 @@ public class Manipulator {
     boolean required;
     String helpText;
     String key;
-    JTextField editBox;
+    String value;
 
     public Param(String key, String helpText, boolean required) {
       this.key = key;
       this.helpText = helpText;
       this.required = required;
-      this.editBox = createEditBox();
+      this.value = "";
     }
 
-    private JTextField createEditBox() {
-      final JTextField ret = new JTextField(12);
-      ret.addFocusListener(new FocusListener() {
-        public void focusGained(FocusEvent arg0) {
-          ret.selectAll();
-        }
-
-        public void focusLost(FocusEvent arg0) {
-        }
-
-      });
-      ret.getDocument().addDocumentListener(new DocumentListener() {
-        public void changedUpdate(DocumentEvent ev) {
-          whack();
-        }
-
-        public void insertUpdate(DocumentEvent ev) {
-          whack();
-        }
-
-        public void removeUpdate(DocumentEvent ev) {
-          whack();
-        }
-
-        void whack() {
-          Runnable runner = new Runnable() {
-            public void run() {
-              if (ret.getText().length() == 0) {
-                ret.setText(helpText);
-              } else if (ret.getText().length() > helpText.length()
-                  && ret.getText().startsWith(helpText)) {
-                ret.setText(ret.getText().substring(helpText.length()));
-              }
-              if (ret.getText().equals(helpText)) {
-                ret.setForeground(Color.LIGHT_GRAY);
-              } else {
-                ret.setForeground(Color.BLACK);
-              }
-            }
-          };
-          SwingUtilities.invokeLater(runner);
-        }
-      });
-      ret.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent ev) {
-          ret.selectAll();
-        }        
-      });
-      ret.setText(helpText);
-      ret.setForeground(Color.LIGHT_GRAY);
-      ret.setFont(new Font("Dialog", required ? Font.BOLD : Font.PLAIN, 16));
-      return ret;
-    }
+    //    private JTextField createEditBox() {
+    //      final JTextField ret = new JTextField(12);
+    //      ret.addFocusListener(new FocusListener() {
+    //        public void focusGained(FocusEvent arg0) {
+    //          ret.selectAll();
+    //        }
+    //
+    //        public void focusLost(FocusEvent arg0) {
+    //        }
+    //
+    //      });
+    //      ret.getDocument().addDocumentListener(new DocumentListener() {
+    //        public void changedUpdate(DocumentEvent ev) {
+    //          whack();
+    //        }
+    //
+    //        public void insertUpdate(DocumentEvent ev) {
+    //          whack();
+    //        }
+    //
+    //        public void removeUpdate(DocumentEvent ev) {
+    //          whack();
+    //        }
+    //
+    //        void whack() {
+    //          Runnable runner = new Runnable() {
+    //            public void run() {
+    //              if (ret.getText().length() == 0) {
+    //                ret.setText(helpText);
+    //              } else if (ret.getText().length() > helpText.length()
+    //                  && ret.getText().startsWith(helpText)) {
+    //                ret.setText(ret.getText().substring(helpText.length()));
+    //              }
+    //              if (ret.getText().equals(helpText)) {
+    //                ret.setForeground(Color.LIGHT_GRAY);
+    //              } else {
+    //                ret.setForeground(Color.BLACK);
+    //              }
+    //            }
+    //          };
+    //          SwingUtilities.invokeLater(runner);
+    //        }
+    //      });
+    //      ret.addActionListener(new ActionListener() {
+    //        public void actionPerformed(ActionEvent ev) {
+    //          ret.selectAll();
+    //        }        
+    //      });
+    //      ret.setText(helpText);
+    //      ret.setForeground(Color.LIGHT_GRAY);
+    //      ret.setFont(new Font("Dialog", required ? Font.BOLD : Font.PLAIN, 16));
+    //      return ret;
+    //    }
   }
 
   public String getValue(String key) {
     String ret = "Unknown";
     for (Param p : params) {
       if (p.key.equals(key)) {
-        ret = p.editBox.getText();
+        ret = p.value;
         break;
       }
     }
     return ret;
+  }
+
+  public boolean isNew() {
+    return newThing;
+  }
+
+  public Manipulator makeInstance(VariableBank vars) {
+    Manipulator ret = new Manipulator(this, vars);
+    return ret;
+  }
+
+  /**
+   * Creates and returns a map relating parameter keys to parameter values.
+   */
+  public Map<String, String> getParamsAsMap() {
+    Map<String, String> ret = new HashMap<String, String>();
+    for (Param p : params) {
+      ret.put(p.key, p.value);
+    }
+    return ret;
+  }
+
+  public boolean isConstraint() {
+    return myConstraint != null;
+  }
+  
+  public boolean isPoint() {
+    return myPoint != null;
+  }
+
+  public Constraint getConstraint() {
+    return myConstraint;
+  }
+  
+  public Pt getPoint() {
+    return myPoint;
   }
 
 }

@@ -1,6 +1,7 @@
 package org.six11.util.solve;
 
 import java.awt.Color;
+import java.util.Map;
 
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
@@ -10,7 +11,9 @@ import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 
 import static org.six11.util.Debug.num;
+import static org.six11.util.Debug.bug;
 import static java.lang.Math.toDegrees;
+import static java.lang.Math.toRadians;
 import static java.lang.Math.abs;
 
 public class OrientationConstraint extends Constraint {
@@ -31,25 +34,29 @@ public class OrientationConstraint extends Constraint {
     this.angle = radians;
   }
 
+  public OrientationConstraint() {
+
+  }
+
   public String getType() {
     return "Orientation";
   }
 
   public void accumulateCorrection() {
     double e = measureError();
-    addMessage("Error is " + num(e) + " (" + num(toDegrees(e)) + " deg) Orientation: " + num(angle.getValue())
-        + " (" + num(toDegrees(angle.getValue())) + ")");
+    addMessage("Error is " + num(e) + " (" + num(toDegrees(e)) + " deg) Orientation: "
+        + num(angle.getValue()) + " (" + num(toDegrees(angle.getValue())) + ")");
     if (abs(e) > TOLERANCE) {
       rotate(lineA1, lineA2, e);
       rotate(lineB1, lineB2, -e);
-//      Line lineB = new Line(lineB1, lineB2);
-//      Pt midB = lineB.getMidpoint();
-//      Pt rotatedB1 = Functions.rotatePointAboutPivot(lineB1, midB, -e / 2);
-//      Pt rotatedB2 = Functions.rotatePointAboutPivot(lineB2, midB, -e / 2);
-//      Vec vecB1 = new Vec(rotatedB1.x - lineB1.x, rotatedB1.y - lineB1.y);
-//      Vec vecB2 = new Vec(rotatedB2.x - lineB2.x, rotatedB2.y - lineB2.y);
-//      accumulate(lineB1, vecB1);
-//      accumulate(lineB2, vecB2);
+      //      Line lineB = new Line(lineB1, lineB2);
+      //      Pt midB = lineB.getMidpoint();
+      //      Pt rotatedB1 = Functions.rotatePointAboutPivot(lineB1, midB, -e / 2);
+      //      Pt rotatedB2 = Functions.rotatePointAboutPivot(lineB2, midB, -e / 2);
+      //      Vec vecB1 = new Vec(rotatedB1.x - lineB1.x, rotatedB1.y - lineB1.y);
+      //      Vec vecB2 = new Vec(rotatedB2.x - lineB2.x, rotatedB2.y - lineB2.y);
+      //      accumulate(lineB1, vecB1);
+      //      accumulate(lineB2, vecB2);
     }
   }
 
@@ -71,7 +78,7 @@ public class OrientationConstraint extends Constraint {
     } else if (free == 1) {
       Pt pivot = isPinned(pt1) ? pt1 : pt2;
       Pt moveMe = isPinned(pt1) ? pt2 : pt1;
-//      double signedAmt = isPinned(pt1) ? amt : -amt;
+      //      double signedAmt = isPinned(pt1) ? amt : -amt;
       Pt rotated = Functions.rotatePointAboutPivot(moveMe, pivot, amt / 2);
       Vec vec = new Vec(rotated.x - moveMe.x, rotated.y - moveMe.y);
       accumulate(moveMe, vec);
@@ -99,4 +106,29 @@ public class OrientationConstraint extends Constraint {
     DrawingBufferRoutines.line(buf, lineB, col, 1);
   }
 
+  public static Manipulator getManipulator() {
+    Manipulator man = new Manipulator(OrientationConstraint.class, "Orientation", //
+        new Manipulator.Param("pA1", "Line 1 start", true), //
+        new Manipulator.Param("pA2", "Line 1 end", true), //
+        new Manipulator.Param("pB1", "Line 2 start", true), //
+        new Manipulator.Param("pB2", "Line 2 end", true), //
+        new Manipulator.Param("angle", "Angle (degrees)", true));
+    return man;
+  }
+
+  public void assume(Manipulator m, VariableBank vars) {
+    if (m.ptOrConstraint != getClass()) {
+      bug("Can't build " + getClass().getName() + " based on manipulator for " + m.label
+          + "(its ptOrConstraint is " + m.ptOrConstraint.getName() + ")");
+    } else {
+      bug("Yay I can build an orientation thing from this manipulator");
+    }
+    Map<String, String> paramVals = m.getParamsAsMap();
+    bug(num(paramVals.values(), " "));
+    lineA1 = vars.getPointWithName(paramVals.get("pA1"));
+    lineA2 = vars.getPointWithName(paramVals.get("pA2"));
+    lineB1 = vars.getPointWithName(paramVals.get("pB1"));
+    lineB2 = vars.getPointWithName(paramVals.get("pB2"));
+    angle = new NumericValue(toRadians(Double.parseDouble(paramVals.get("angle"))));
+  }
 }
