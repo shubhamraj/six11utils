@@ -1,6 +1,7 @@
 package org.six11.util.solve;
 
 import java.awt.Color;
+import java.util.Map;
 
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
@@ -9,6 +10,9 @@ import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 import static java.lang.Math.abs;
+import static java.lang.Math.toRadians;
+import static org.six11.util.Debug.bug;
+import static org.six11.util.Debug.num;
 
 public class PointOnLineConstraint extends Constraint {
 
@@ -20,6 +24,10 @@ public class PointOnLineConstraint extends Constraint {
     this.a = a;
     this.b = b;
     this.m = m;
+  }
+  
+  public PointOnLineConstraint() {
+    
   }
 
   public String getType() {
@@ -54,6 +62,28 @@ public class PointOnLineConstraint extends Constraint {
   public void draw(DrawingBuffer buf) {
     Color col = (abs(measureError()) > TOLERANCE) ? Color.RED : Color.GREEN;
     DrawingBufferRoutines.line(buf, new Line(a, b), col, 1.0);
+  }
+
+  public static Manipulator getManipulator() {
+    Manipulator man = new Manipulator(PointOnLineConstraint.class, "Point on Line", //
+        new Manipulator.Param("p1", "Point 1 (Line)", true),
+        new Manipulator.Param("p2", "Point 2 (Line)", true),
+        new Manipulator.Param("p3", "Point 3 (Target)", true));
+    return man;  }
+
+  @Override
+  public void assume(Manipulator man, VariableBank vars) {
+    if (man.ptOrConstraint != getClass()) {
+      bug("Can't build " + getClass().getName() + " based on manipulator for " + man.label
+          + "(its ptOrConstraint is " + man.ptOrConstraint.getName() + ")");
+    } else {
+      bug("Yay I can build a point-on-line thing from this manipulator");
+    }
+    Map<String, String> paramVals = man.getParamsAsMap();
+    bug(num(paramVals.values(), " "));
+    a = vars.getPointWithName(paramVals.get("p1"));
+    b = vars.getPointWithName(paramVals.get("p2"));
+    m = vars.getPointWithName(paramVals.get("p3"));
   }
 
 }

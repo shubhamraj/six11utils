@@ -78,4 +78,10 @@ public class AngleConstraint extends Constraint {
         col.darker());
   }
 
+  @Override
+  public void assume(Manipulator m, VariableBank vars) {
+    // TODO Auto-generated method stub
+    
+  }
+
 }

@@ -10,7 +10,7 @@ import static org.six11.util.Debug.bug;
 public abstract class Constraint {
   
   StringBuffer messages;
-  
+    
   public Constraint() {
     this.messages = new StringBuffer();
   }
@@ -37,6 +37,12 @@ public abstract class Constraint {
     return ret;
   }
     
+  /**
+   * Use the values contained in the given manipulator
+   * @param m
+   */
+  public abstract void assume(Manipulator m, VariableBank vars);
+  
   public abstract String getType();
   
   public abstract void accumulateCorrection();

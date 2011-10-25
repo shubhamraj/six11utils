@@ -46,4 +46,10 @@ public class LocationConstraint extends Constraint {
     }
   }
 
+  @Override
+  public void assume(Manipulator m, VariableBank vars) {
+    // TODO Auto-generated method stub
+    
+  }
+
 }

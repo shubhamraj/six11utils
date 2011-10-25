@@ -1,6 +1,7 @@
 package org.six11.util.solve;
 
 import java.awt.Color;
+import java.util.Map;
 
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
@@ -11,6 +12,7 @@ import org.six11.util.pen.Vec;
 import static org.six11.util.Debug.num;
 import static org.six11.util.Debug.bug;
 import static java.lang.Math.abs;
+import static java.lang.Math.toRadians;
 
 public class DistanceConstraint extends Constraint {
 
@@ -23,6 +25,10 @@ public class DistanceConstraint extends Constraint {
     this.a = a;
     this.b = b;
     this.d = d;
+  }
+  
+  public DistanceConstraint() {
+    
   }
 
   public Line getCurrentSegment() {
@@ -63,6 +69,28 @@ public class DistanceConstraint extends Constraint {
     DrawingBufferRoutines.line(buf, getCurrentSegment(), col, 2);
     Pt mid = getCurrentSegment().getMidpoint();
     DrawingBufferRoutines.text(buf, mid.getTranslated(0, 10), "length: " + d, col.darker());
+  }
+
+  public static Manipulator getManipulator() {
+    Manipulator man = new Manipulator(DistanceConstraint.class, "Distance", //
+        new Manipulator.Param("p1", "Point 1", true),
+        new Manipulator.Param("p2", "Point 2", true),
+        new Manipulator.Param("dist", "Distance", true));
+    return man;
+  }
+
+  public void assume(Manipulator m, VariableBank vars) {
+    if (m.ptOrConstraint != getClass()) {
+      bug("Can't build " + getClass().getName() + " based on manipulator for " + m.label
+          + "(its ptOrConstraint is " + m.ptOrConstraint.getName() + ")");
+    } else {
+      bug("Yay I can build a distance thing from this manipulator");
+    }
+    Map<String, String> paramVals = m.getParamsAsMap();
+    bug(num(paramVals.values(), " "));
+    a = vars.getPointWithName(paramVals.get("p1"));
+    b = vars.getPointWithName(paramVals.get("p2"));
+    d = new NumericValue(Double.parseDouble(paramVals.get("dist")));
   }
 
 }
