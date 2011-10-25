@@ -71,7 +71,7 @@ public class AngleConstraint extends Constraint {
 
   public void draw(DrawingBuffer buf) {
     double e = measureError();
-    Color col = (e > TOLERANCE) ? Color.RED : Color.GREEN;
+    Color col = (abs(e) > TOLERANCE) ? Color.RED : Color.GREEN;
     DrawingBufferRoutines.line(buf, getSegment1(), col, 2);
     DrawingBufferRoutines.line(buf, getSegment2(), col, 2);
     DrawingBufferRoutines.text(buf, f.getTranslated(0, 10), num(toDegrees(angle.getValue())) + " deg",

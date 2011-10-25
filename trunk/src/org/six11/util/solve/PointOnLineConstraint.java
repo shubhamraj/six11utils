@@ -8,6 +8,7 @@ import org.six11.util.pen.Functions;
 import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
+import static java.lang.Math.abs;
 
 public class PointOnLineConstraint extends Constraint {
 
@@ -51,7 +52,7 @@ public class PointOnLineConstraint extends Constraint {
 
   @Override
   public void draw(DrawingBuffer buf) {
-    Color col = (measureError() > TOLERANCE) ? Color.RED : Color.GREEN;
+    Color col = (abs(measureError()) > TOLERANCE) ? Color.RED : Color.GREEN;
     DrawingBufferRoutines.line(buf, new Line(a, b), col, 1.0);
   }
 
