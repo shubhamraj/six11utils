@@ -6,6 +6,7 @@ import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
+import static java.lang.Math.abs;
 
 /**
  * Constrains a point to be on a line segment and some percentage of the distance between the end
@@ -54,7 +55,7 @@ public class PointAsLineParamConstraint extends Constraint {
 
   public void draw(DrawingBuffer buf) {
     // only need to draw a line. the points should be taken care of elsewhere.
-    Color col = (measureError() > TOLERANCE) ? Color.RED : Color.GREEN;
+    Color col = (abs(measureError()) > TOLERANCE) ? Color.RED : Color.GREEN;
     DrawingBufferRoutines.line(buf, lineA, lineB, col, 1.0);
   }
 

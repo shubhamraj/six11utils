@@ -90,7 +90,7 @@ public class OrientationConstraint extends Constraint {
 
   @Override
   public void draw(DrawingBuffer buf) {
-    Color col = (measureError() > TOLERANCE) ? Color.RED : Color.GREEN;
+    Color col = (abs(measureError()) > TOLERANCE) ? Color.RED : Color.GREEN;
     Line lineA = new Line(lineA1, lineA2);
     Line lineB = new Line(lineB1, lineB2);
     DrawingBufferRoutines.cross(buf, lineA.getMidpoint(), 6, Color.LIGHT_GRAY);

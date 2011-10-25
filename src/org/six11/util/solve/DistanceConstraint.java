@@ -53,13 +53,13 @@ public class DistanceConstraint extends Constraint {
 
   public double measureError() {
     double ret = 0;
-    ret = (a.distance(b) - d.getValue());
+    ret = a.distance(b) - d.getValue();
     return ret;
   }
 
   public void draw(DrawingBuffer buf) {
     double e = measureError();
-    Color col = (e > TOLERANCE) ? Color.RED : Color.GREEN;
+    Color col = (abs(e) > TOLERANCE) ? Color.RED : Color.GREEN;
     DrawingBufferRoutines.line(buf, getCurrentSegment(), col, 2);
     Pt mid = getCurrentSegment().getMidpoint();
     DrawingBufferRoutines.text(buf, mid.getTranslated(0, 10), "length: " + d, col.darker());
