@@ -9,21 +9,30 @@ import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import static java.lang.Math.toRadians;
 
+import javax.swing.Action;
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -119,8 +128,13 @@ public class TestSolveUI {
       public void mouseReleased(MouseEvent ev) {
         dragPt = null;
         mousePt = null;
-        main.run();
+        main.wakeUp();
         tableModel.fireTableDataChanged();
+        canvas.repaint();
+      }
+
+      public void mouseExited(MouseEvent ev) {
+        mousePt = null;
         canvas.repaint();
       }
     });
@@ -152,24 +166,60 @@ public class TestSolveUI {
     table = new JTable(2, 0);
     tableModel = new MyTableModel();
     table.setModel(tableModel);
-    JScrollPane tablePane = new JScrollPane(table);
-    table.setFillsViewportHeight(true);
-    saveManipulatorAction = new ActionListener() {
-      public void actionPerformed(ActionEvent ev) {
-        if (currentManipulator != null) {
-          if (currentManipulator.isNew()) {
-            currentManipulator = currentManipulator.makeInstance(main.vars);
-            if (currentManipulator.isConstraint()) {
-              main.vars.constraints.add(currentManipulator.getConstraint());
-              bug("Added constraint to list.");
-            }
-          }
+    table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    table.getColumnModel().getColumn(0).setHeaderValue("Object");
+    table.getColumnModel().getColumn(1).setMaxWidth(60);
+    table.getColumnModel().getColumn(1).setHeaderValue("Error");
+    table.addMouseListener(new MouseAdapter() {
+      public void mouseClicked(MouseEvent e) {
+        if (e.getClickCount() == 2) {
+          int row = table.rowAtPoint(e.getPoint());
+          Constraint constraint = tableModel.getConstraint(row);
+          Manipulator useMe = constraint.getManipulator(main.vars);
+          setManipulator(useMe);
         }
       }
+    });
+    KeyStroke delKey = KeyStroke.getKeyStroke((char) KeyEvent.VK_BACK_SPACE);
+    Action delAction = new AbstractAction() {
+      public void actionPerformed(ActionEvent ev) {
+        int row = table.getSelectionModel().getLeadSelectionIndex();
+        Constraint constraint = tableModel.getConstraint(row);
+        main.vars.constraints.remove(constraint);
+        modelChanged();
+      }
     };
+    table.getInputMap().put(delKey, delAction);
+    table.getActionMap().put(delAction, delAction);
+    
+    JScrollPane tablePane = new JScrollPane(table);
+    saveManipulatorAction = new ActionListener() {
+      public void actionPerformed(ActionEvent ev) {
+        bug("saveManipulatorAction...");
+        if (currentManipulator != null) {
+          if (currentManipulator.isNew()) {
+            bug("Manipulator is new. Trying to save it.");
+            Manipulator prev = currentManipulator;
+            currentManipulator = currentManipulator.makeInstance(main.vars);
+            if (currentManipulator.isConstraint()) {
+              main.addConstraint(currentManipulator.getConstraint());
+            }
+            setManipulator(prev);
+          } else {
+            bug("Manipulator is not new. SO i should save to the existing constraint");
+            currentManipulator.getConstraint().assume(currentManipulator, main.vars);
+          }
+        } else {
+          bug("current manipulator is null!");
+        }
+        modelChanged();
+      }
+    };
+    
     editPane = new JPanel();
     editPane.setLayout(new BorderLayout());
-    JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tablePane, editPane);
+    JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, editPane, tablePane);
+    splitPane.setDividerLocation(160);
     ret.setLayout(new BorderLayout());
     ret.add(buttonPane, BorderLayout.NORTH);
     ret.add(splitPane, BorderLayout.CENTER);
@@ -181,6 +231,14 @@ public class TestSolveUI {
   protected void showAddPointsDialog() {
     if (showAddPointsDialog == null) {
       showAddPointsDialog = new JDialog(af, ModalityType.MODELESS);
+      KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+      JRootPane rootPane = showAddPointsDialog.getRootPane();
+      ActionListener closeMe = new ActionListener() {
+        public void actionPerformed(ActionEvent actionEvent) {
+          showAddPointsDialog.setVisible(false);
+        }
+      };
+      rootPane.registerKeyboardAction(closeMe, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
       JPanel content = new JPanel();
       JLabel instructions = new JLabel("Point Name:");
       final JTextField ptName = new JTextField(6);
@@ -208,9 +266,13 @@ public class TestSolveUI {
     editPane.add(new JLabel("Editor for " + manip.label), BorderLayout.NORTH);
     JPanel paramBox = new JPanel();
     paramBox.setLayout(new GridLayout(0, 2));
+    JTextField first = null;
     for (Manipulator.Param p : manip.params) {
       paramBox.add(new JLabel(p.helpText));
       JTextField textbox = makeAutosaveTextbox(p);
+      if (first == null) {
+        first = textbox;
+      }
       textbox.addActionListener(saveManipulatorAction);
       paramBox.add(textbox);
     }
@@ -219,6 +281,10 @@ public class TestSolveUI {
         ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
     editPane.add(paramScroller, BorderLayout.CENTER);
     editPane.revalidate();
+    if (first != null) {
+      bug("first text box is requesting focus.");
+      first.requestFocus();
+    }
   }
 
   private JTextField makeAutosaveTextbox(final Param p) {
@@ -240,6 +306,9 @@ public class TestSolveUI {
         p.value = ret.getText();
       }
     });
+    if (p.value != null) {
+      ret.setText(p.value);
+    }
     return ret;
   }
 
@@ -252,73 +321,73 @@ public class TestSolveUI {
     return ret;
   }
 
-  protected void activateManipulator() {
-    bug("activate manipulator: " + currentManipulator.label);
-    String label = currentManipulator.label;
-    if (label.equals(Manipulator.ADD_POINT)) {
-      String name = currentManipulator.getValue("pointName");
-      double x = 0;
-      double y = 0;
-      try {
-        x = Double.parseDouble(currentManipulator.getValue("initialX"));
-      } catch (NumberFormatException ex) {
-        Entropy rand = Entropy.getEntropy();
-        x = rand.getIntBetween(20, canvas.getWidth() - 20);
-      }
-      try {
-        y = Double.parseDouble(currentManipulator.getValue("initialY"));
-      } catch (NumberFormatException ex) {
-        Entropy rand = Entropy.getEntropy();
-        y = rand.getIntBetween(20, canvas.getHeight() - 20);
-      }
-      Pt loc = new Pt(x, y);
-      bug("uh " + num(loc));
-      main.addPoint(name, loc);
-    } else if (label.equals(Manipulator.ADD_DISTANCE)) {
-      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
-      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
-      NumericValue dist = new NumericValue(Double.parseDouble(currentManipulator.getValue("dist")));
-      if (p1 != null && p2 != null) {
-        main.addConstraint(new DistanceConstraint(p1, p2, dist));
-      }
-    } else if (label.equals(Manipulator.ADD_ANGLE)) {
-      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
-      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
-      Pt pF = main.vars.getPointWithName(currentManipulator.getValue("fulcrum"));
-      double angle = Double.parseDouble(currentManipulator.getValue("angle"));
-      if (p1 != null && p2 != null && pF != null) {
-        main.addConstraint(new AngleConstraint(p1, pF, p2, new NumericValue(toRadians(angle))));
-      }
-    } else if (label.equals(Manipulator.ADD_ORIENTATION)) {
-      //  line1start line1end line2start line2end angle
-      Pt pA1 = main.vars.getPointWithName(currentManipulator.getValue("line1start"));
-      Pt pA2 = main.vars.getPointWithName(currentManipulator.getValue("line1end"));
-      Pt pB1 = main.vars.getPointWithName(currentManipulator.getValue("line2start"));
-      Pt pB2 = main.vars.getPointWithName(currentManipulator.getValue("line2end"));
-      double angle = Double.parseDouble(currentManipulator.getValue("angle"));
-      if (pA1 != null && pA2 != null && pB1 != null && pB2 != null) {
-        main.addConstraint(new OrientationConstraint(pA1, pA2, pB1, pB2, new NumericValue(
-            toRadians(angle))));
-      }
-    } else if (label.equals(Manipulator.ADD_POINT_AS_LINE_PARAM)) {
-      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
-      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
-      NumericValue prop = new NumericValue(Double.parseDouble(currentManipulator
-          .getValue("proportion")));
-      Pt pT = main.vars.getPointWithName(currentManipulator.getValue("target"));
-      if (p1 != null && p2 != null && pT != null) {
-        main.addConstraint(new PointAsLineParamConstraint(p1, p2, prop, pT));
-      }
-    } else if (label.equals(Manipulator.ADD_POINT_ON_LINE)) {
-      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
-      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
-      Pt pT = main.vars.getPointWithName(currentManipulator.getValue("target"));
-      if (p1 != null && p2 != null && pT != null) {
-        main.addConstraint(new PointOnLineConstraint(p1, p2, pT));
-      }
-    }
-    canvas.repaint();
-  }
+  //  protected void activateManipulator() {
+  //    bug("activate manipulator: " + currentManipulator.label);
+  //    String label = currentManipulator.label;
+  //    if (label.equals(Manipulator.ADD_POINT)) {
+  //      String name = currentManipulator.getValue("pointName");
+  //      double x = 0;
+  //      double y = 0;
+  //      try {
+  //        x = Double.parseDouble(currentManipulator.getValue("initialX"));
+  //      } catch (NumberFormatException ex) {
+  //        Entropy rand = Entropy.getEntropy();
+  //        x = rand.getIntBetween(20, canvas.getWidth() - 20);
+  //      }
+  //      try {
+  //        y = Double.parseDouble(currentManipulator.getValue("initialY"));
+  //      } catch (NumberFormatException ex) {
+  //        Entropy rand = Entropy.getEntropy();
+  //        y = rand.getIntBetween(20, canvas.getHeight() - 20);
+  //      }
+  //      Pt loc = new Pt(x, y);
+  //      bug("uh " + num(loc));
+  //      main.addPoint(name, loc);
+  //    } else if (label.equals(Manipulator.ADD_DISTANCE)) {
+  //      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
+  //      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
+  //      NumericValue dist = new NumericValue(Double.parseDouble(currentManipulator.getValue("dist")));
+  //      if (p1 != null && p2 != null) {
+  //        main.addConstraint(new DistanceConstraint(p1, p2, dist));
+  //      }
+  //    } else if (label.equals(Manipulator.ADD_ANGLE)) {
+  //      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
+  //      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
+  //      Pt pF = main.vars.getPointWithName(currentManipulator.getValue("fulcrum"));
+  //      double angle = Double.parseDouble(currentManipulator.getValue("angle"));
+  //      if (p1 != null && p2 != null && pF != null) {
+  //        main.addConstraint(new AngleConstraint(p1, pF, p2, new NumericValue(toRadians(angle))));
+  //      }
+  //    } else if (label.equals(Manipulator.ADD_ORIENTATION)) {
+  //      //  line1start line1end line2start line2end angle
+  //      Pt pA1 = main.vars.getPointWithName(currentManipulator.getValue("line1start"));
+  //      Pt pA2 = main.vars.getPointWithName(currentManipulator.getValue("line1end"));
+  //      Pt pB1 = main.vars.getPointWithName(currentManipulator.getValue("line2start"));
+  //      Pt pB2 = main.vars.getPointWithName(currentManipulator.getValue("line2end"));
+  //      double angle = Double.parseDouble(currentManipulator.getValue("angle"));
+  //      if (pA1 != null && pA2 != null && pB1 != null && pB2 != null) {
+  //        main.addConstraint(new OrientationConstraint(pA1, pA2, pB1, pB2, new NumericValue(
+  //            toRadians(angle))));
+  //      }
+  //    } else if (label.equals(Manipulator.ADD_POINT_AS_LINE_PARAM)) {
+  //      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
+  //      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
+  //      NumericValue prop = new NumericValue(Double.parseDouble(currentManipulator
+  //          .getValue("proportion")));
+  //      Pt pT = main.vars.getPointWithName(currentManipulator.getValue("target"));
+  //      if (p1 != null && p2 != null && pT != null) {
+  //        main.addConstraint(new PointAsLineParamConstraint(p1, p2, prop, pT));
+  //      }
+  //    } else if (label.equals(Manipulator.ADD_POINT_ON_LINE)) {
+  //      Pt p1 = main.vars.getPointWithName(currentManipulator.getValue("pointA"));
+  //      Pt p2 = main.vars.getPointWithName(currentManipulator.getValue("pointB"));
+  //      Pt pT = main.vars.getPointWithName(currentManipulator.getValue("target"));
+  //      if (p1 != null && p2 != null && pT != null) {
+  //        main.addConstraint(new PointOnLineConstraint(p1, p2, pT));
+  //      }
+  //    }
+  //    canvas.repaint();
+  //  }
 
   private Pt getPointWithName(String n) {
     Pt ret = null;
@@ -397,7 +466,7 @@ public class TestSolveUI {
       DrawingBufferRoutines.dot(buf, pt, radius, borderThickness, borderColor, fillColor);
     }
   }
-  
+
   class MyTableModel extends AbstractTableModel {
 
     public int getColumnCount() {
@@ -412,13 +481,26 @@ public class TestSolveUI {
       Object ret = null;
       Constraint c = main.vars.constraints.get(row);
       if (col == 0) {
-        ret = c.getType();
+        ret = c.getHumanDescriptionString();
       } else if (col == 1) {
-        ret = num(c.measureError());
+        double e = c.measureError();
+        ret = num(e);
+        if (ret.toString().equals("-0.0") || ret.toString().equals("0.0")) {
+          ret = "0";
+        }
       }
       return ret;
     }
-  
+
+    public Constraint getConstraint(int row) {
+      return main.vars.constraints.get(row);
+    }
+
+  }
+
+  public void modelChanged() {
+    canvas.repaint();
+    tableModel.fireTableDataChanged();
   }
 
 }

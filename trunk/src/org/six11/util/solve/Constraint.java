@@ -43,6 +43,8 @@ public abstract class Constraint {
    */
   public abstract void assume(Manipulator m, VariableBank vars);
   
+  public abstract Manipulator getManipulator(VariableBank vars);
+  
   public abstract String getType();
   
   public abstract void accumulateCorrection();
@@ -66,4 +68,10 @@ public abstract class Constraint {
   }
   
   public abstract void draw(DrawingBuffer buf);
+
+  public abstract String getHumanDescriptionString();
+  
+  public String name(Pt p) {
+    return p.getString("name");
+  }
 }

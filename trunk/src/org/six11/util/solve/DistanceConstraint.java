@@ -13,6 +13,7 @@ import static org.six11.util.Debug.num;
 import static org.six11.util.Debug.bug;
 import static java.lang.Math.abs;
 import static java.lang.Math.toRadians;
+import static java.lang.Math.toDegrees;
 
 public class DistanceConstraint extends Constraint {
 
@@ -91,6 +92,23 @@ public class DistanceConstraint extends Constraint {
     a = vars.getPointWithName(paramVals.get("p1"));
     b = vars.getPointWithName(paramVals.get("p2"));
     d = new NumericValue(Double.parseDouble(paramVals.get("dist")));
+  }
+
+  /**
+   * Create a manipulator that holds the values of this constraint.
+   */
+  public Manipulator getManipulator(VariableBank vars) {
+    Manipulator man = DistanceConstraint.getManipulator();
+    man.setParamValue("p1", a.getString("name"));
+    man.setParamValue("p2", b.getString("name"));
+    man.setParamValue("dist", "" + d.getValue());
+    man.newThing = false;
+    man.constraint = this;
+    return man;
+  }
+
+  public String getHumanDescriptionString() {
+    return "Distance " + name(a) + ", " + name(b) + " =  " + num(d.getValue());
   }
 
 }

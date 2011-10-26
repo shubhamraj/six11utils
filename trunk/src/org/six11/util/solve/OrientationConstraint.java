@@ -131,4 +131,23 @@ public class OrientationConstraint extends Constraint {
     lineB2 = vars.getPointWithName(paramVals.get("pB2"));
     angle = new NumericValue(toRadians(Double.parseDouble(paramVals.get("angle"))));
   }
+  
+  /**
+   * Create a manipulator that holds the values of this constraint.
+   */
+  public Manipulator getManipulator(VariableBank vars) {
+    Manipulator man = OrientationConstraint.getManipulator();
+    man.setParamValue("pA1", lineA1.getString("name"));
+    man.setParamValue("pA2", lineA2.getString("name"));
+    man.setParamValue("pB1", lineB1.getString("name"));
+    man.setParamValue("pB2", lineB2.getString("name"));
+    man.setParamValue("angle", "" + toDegrees(angle.getValue()));
+    man.newThing = false;
+    man.constraint = this;
+    return man;
+  }
+  
+  public String getHumanDescriptionString() {
+    return "Orientation " + name(lineA1) + "--" + name(lineA2) + ", " + name(lineB1) + "--" + name(lineB2) + " =  " + num(toDegrees(angle.getValue()));
+  }
 }

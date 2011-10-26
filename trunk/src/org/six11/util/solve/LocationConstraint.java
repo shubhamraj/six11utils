@@ -52,4 +52,15 @@ public class LocationConstraint extends Constraint {
     
   }
 
+  @Override
+  public Manipulator getManipulator(VariableBank vars) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  public String getHumanDescriptionString() {
+    return "Location";
+  }
+  
+
 }
