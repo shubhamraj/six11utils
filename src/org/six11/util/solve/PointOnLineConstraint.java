@@ -86,4 +86,21 @@ public class PointOnLineConstraint extends Constraint {
     m = vars.getPointWithName(paramVals.get("p3"));
   }
 
+  /**
+   * Create a manipulator that holds the values of this constraint.
+   */
+  public Manipulator getManipulator(VariableBank vars) {
+    Manipulator man = PointOnLineConstraint.getManipulator();
+    man.setParamValue("p1", a.getString("name"));
+    man.setParamValue("p2", b.getString("name"));
+    man.setParamValue("p3", m.getString("name"));
+    man.newThing = false;
+    man.constraint = this;
+    return man;
+  }
+  
+  public String getHumanDescriptionString() {
+    return "PointAsLineParam " + name(a) + ", " + name(b) + ", " + name(m);
+  }
+
 }

@@ -1,19 +1,7 @@
 package org.six11.util.solve;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 import org.six11.util.pen.Pt;
 
@@ -32,7 +20,7 @@ public class Manipulator {
   String label;
   Param[] params;
   boolean newThing;
-  Constraint myConstraint;
+  Constraint constraint;
   Pt myPoint;
 
   public Manipulator(Class ptOrConstraint, String label, Param... params) {
@@ -40,7 +28,7 @@ public class Manipulator {
     this.label = label;
     this.params = params;
     newThing = true;
-    myConstraint = null;
+    constraint = null;
     myPoint = null;
   }
 
@@ -55,12 +43,9 @@ public class Manipulator {
     }
     try {
       if (Constraint.class.isAssignableFrom(ptOrConstraint)) {
-        bug("Yes I can assign " + ptOrConstraint);
         Constraint c = (Constraint) ptOrConstraint.newInstance();
-        bug("Made a constraint: " + c);
         c.assume(this, vars);
-        bug("... and made it assume my values.");
-        this.myConstraint = c;
+        this.constraint = c;
         this.newThing = false;
       } else {
         bug("No I can't assign " + ptOrConstraint);
@@ -69,7 +54,15 @@ public class Manipulator {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
+  }
 
+  public void setParamValue(String key, String value) {
+    for (Param p : params) {
+      if (p.key.equals(key)) {
+        p.value = value;
+        break;
+      }
+    }
   }
 
   public String toString() {
@@ -177,17 +170,17 @@ public class Manipulator {
   }
 
   public boolean isConstraint() {
-    return myConstraint != null;
+    return constraint != null;
   }
-  
+
   public boolean isPoint() {
     return myPoint != null;
   }
 
   public Constraint getConstraint() {
-    return myConstraint;
+    return constraint;
   }
-  
+
   public Pt getPoint() {
     return myPoint;
   }

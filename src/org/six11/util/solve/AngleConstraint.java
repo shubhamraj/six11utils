@@ -83,5 +83,17 @@ public class AngleConstraint extends Constraint {
     // TODO Auto-generated method stub
     
   }
+  
+  /**
+   * Create a manipulator that holds the values of this constraint.
+   */
+  public Manipulator getManipulator(VariableBank vars) {
+    return null;
+  }
+
+  @Override
+  public String getHumanDescriptionString() {
+    return "Angle " + name(a) + ", " + name(b) + ", " + name(f) + num(toDegrees(angle.getValue())); 
+  }
 
 }

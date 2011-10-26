@@ -74,18 +74,20 @@ public class Main {
   public static final String ACCUM_CORRECTION = "accumulated correction";
   List<Demo> demos;
   TestSolveUI ui = null;
-  
+
   String msg = null;
   boolean finished = false;
   int fps;
   Demo currentDemo;
   VariableBank vars;
+  Object monitor;
 
   public static void main(String[] in) throws Exception {
     new Main(in);
   }
 
   public Main(String[] in) throws SecurityException, NoSuchMethodException {
+    monitor = new Object();
     vars = new VariableBank();
     Arguments args = new Arguments();
     args.parseArguments(in);
@@ -131,7 +133,7 @@ public class Main {
     if (args.hasFlag("ui")) {
       ui = new TestSolveUI(this);
     }
-
+    run();
     currentDemo.go();
   }
 
@@ -237,7 +239,8 @@ public class Main {
     addPoint("B", ptB);
     addPoint("C", ptC);
     addPoint("D", ptD);
-    Constraint orient = new OrientationConstraint(ptA, ptB, ptC, ptD, new NumericValue(toRadians(90)));
+    Constraint orient = new OrientationConstraint(ptA, ptB, ptC, ptD, new NumericValue(
+        toRadians(90)));
     addConstraint(orient);
   }
 
@@ -303,37 +306,30 @@ public class Main {
   }
 
   void run() {
-    Runnable runner = new Runnable() {
-      public void run() {
-        finished = false;
-        long naptime = 0;
-        if (fps > 0) {
-          naptime = (long) (1000.0 / (double) fps);
-        }
-        while (!finished) {
+    finished = false;
+    long naptime = 0;
+    if (fps > 0) {
+      naptime = (long) (1000.0 / (double) fps);
+    }
+    while (true) {
+      synchronized (monitor) {
+        try {
+          if (finished) {
+            bug("waiting...");
+            monitor.wait();
+            bug("... woke up");
+          }
           step();
           if (ui != null) {
-            ui.canvas.repaint();
+            ui.modelChanged();
           }
-          try {
-            Thread.sleep(naptime);
-          } catch (InterruptedException ex) {
-            ;
-          }
+          Thread.sleep(naptime);
+        } catch (InterruptedException ex) {
+          ;
         }
-        bug("Iterative solver finished in thread " + Thread.currentThread().getId());
       }
-    };
-    if (EventQueue.isDispatchThread()) {
-      // TODO: this is dumb. Should have a single thread handle all of this. It is possible
-      // for two or more threads to be solving the system at the same time. This leads
-      // to race conditions and concurrent modification issues.
-      Thread thread = new Thread(runner);
-      bug("Starting thread: " + thread.getId());
-      thread.start();
-    } else {
-      runner.run();
     }
+    // bug("Iterative solver finished in thread " + Thread.currentThread().getId());
   }
 
   private void step() {
@@ -383,17 +379,31 @@ public class Main {
   public void addPoint(String name, Pt pt) {
     pt.setAttribute("name", name);
     vars.points.add(pt);
+    if (ui != null) {
+      ui.modelChanged();
+    }
   }
 
   public List<Constraint> getConstraints() {
     return vars.constraints;
   }
-  
+
   public VariableBank getVars() {
     return vars;
   }
 
   public void addConstraint(Constraint c) {
     vars.constraints.add(c);
+    if (ui != null) {
+      ui.modelChanged();
+    }
+  }
+
+  public void wakeUp() {
+    synchronized (monitor) {
+      finished = false;
+      monitor.notify();
+      bug("Woke up monitor");
+    }
   }
 }

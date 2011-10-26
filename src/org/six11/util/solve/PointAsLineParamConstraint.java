@@ -7,6 +7,8 @@ import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 import static java.lang.Math.abs;
+import static java.lang.Math.toDegrees;
+import static org.six11.util.Debug.num;
 
 /**
  * Constrains a point to be on a line segment and some percentage of the distance between the end
@@ -66,7 +68,18 @@ public class PointAsLineParamConstraint extends Constraint {
   @Override
   public void assume(Manipulator m, VariableBank vars) {
     // TODO Auto-generated method stub
-    
+
+  }
+
+  @Override
+  public Manipulator getManipulator(VariableBank vars) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public String getHumanDescriptionString() {
+    return "PointAsLineParam " + name(lineA) + ", " + name(lineB) + ", " + name(lineB) + ", "
+        + name(target) + " =  " + num(dist.getValue());
   }
 
 }
