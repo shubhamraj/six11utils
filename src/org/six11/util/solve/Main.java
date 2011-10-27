@@ -306,6 +306,7 @@ public class Main {
   }
 
   void run() {
+    bug("Entering run(). You should only see this one time!");
     finished = false;
     long naptime = 0;
     if (fps > 0) {
@@ -315,9 +316,7 @@ public class Main {
       synchronized (monitor) {
         try {
           if (finished) {
-            bug("waiting...");
             monitor.wait();
-            bug("... woke up");
           }
           step();
           if (ui != null) {
@@ -329,7 +328,6 @@ public class Main {
         }
       }
     }
-    // bug("Iterative solver finished in thread " + Thread.currentThread().getId());
   }
 
   private void step() {

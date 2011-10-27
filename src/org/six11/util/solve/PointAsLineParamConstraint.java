@@ -1,6 +1,7 @@
 package org.six11.util.solve;
 
 import java.awt.Color;
+import java.util.Map;
 
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
@@ -8,6 +9,7 @@ import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 import static java.lang.Math.abs;
 import static java.lang.Math.toDegrees;
+import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
 
 /**
@@ -28,6 +30,10 @@ public class PointAsLineParamConstraint extends Constraint {
     this.target = target;
     this.dist = proportionFromAToB;
     setPinned(target, true);
+  }
+  
+  public PointAsLineParamConstraint() {
+    
   }
 
   public String getType() {
@@ -65,16 +71,41 @@ public class PointAsLineParamConstraint extends Constraint {
     return target;
   }
 
+  public static Manipulator getManipulator() {
+    Manipulator man = new Manipulator(PointAsLineParamConstraint.class, "Point As Line Param", //
+        new Manipulator.Param("p1", "Point 1", true),
+        new Manipulator.Param("p2", "Point 2", true),
+        new Manipulator.Param("target", "Target Point", true),
+        new Manipulator.Param("dist", "Distance", true));
+    return man;
+  }
+  
   @Override
   public void assume(Manipulator m, VariableBank vars) {
-    // TODO Auto-generated method stub
-
+    if (m.ptOrConstraint != getClass()) {
+      bug("Can't build " + getClass().getName() + " based on manipulator for " + m.label
+          + "(its ptOrConstraint is " + m.ptOrConstraint.getName() + ")");
+    } else {
+      bug("Yay I can build a point-as-line-param thing from this manipulator");
+    }
+    Map<String, String> paramVals = m.getParamsAsMap();
+    bug(num(paramVals.values(), " "));
+    lineA = vars.getPointWithName(paramVals.get("p1"));
+    lineB = vars.getPointWithName(paramVals.get("p2"));
+    target = vars.getPointWithName(paramVals.get("target"));
+    dist = new NumericValue(Double.parseDouble(paramVals.get("dist")));
   }
 
   @Override
   public Manipulator getManipulator(VariableBank vars) {
-    // TODO Auto-generated method stub
-    return null;
+    Manipulator man = PointAsLineParamConstraint.getManipulator();
+    man.setParamValue("p1", lineA.getString("name"));
+    man.setParamValue("p2", lineB.getString("name"));
+    man.setParamValue("target", target.getString("name"));
+    man.setParamValue("dist", "" + dist.getValue());
+    man.newThing = false;
+    man.constraint = this;
+    return man;
   }
 
   public String getHumanDescriptionString() {

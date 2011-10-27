@@ -1,6 +1,7 @@
 package org.six11.util.solve;
 
 import java.awt.Color;
+import java.util.Map;
 
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
@@ -13,6 +14,7 @@ import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
 import static java.lang.Math.abs;
 import static java.lang.Math.toDegrees;
+import static java.lang.Math.toRadians;
 
 public class AngleConstraint extends Constraint {
 
@@ -28,6 +30,10 @@ public class AngleConstraint extends Constraint {
     this.angle = radians;
   }
 
+  public AngleConstraint() {
+    
+  }
+  
   public String getType() {
     return "Angle";
   }
@@ -78,17 +84,42 @@ public class AngleConstraint extends Constraint {
         col.darker());
   }
 
+  public static Manipulator getManipulator() {
+    Manipulator man = new Manipulator(AngleConstraint.class, "Angle", //
+        new Manipulator.Param("a", "Point 1", true),
+        new Manipulator.Param("b", "Point 2", true),
+        new Manipulator.Param("f", "Fulcrum", true),
+        new Manipulator.Param("angle", "Angle (degrees)", true));
+    return man;
+  }
+  
   @Override
   public void assume(Manipulator m, VariableBank vars) {
-    // TODO Auto-generated method stub
-    
+    if (m.ptOrConstraint != getClass()) {
+      bug("Can't build " + getClass().getName() + " based on manipulator for " + m.label
+          + "(its ptOrConstraint is " + m.ptOrConstraint.getName() + ")");
+    } else {
+      bug("Yay I can build a angle thing from this manipulator");
+    }
+    Map<String, String> paramVals = m.getParamsAsMap();
+    a = vars.getPointWithName(paramVals.get("a"));
+    b = vars.getPointWithName(paramVals.get("b"));
+    f = vars.getPointWithName(paramVals.get("f"));
+    angle = new NumericValue(toRadians(Double.parseDouble(paramVals.get("angle"))));
   }
   
   /**
    * Create a manipulator that holds the values of this constraint.
    */
   public Manipulator getManipulator(VariableBank vars) {
-    return null;
+    Manipulator man = AngleConstraint.getManipulator();
+    man.setParamValue("a", a.getString("name"));
+    man.setParamValue("b", b.getString("name"));
+    man.setParamValue("f", f.getString("name"));
+    man.setParamValue("angle", "" + toDegrees(angle.getValue()));
+    man.newThing = false;
+    man.constraint = this;
+    return man;
   }
 
   @Override

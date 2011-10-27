@@ -7,6 +7,8 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 import org.six11.util.pen.Pt;
 
@@ -50,6 +52,17 @@ public class Components {
     int x = (screenSize.width - frameSize.width) / 2;
     int y = (screenSize.height - frameSize.height) / 2;
     c.setLocation(x, y);
+  }
+
+  /**
+   * Returns the upper left corner location that the given dimension should be if it would be placed
+   * onscreen in the center.
+   */
+  public static Point2D centerRectangle(Dimension dim) {
+    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    double x = ((screenSize.width - dim.getWidth()) / 2);
+    double y = ((screenSize.height - dim.getHeight()) / 2);
+    return new Point2D.Double(x, y);
   }
 
 }

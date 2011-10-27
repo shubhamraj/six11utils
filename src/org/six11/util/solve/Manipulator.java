@@ -50,6 +50,9 @@ public class Manipulator {
       } else {
         bug("No I can't assign " + ptOrConstraint);
       }
+    } catch (InstantiationException ex) {
+      bug("Can't instantiate class: " + ptOrConstraint.getName()
+          + ". Maybe you didn't implement the nullary constructor?");
     } catch (Exception e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
