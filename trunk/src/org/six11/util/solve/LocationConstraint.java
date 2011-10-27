@@ -1,11 +1,14 @@
 package org.six11.util.solve;
 
 import java.awt.Color;
+import java.util.Map;
 
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
+
+import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
 
 public class LocationConstraint extends Constraint {
@@ -17,6 +20,10 @@ public class LocationConstraint extends Constraint {
   public LocationConstraint(Pt p, Pt target) {
     this.p = p;
     this.target = target;
+  }
+  
+  public LocationConstraint() {
+    
   }
 
   public String getType() {
@@ -33,34 +40,48 @@ public class LocationConstraint extends Constraint {
     }
   }
 
-  @Override
   public double measureError() {
     return p.distance(target);
   }
 
-  @Override
   public void draw(DrawingBuffer buf) {
     DrawingBufferRoutines.dot(buf, target, 3, 0.1, Color.BLACK, Color.red.brighter());
     if (!p.isSameLocation(target)) {
       DrawingBufferRoutines.arrow(buf, p, target, 2, Color.LIGHT_GRAY);
     }
   }
-
-  @Override
-  public void assume(Manipulator m, VariableBank vars) {
-    // TODO Auto-generated method stub
-    
+  
+  public static Manipulator getManipulator() {
+    Manipulator man = new Manipulator(LocationConstraint.class, "Location", //
+        new Manipulator.Param("p", "Point", true),
+        new Manipulator.Param("target", "Desired Location", true));
+    return man;
   }
 
-  @Override
+  public void assume(Manipulator m, VariableBank vars) {
+    if (m.ptOrConstraint != getClass()) {
+      bug("Can't build " + getClass().getName() + " based on manipulator for " + m.label
+          + "(its ptOrConstraint is " + m.ptOrConstraint.getName() + ")");
+    } else {
+      bug("Yay I can build a location thing from this manipulator");
+    }
+    Map<String, String> paramVals = m.getParamsAsMap();
+    bug(num(paramVals.values(), " "));
+    p = vars.getPointWithName(paramVals.get("p"));
+    target = vars.getPointWithName(paramVals.get("target"));
+  }
+
   public Manipulator getManipulator(VariableBank vars) {
-    // TODO Auto-generated method stub
-    return null;
+    Manipulator man = LocationConstraint.getManipulator();
+    man.setParamValue("p", p.getString("name"));
+    man.setParamValue("target", target.getString("name"));
+    man.newThing = false;
+    man.constraint = this;
+    return man;
   }
   
   public String getHumanDescriptionString() {
-    return "Location";
+    return "Location " + name(p) + " => " + name(target);
   }
-  
 
 }
