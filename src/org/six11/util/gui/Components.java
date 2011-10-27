@@ -9,6 +9,12 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Map;
+
+import javax.swing.Action;
+import javax.swing.JComponent;
+import javax.swing.JRootPane;
+import javax.swing.KeyStroke;
 
 import org.six11.util.pen.Pt;
 
@@ -63,6 +69,15 @@ public class Components {
     double x = ((screenSize.width - dim.getWidth()) / 2);
     double y = ((screenSize.height - dim.getHeight()) / 2);
     return new Point2D.Double(x, y);
+  }
+
+  public static void attachKeyboardAccelerators(JRootPane rp, Map<String, Action> actions) {
+    for (Action action : actions.values()) {
+      KeyStroke s = (KeyStroke) action.getValue(Action.ACCELERATOR_KEY);
+      if (s != null) {
+        rp.registerKeyboardAction(action, s, JComponent.WHEN_IN_FOCUSED_WINDOW);
+      }
+    }
   }
 
 }
