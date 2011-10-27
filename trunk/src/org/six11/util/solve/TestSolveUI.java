@@ -1,5 +1,9 @@
 package org.six11.util.solve;
 
+import static java.awt.event.InputEvent.CTRL_MASK;
+import static java.awt.event.InputEvent.META_MASK;
+import static java.awt.event.InputEvent.SHIFT_MASK;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dialog.ModalityType;
@@ -9,15 +13,19 @@ import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import static java.lang.Math.toRadians;
+import java.util.Map;
 
 import javax.swing.Action;
 import javax.swing.AbstractAction;
@@ -25,6 +33,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
@@ -37,15 +46,17 @@ import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableModel;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.six11.util.gui.ApplicationFrame;
 import org.six11.util.gui.Components;
+import org.six11.util.lev.NamedAction;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
-import org.six11.util.pen.Entropy;
 import org.six11.util.pen.MouseThing;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
@@ -56,10 +67,14 @@ import static org.six11.util.solve.Constraint.isPinned;
 import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
 
-// import static java.lang.Math.toDegrees;
-
 public class TestSolveUI {
 
+  private static final String ACTION_SAVE_AS = "save as";
+  private static final String ACTION_SAVE = "save";
+  private static final String ACTION_OPEN = "open";
+
+  Map<String, Action> actions;
+  File currentFile;
   ApplicationFrame af;
   DrawingBuffer buf;
   JComponent canvas;
@@ -139,6 +154,10 @@ public class TestSolveUI {
         canvas.repaint();
       }
     });
+
+    makeActions();
+    Components.attachKeyboardAccelerators(af.getRootPane(), actions);
+    Components.attachKeyboardAccelerators(toolBox.getRootPane(), actions);
     af.setLayout(new BorderLayout());
     af.add(canvas, BorderLayout.CENTER);
     Dimension dim = new Dimension(toolBox.getWidth() + af.getWidth(), toolBox.getHeight()
@@ -150,6 +169,35 @@ public class TestSolveUI {
     //    af.center();
     af.setVisible(true);
     toolBox.setVisible(true);
+  }
+
+  private void makeActions() {
+    int mod = CTRL_MASK;
+    int shiftMod = CTRL_MASK | SHIFT_MASK;
+    actions = new HashMap<String, Action>();
+
+    // Save Action
+    actions.put(ACTION_SAVE, new NamedAction("Save", KeyStroke.getKeyStroke(KeyEvent.VK_S, mod)) {
+      public void activate() {
+        save();
+      }
+    });
+
+    // Save As Action
+    actions.put(ACTION_SAVE_AS,
+        new NamedAction("Save As...", KeyStroke.getKeyStroke(KeyEvent.VK_S, shiftMod)) {
+          public void activate() {
+            saveAs();
+          }
+        });
+
+    // Open Action
+    actions.put(ACTION_OPEN,
+        new NamedAction("Open", KeyStroke.getKeyStroke(KeyEvent.VK_O, mod)) {
+          public void activate() {
+            open();
+          }
+        });
   }
 
   private JDialog buildToolBox() {
@@ -444,6 +492,78 @@ public class TestSolveUI {
   public void modelChanged() {
     canvas.repaint();
     tableModel.fireTableDataChanged();
+  }
+
+  public void save() {
+    bug("save");
+    if (currentFile == null) {
+      saveAs();
+    } else {
+      save(currentFile);
+    }
+  }
+
+  public void saveAs() {
+    bug("save as");
+    JFileChooser fileChooser = new JFileChooser();
+    int retVal = fileChooser.showSaveDialog(af);
+    if (retVal == JFileChooser.APPROVE_OPTION) {
+      currentFile = fileChooser.getSelectedFile();
+      save(currentFile);
+    }
+  }
+
+  public void save(File file) {
+    try {
+      if (!file.exists()) {
+        file.createNewFile();
+      }
+      JsonIO io = new JsonIO();
+      JSONArray points = io.write(main.vars.points, "name", "pinned");
+      JSONObject top = new JSONObject();
+      top.put("points", points);
+      FileWriter writer = new FileWriter(file);
+      writer.write(top.toString());
+      writer.flush();
+      writer.close();
+      currentFile = file;
+    } catch (IOException ex) {
+      ex.printStackTrace();
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+  }
+
+  public void open() {
+    JFileChooser fileChooser = new JFileChooser();
+    int retVal = fileChooser.showOpenDialog(af);
+    if (retVal == JFileChooser.APPROVE_OPTION) {
+      currentFile = fileChooser.getSelectedFile();
+      open(currentFile);
+    }
+  }
+
+  public void open(File file) {
+    try {
+      JsonIO io = new JsonIO();
+      FileReader reader = new FileReader(file);
+      JSONTokener toks = new JSONTokener(reader);
+      JSONObject top = new JSONObject(toks);
+      JSONArray pointArray = top.getJSONArray("points");
+      List<Pt> points = io.readPoints(pointArray, "name", "pinned");
+      main.vars.points.clear();
+      main.vars.points.addAll(points);
+      modelChanged();
+    } catch (JSONException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (FileNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
   }
 
 }
