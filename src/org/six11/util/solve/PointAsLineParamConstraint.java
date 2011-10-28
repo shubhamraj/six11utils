@@ -10,7 +10,6 @@ import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 import static java.lang.Math.abs;
-import static java.lang.Math.toDegrees;
 import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
 

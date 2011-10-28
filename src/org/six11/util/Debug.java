@@ -261,8 +261,7 @@ public class Debug {
     return num(l, separator);
   }
 
-  @SuppressWarnings("unchecked")
-  public static String num(/* Set set */Collection col, String separator) {
+  public static String num(Collection<?> col, String separator) {
     boolean first = true;
     StringBuffer buf = new StringBuffer();
     for (Object o : /* set */col) {

@@ -5,7 +5,6 @@ package org.six11.util.pen;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.AffineTransform;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -14,12 +13,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import static java.lang.Math.*;
-import static java.lang.Math.acos;
-import static java.lang.Math.abs;
 
 import org.six11.util.Debug;
-import static org.six11.util.Debug.num;
-import static org.six11.util.Debug.numTime;
 import org.six11.util.data.Statistics;
 import org.six11.util.math.EllipseFit;
 

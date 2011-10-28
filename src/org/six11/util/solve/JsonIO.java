@@ -5,10 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.six11.util.Debug;
 import org.six11.util.pen.Pt;
 import static org.six11.util.Debug.bug;
-import static org.six11.util.Debug.num;
 
 import org.json.*;
 

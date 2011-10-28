@@ -119,7 +119,7 @@ public class Message {
    * @return the String contained in the named element ("...foofoo..." in this example) or the empty
    *         string if no such string is found.
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   public String getString(String strName) {
     List strElements = xml.getRootElement().getChildren("string");
     String ret = "";
@@ -138,7 +138,7 @@ public class Message {
    *          the parameter's key
    * @return
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   public String getParam(String key) {
     List list = xml.getRootElement().getChildren("param");
     String ret = null;

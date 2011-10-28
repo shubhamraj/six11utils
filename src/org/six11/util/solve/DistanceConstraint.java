@@ -14,8 +14,6 @@ import org.six11.util.pen.Vec;
 import static org.six11.util.Debug.num;
 import static org.six11.util.Debug.bug;
 import static java.lang.Math.abs;
-import static java.lang.Math.toRadians;
-import static java.lang.Math.toDegrees;
 
 public class DistanceConstraint extends Constraint {
 

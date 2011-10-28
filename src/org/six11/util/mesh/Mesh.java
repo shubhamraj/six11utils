@@ -4,13 +4,11 @@ import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
 import org.six11.util.pen.DrawingBufferRoutines;
-//import org.six11.skrui.Main;
 import org.six11.util.Debug;
 import org.six11.util.gui.BoundingBox;
 import org.six11.util.pen.CircleArc;

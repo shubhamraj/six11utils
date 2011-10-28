@@ -8,7 +8,6 @@ import static java.lang.Math.atan2;
 import static java.lang.Math.toDegrees;
 
 import static org.six11.util.Debug.num;
-import static org.six11.util.Debug.numTime;
 import org.six11.util.Debug;
 import org.six11.util.gui.shape.ShapeFactory;
 

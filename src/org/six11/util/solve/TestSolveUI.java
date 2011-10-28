@@ -1,7 +1,7 @@
 package org.six11.util.solve;
 
 import static java.awt.event.InputEvent.CTRL_MASK;
-import static java.awt.event.InputEvent.META_MASK;
+//import static java.awt.event.InputEvent.META_MASK;
 import static java.awt.event.InputEvent.SHIFT_MASK;
 
 import java.awt.BorderLayout;
@@ -54,6 +54,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.six11.util.gui.ApplicationFrame;
 import org.six11.util.gui.Components;
+import org.six11.util.io.Preferences;
 import org.six11.util.lev.NamedAction;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
@@ -72,6 +73,7 @@ public class TestSolveUI {
   private static final String ACTION_SAVE_AS = "save as";
   private static final String ACTION_SAVE = "save";
   private static final String ACTION_OPEN = "open";
+  private static final String PREF_LAST_DIRECTORY = "lastDirectory";
 
   Map<String, Action> actions;
   File currentFile;
@@ -89,9 +91,16 @@ public class TestSolveUI {
   JDialog showAddPointsDialog;
   JTable table;
   MyTableModel tableModel;
+  Preferences prefs;
 
   @SuppressWarnings("serial")
   public TestSolveUI(Main m) {
+    try {
+      prefs = Preferences.makePrefs("testSolver");
+      bug("Loaded prefs: " + prefs.getPropertiesFile().getCanonicalPath());
+    } catch (IOException e) {
+      bug("Could not create prefs file.");
+    }
     this.main = m;
     af = new ApplicationFrame("Test Solve UI");
     af.setSize(800, 600);
@@ -192,12 +201,11 @@ public class TestSolveUI {
         });
 
     // Open Action
-    actions.put(ACTION_OPEN,
-        new NamedAction("Open", KeyStroke.getKeyStroke(KeyEvent.VK_O, mod)) {
-          public void activate() {
-            open();
-          }
-        });
+    actions.put(ACTION_OPEN, new NamedAction("Open", KeyStroke.getKeyStroke(KeyEvent.VK_O, mod)) {
+      public void activate() {
+        open();
+      }
+    });
   }
 
   private JDialog buildToolBox() {
@@ -380,17 +388,6 @@ public class TestSolveUI {
     return ret;
   }
 
-  private Pt getPointWithName(String n) {
-    Pt ret = null;
-    for (Pt pt : main.vars.points) {
-      if (pt.getString("name").equals(n)) {
-        ret = pt;
-        break;
-      }
-    }
-    return ret;
-  }
-
   private Pt findPoint(Pt cursor) {
     double best = Double.MAX_VALUE;
     Pt ret = null;
@@ -503,13 +500,23 @@ public class TestSolveUI {
     }
   }
 
+  private JFileChooser makeFileChooser() {
+    JFileChooser fileChooser = new JFileChooser();
+    if (currentFile != null) {
+      fileChooser.setCurrentDirectory(currentFile.getParentFile());
+    } else if (prefs.getProperty(PREF_LAST_DIRECTORY) != null) {
+      File lastDirectory = new File(prefs.getProperty("lastDirectory"));
+      fileChooser.setCurrentDirectory(lastDirectory);
+    }
+    return fileChooser;
+  }
+
   public void saveAs() {
     bug("save as");
-    JFileChooser fileChooser = new JFileChooser();
+    JFileChooser fileChooser = makeFileChooser();
     int retVal = fileChooser.showSaveDialog(af);
     if (retVal == JFileChooser.APPROVE_OPTION) {
-      currentFile = fileChooser.getSelectedFile();
-      save(currentFile);
+      save(fileChooser.getSelectedFile());
     }
   }
 
@@ -528,7 +535,7 @@ public class TestSolveUI {
       writer.write(top.toString());
       writer.flush();
       writer.close();
-      currentFile = file;
+      setCurrentFile(file);
     } catch (IOException ex) {
       ex.printStackTrace();
     } catch (JSONException e) {
@@ -539,11 +546,26 @@ public class TestSolveUI {
   }
 
   public void open() {
-    JFileChooser fileChooser = new JFileChooser();
+    JFileChooser fileChooser = makeFileChooser();
     int retVal = fileChooser.showOpenDialog(af);
     if (retVal == JFileChooser.APPROVE_OPTION) {
-      currentFile = fileChooser.getSelectedFile();
+      setCurrentFile(fileChooser.getSelectedFile());
       open(currentFile);
+    }
+  }
+
+  private void setCurrentFile(File f) {
+    currentFile = f;
+    prefs.setProperty(PREF_LAST_DIRECTORY, currentFile.getParent());
+    try {
+      prefs.save();
+      bug("Saved prefs.");
+    } catch (FileNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
 
