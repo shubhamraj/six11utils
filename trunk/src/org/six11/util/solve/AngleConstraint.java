@@ -3,6 +3,8 @@ package org.six11.util.solve;
 import java.awt.Color;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
@@ -125,6 +127,22 @@ public class AngleConstraint extends Constraint {
   @Override
   public String getHumanDescriptionString() {
     return "Angle " + name(a) + ", " + name(b) + ", " + name(f) + num(toDegrees(angle.getValue())); 
+  }
+
+  public JSONObject toJson() throws JSONException {
+    JSONObject ret = new JSONObject();
+    ret.put("a", a.getString("name"));
+    ret.put("b", b.getString("name"));
+    ret.put("f", f.getString("name"));
+    ret.put("angle", angle.getValue());
+    return ret;
+  }
+
+  public void fromJson(JSONObject obj, VariableBank vars) throws JSONException {
+    a = vars.getPointWithName(obj.getString("a"));
+    b = vars.getPointWithName(obj.getString("b"));
+    f = vars.getPointWithName(obj.getString("f"));
+    angle = new NumericValue(obj.getDouble("angle"));
   }
 
 }

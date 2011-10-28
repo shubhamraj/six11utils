@@ -2,6 +2,8 @@ package org.six11.util.solve;
 
 import java.util.List;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
@@ -26,6 +28,10 @@ public abstract class Constraint {
   public String getMessages() {
     return messages.toString();
   }
+  
+  public abstract JSONObject toJson() throws JSONException;
+  
+  public abstract void fromJson(JSONObject obj, VariableBank vars) throws JSONException;
   
   public static int countPinned(Pt ... somePoints) {
     int ret = 0;

@@ -3,6 +3,8 @@ package org.six11.util.solve;
 import java.awt.Color;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
@@ -149,5 +151,23 @@ public class OrientationConstraint extends Constraint {
   
   public String getHumanDescriptionString() {
     return "Orientation " + name(lineA1) + "--" + name(lineA2) + ", " + name(lineB1) + "--" + name(lineB2) + " =  " + num(toDegrees(angle.getValue()));
+  }
+  
+  public JSONObject toJson() throws JSONException {
+    JSONObject ret = new JSONObject();
+    ret.put("pA1", lineA1.getString("name"));
+    ret.put("pA2", lineA2.getString("name"));
+    ret.put("pB1", lineB1.getString("name"));
+    ret.put("pB2", lineB2.getString("name"));
+    ret.put("angle", angle.getValue());
+    return ret;
+  }
+
+  public void fromJson(JSONObject obj, VariableBank vars) throws JSONException {
+    lineA1 = vars.getPointWithName(obj.getString("pA1"));
+    lineA2 = vars.getPointWithName(obj.getString("pA2"));
+    lineB1 = vars.getPointWithName(obj.getString("pB1"));
+    lineB2 = vars.getPointWithName(obj.getString("pB2"));
+    angle = new NumericValue(obj.getDouble("angle"));
   }
 }

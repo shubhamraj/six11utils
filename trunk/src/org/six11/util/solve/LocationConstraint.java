@@ -3,6 +3,8 @@ package org.six11.util.solve;
 import java.awt.Color;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Pt;
@@ -82,6 +84,18 @@ public class LocationConstraint extends Constraint {
   
   public String getHumanDescriptionString() {
     return "Location " + name(p) + " => " + name(target);
+  }
+  
+  public JSONObject toJson() throws JSONException {
+    JSONObject ret = new JSONObject();
+    ret.put("p", p.getString("name"));
+    ret.put("target", target.getString("name"));
+    return ret;
+  }
+
+  public void fromJson(JSONObject obj, VariableBank vars) throws JSONException {
+    p = vars.getPointWithName(obj.getString("p"));
+    target = vars.getPointWithName(obj.getString("target"));
   }
 
 }

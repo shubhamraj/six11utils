@@ -3,6 +3,8 @@ package org.six11.util.solve;
 import java.awt.Color;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Line;
@@ -109,6 +111,20 @@ public class DistanceConstraint extends Constraint {
 
   public String getHumanDescriptionString() {
     return "Distance " + name(a) + ", " + name(b) + " =  " + num(d.getValue());
+  }
+  
+  public JSONObject toJson() throws JSONException {
+    JSONObject ret = new JSONObject();
+    ret.put("p1", a.getString("name"));
+    ret.put("p2", b.getString("name"));
+    ret.put("dist", d.getValue());
+    return ret;
+  }
+
+  public void fromJson(JSONObject obj, VariableBank vars) throws JSONException {
+    a = vars.getPointWithName(obj.getString("p1"));
+    b = vars.getPointWithName(obj.getString("p2"));
+    d = new NumericValue(obj.getDouble("dist"));
   }
 
 }
