@@ -69,7 +69,6 @@ public class JsonIO {
   }
 
   public Pt readPt(JSONObject obj, String... dataNames) throws JSONException {
-
     double xLoc = (Double) obj.getDouble("x");
     double yLoc = (Double) obj.getDouble("y");
     long time = (Long) obj.getLong("t");
@@ -89,5 +88,44 @@ public class JsonIO {
       points.add(readPt((JSONObject) array.get(i), dataNames));
     }
     return points;
+  }
+
+  public JSONArray write(List<Constraint> constraints) throws JSONException {
+    JSONArray ret = new JSONArray();
+    for (Constraint c : constraints) {
+      JSONObject asJson = c.toJson();
+      asJson.put("type", c.getType());
+      ret.put(asJson);
+    }
+    return ret;
+  }
+  
+  public List<Constraint> readConstraints(JSONArray array, VariableBank vars) throws JSONException {
+    List<Constraint> constraints = new ArrayList<Constraint>();
+    for (int i=0; i < array.length(); i++) {
+      JSONObject obj = array.getJSONObject(i);
+      String type = obj.getString("type");
+      Constraint c = null;
+      if ("Angle".equals(type)) {
+        c = new AngleConstraint();
+      } else if ("Distance".equals(type)) {
+        c = new DistanceConstraint();
+      } else if ("Pin".equals(type)) {
+        c = new LocationConstraint();
+      } else if ("Orientation".equals(type)) {
+        c = new OrientationConstraint();
+      } else if ("Point As Line Param".equals(type)) {
+        c = new PointAsLineParamConstraint();
+      } else if ("Point On Line".equals(type)) {
+        c = new PointOnLineConstraint();
+      }
+      if (c == null) {
+        bug("** Unknown constraint type on load: " + type);
+      } else {
+        c.fromJson(obj, vars);
+        constraints.add(c);
+      }
+    }
+    return constraints;
   }
 }

@@ -520,8 +520,10 @@ public class TestSolveUI {
       }
       JsonIO io = new JsonIO();
       JSONArray points = io.write(main.vars.points, "name", "pinned");
+      JSONArray constraints = io.write(main.vars.constraints);
       JSONObject top = new JSONObject();
       top.put("points", points);
+      top.put("constraints", constraints);
       FileWriter writer = new FileWriter(file);
       writer.write(top.toString());
       writer.flush();
@@ -552,9 +554,13 @@ public class TestSolveUI {
       JSONTokener toks = new JSONTokener(reader);
       JSONObject top = new JSONObject(toks);
       JSONArray pointArray = top.getJSONArray("points");
+      JSONArray constraintArray = top.getJSONArray("constraints");
       List<Pt> points = io.readPoints(pointArray, "name", "pinned");
       main.vars.points.clear();
+      main.vars.constraints.clear();
       main.vars.points.addAll(points);
+      List<Constraint> constraints = io.readConstraints(constraintArray, main.vars);
+      main.vars.constraints.addAll(constraints);
       modelChanged();
     } catch (JSONException e) {
       // TODO Auto-generated catch block

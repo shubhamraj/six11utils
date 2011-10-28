@@ -3,6 +3,8 @@ package org.six11.util.solve;
 import java.awt.Color;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
@@ -101,6 +103,20 @@ public class PointOnLineConstraint extends Constraint {
   
   public String getHumanDescriptionString() {
     return "PointAsLineParam " + name(a) + ", " + name(b) + ", " + name(m);
+  }
+  
+  public JSONObject toJson() throws JSONException {
+    JSONObject ret = new JSONObject();
+    ret.put("p1", a.getString("name"));
+    ret.put("p2", b.getString("name"));
+    ret.put("p3", m.getString("name"));
+    return ret;
+  }
+
+  public void fromJson(JSONObject obj, VariableBank vars) throws JSONException {
+    a = vars.getPointWithName(obj.getString("p1"));
+    b = vars.getPointWithName(obj.getString("p2"));
+    m = vars.getPointWithName(obj.getString("p3"));
   }
 
 }

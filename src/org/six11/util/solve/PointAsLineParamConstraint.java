@@ -3,6 +3,8 @@ package org.six11.util.solve;
 import java.awt.Color;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Pt;
@@ -31,9 +33,9 @@ public class PointAsLineParamConstraint extends Constraint {
     this.dist = proportionFromAToB;
     setPinned(target, true);
   }
-  
+
   public PointAsLineParamConstraint() {
-    
+
   }
 
   public String getType() {
@@ -72,14 +74,14 @@ public class PointAsLineParamConstraint extends Constraint {
   }
 
   public static Manipulator getManipulator() {
-    Manipulator man = new Manipulator(PointAsLineParamConstraint.class, "Point As Line Param", //
-        new Manipulator.Param("p1", "Point 1", true),
-        new Manipulator.Param("p2", "Point 2", true),
-        new Manipulator.Param("target", "Target Point", true),
-        new Manipulator.Param("dist", "Distance", true));
+    Manipulator man = new Manipulator(PointAsLineParamConstraint.class,
+        "Point As Line Param", //
+        new Manipulator.Param("p1", "Point 1", true), new Manipulator.Param("p2", "Point 2", true),
+        new Manipulator.Param("target", "Target Point", true), new Manipulator.Param("dist",
+            "Distance", true));
     return man;
   }
-  
+
   @Override
   public void assume(Manipulator m, VariableBank vars) {
     if (m.ptOrConstraint != getClass()) {
@@ -113,4 +115,19 @@ public class PointAsLineParamConstraint extends Constraint {
         + name(target) + " =  " + num(dist.getValue());
   }
 
+  public JSONObject toJson() throws JSONException {
+    JSONObject ret = new JSONObject();
+    ret.put("p1", lineA.getString("name"));
+    ret.put("p2", lineB.getString("name"));
+    ret.put("target", target.getString("name"));
+    ret.put("dist", dist.getValue());
+    return ret;
+  }
+
+  public void fromJson(JSONObject obj, VariableBank vars) throws JSONException {
+    lineA = vars.getPointWithName(obj.getString("p1"));
+    lineB = vars.getPointWithName(obj.getString("p2"));
+    target = vars.getPointWithName(obj.getString("target"));
+    dist = new NumericValue(obj.getDouble("dist"));
+  }
 }
