@@ -28,6 +28,10 @@ public class Preferences {
     this.appName = appName;
   }
 
+  public File getPropertiesFile() {
+    return propsFile;
+  }
+  
   /**
    * Uses the operating system's conventions to find or create a file for persisting properties.
    * 

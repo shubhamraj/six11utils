@@ -1,8 +1,6 @@
 package org.six11.util.solve;
 
 import java.awt.Component;
-import java.awt.EventQueue;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +10,8 @@ import org.six11.util.args.Arguments;
 import org.six11.util.pen.Entropy;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
-import org.six11.util.solve.Main.Demo;
 
 import static org.six11.util.Debug.bug;
-import static org.six11.util.Debug.num;
 import static java.lang.Math.toRadians;
 import static java.lang.Math.sqrt;
 
@@ -329,10 +325,11 @@ public class Main {
       }
     }
   }
-
+  @SuppressWarnings("unchecked")
   private void step() {
     // 1: clear any current correction values
     for (Pt pt : vars.points) {
+      
       List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
       if (corrections == null) {
         pt.setAttribute(ACCUM_CORRECTION, new ArrayList<Vec>());
@@ -401,7 +398,6 @@ public class Main {
     synchronized (monitor) {
       finished = false;
       monitor.notify();
-      bug("Woke up monitor");
     }
   }
 }

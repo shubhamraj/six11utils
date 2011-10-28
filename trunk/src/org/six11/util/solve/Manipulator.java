@@ -16,14 +16,14 @@ public class Manipulator {
   public static final String ADD_POINT_AS_LINE_PARAM = "Add Point-As-Line-Param Constraint";
   public static final String ADD_POINT_ON_LINE = "Add point on line Constraint";
 
-  Class ptOrConstraint;
+  Class<?> ptOrConstraint; // Pt, Constraint, NumericValue, etc... could be many things
   String label;
   Param[] params;
   boolean newThing;
   Constraint constraint;
   Pt myPoint;
 
-  public Manipulator(Class ptOrConstraint, String label, Param... params) {
+  public Manipulator(Class<?> ptOrConstraint, String label, Param... params) {
     this.ptOrConstraint = ptOrConstraint;
     this.label = label;
     this.params = params;

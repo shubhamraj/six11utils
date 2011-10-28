@@ -210,7 +210,7 @@ public class NetworkThing {
     }
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   private void download() {
     bug("Download thread is working.");
     while (running) {

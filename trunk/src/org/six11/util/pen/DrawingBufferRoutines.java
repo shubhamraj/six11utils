@@ -1,6 +1,5 @@
 package org.six11.util.pen;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Rectangle;

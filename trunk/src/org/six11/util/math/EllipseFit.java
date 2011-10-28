@@ -1,17 +1,10 @@
 package org.six11.util.math;
 
-import java.awt.BasicStroke;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import javax.swing.JComponent;
 
 import static java.lang.Math.atan2;
 import static java.lang.Math.sin;
@@ -22,13 +15,8 @@ import static java.lang.Math.sqrt;
 
 import org.six11.util.Debug;
 import org.six11.util.args.Arguments;
-import org.six11.util.gui.ApplicationFrame;
 import org.six11.util.gui.BoundingBox;
-import org.six11.util.gui.Components;
-import org.six11.util.gui.shape.Circle;
-import org.six11.util.gui.shape.ShapeFactory;
 import org.six11.util.io.FileUtil;
-import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.Functions;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.RotatedEllipse;
@@ -178,8 +166,6 @@ public class EllipseFit {
     double[] a = new double[d1.length + d2.length];
     System.arraycopy(d1, 0, a, 0, d1.length);
     System.arraycopy(d2, 0, a, d1.length, d2.length);
-    Matrix aMat = new Matrix(a, a.length);
-//    bugMat("Matrix 'A'", aMat);
 
     double[] par = {
         a[0] * sy * sy,
@@ -230,44 +216,44 @@ public class EllipseFit {
 //    drawThing(points, ellipse, bb);
     return ellipse;
   }
-
-  private static void drawThing(final List<Pt> points, final RotatedEllipse ellipse, BoundingBox bb) {
-    ApplicationFrame af = new ApplicationFrame("EllipseFit Test");
-    final RotatedEllipse ellipse2 = ellipse.copy();
-    ellipse2.setRotation(-ellipse.getRotation());
-    af.setSize(800, 800);
-    af.center();
-    double tx = (bb.getMinX() < 0) ? -bb.getMinX() : 0;
-    double ty = (bb.getMinY() < 0) ? -bb.getMinY() : 0;
-    if (tx > 0 || ty > 0) {
-      for (Pt pt : points) {
-        pt.setLocation(pt.getX() + tx + 6, pt.getY() + ty + 6);
-      }
-      ellipse.translate(tx + 6, ty + 6);
-      ellipse2.translate(tx + 6, ty + 6);
-    }
-
-    JComponent drawMe = new JComponent() {
-      public void paintComponent(Graphics g1) {
-        Graphics2D g = (Graphics2D) g1;
-        g.setColor(Color.GRAY);
-        g.setStroke(new BasicStroke(0.8f));
-        Components.antialias(g);
-        for (Pt pt : points) {
-          g.draw(new Circle(pt.getX(), pt.getY(), 3));
-        }
-        g.setStroke(new BasicStroke(3.0f));
-        g.setColor(Color.BLUE);
-        g.draw(new ShapeFactory.RotatedEllipseShape(ellipse, 200));
-        g.setColor(Color.RED);
-        g.draw(new ShapeFactory.RotatedEllipseShape(ellipse2, 200));
-
-      }
-    };
-    af.setLayout(new BorderLayout());
-    af.add(BorderLayout.CENTER, drawMe);
-    af.setVisible(true);
-  }
+//
+//  private static void drawThing(final List<Pt> points, final RotatedEllipse ellipse, BoundingBox bb) {
+//    ApplicationFrame af = new ApplicationFrame("EllipseFit Test");
+//    final RotatedEllipse ellipse2 = ellipse.copy();
+//    ellipse2.setRotation(-ellipse.getRotation());
+//    af.setSize(800, 800);
+//    af.center();
+//    double tx = (bb.getMinX() < 0) ? -bb.getMinX() : 0;
+//    double ty = (bb.getMinY() < 0) ? -bb.getMinY() : 0;
+//    if (tx > 0 || ty > 0) {
+//      for (Pt pt : points) {
+//        pt.setLocation(pt.getX() + tx + 6, pt.getY() + ty + 6);
+//      }
+//      ellipse.translate(tx + 6, ty + 6);
+//      ellipse2.translate(tx + 6, ty + 6);
+//    }
+//
+//    JComponent drawMe = new JComponent() {
+//      public void paintComponent(Graphics g1) {
+//        Graphics2D g = (Graphics2D) g1;
+//        g.setColor(Color.GRAY);
+//        g.setStroke(new BasicStroke(0.8f));
+//        Components.antialias(g);
+//        for (Pt pt : points) {
+//          g.draw(new Circle(pt.getX(), pt.getY(), 3));
+//        }
+//        g.setStroke(new BasicStroke(3.0f));
+//        g.setColor(Color.BLUE);
+//        g.draw(new ShapeFactory.RotatedEllipseShape(ellipse, 200));
+//        g.setColor(Color.RED);
+//        g.draw(new ShapeFactory.RotatedEllipseShape(ellipse2, 200));
+//
+//      }
+//    };
+//    af.setLayout(new BorderLayout());
+//    af.add(BorderLayout.CENTER, drawMe);
+//    af.setVisible(true);
+//  }
 
 //  private static void bugMat(String what, Matrix mat) {
 //    bug(what);

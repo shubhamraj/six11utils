@@ -45,7 +45,7 @@ public abstract class ModuleView extends JPanel implements AppDataListener {
   /**
    * Called when this module is registered with the given model.
    */
-  public void modelRegistered(@SuppressWarnings("unused") Model model) {
+  public void modelRegistered(Model model) {
   }
 
   public void setDefaultFocusedItem(Component comp) {

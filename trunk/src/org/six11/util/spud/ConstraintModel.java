@@ -67,11 +67,8 @@ public class ConstraintModel {
   }
 
   private void solveRound() {
-    int round = 1;
     for (Constraint c : constraints) {
       c.solveSafely();
-      //      bug("End of round " + round + ": " + getMondoDebugString());
-      round++;
     }
   }
 

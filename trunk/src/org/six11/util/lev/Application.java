@@ -270,8 +270,7 @@ public abstract class Application {
    * This method is called AFTER a module's enabled state has changed, so its semantics are of
    * notification, rather than imparative.
    */
-  public void moduleEnableNotification(@SuppressWarnings("unused") boolean enabledState,
-      @SuppressWarnings("unused") Module mod) {
+  public void moduleEnableNotification(boolean enabledState, Module mod) {
 
   }
 }

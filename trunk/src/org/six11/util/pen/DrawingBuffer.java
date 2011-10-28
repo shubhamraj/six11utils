@@ -302,7 +302,7 @@ public class DrawingBuffer {
       g.transform(defaultXform);
       g.translate(bb.getX(), bb.getY());
       g.drawImage(getImage(), 1, 1, null); // I don't understand how this can be right. should be 0, 0... but it gives weird behavior
-      Point2D newOrigin = g.getTransform().transform(new Pt(0, 0), null);
+//      Point2D newOrigin = g.getTransform().transform(new Pt(0, 0), null);
     }
     g.setTransform(before);
   }

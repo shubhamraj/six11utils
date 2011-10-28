@@ -10,8 +10,6 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
-import static java.lang.Math.toRadians;
-import static java.lang.Math.abs;
 
 import org.six11.util.Debug;
 import static org.six11.util.Debug.num;
@@ -21,6 +19,7 @@ import org.six11.util.pen.IntersectionData;
 import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.RotatedEllipse;
+import static org.six11.util.Debug.bug;
 
 /**
  * 
@@ -297,11 +296,6 @@ public abstract class ShapeFactory {
       ret.lineTo(points.get(0).getX(), points.get(0).getY());
     }
     return ret;
-  }
-
-  @SuppressWarnings("unused")
-  private static void bug(String what) {
-    Debug.out("ShapeFactory", what);
   }
 
 }

@@ -17,7 +17,7 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-import org.six11.util.Debug;
+import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
 
 /**
@@ -143,7 +143,7 @@ public class Sequence implements Shape, Iterable<Pt> {
   public String toString() {
     StringBuffer buf = new StringBuffer("[ ");
     for (Pt pt : this) {
-      buf.append(Debug.num(pt) + " ");
+      buf.append(num(pt) + " ");
     }
     buf.append("]");
     return buf.toString();
@@ -740,11 +740,6 @@ public class Sequence implements Shape, Iterable<Pt> {
       }
       return type;
     }
-  }
-
-  @SuppressWarnings("unused")
-  private static void bug(String what) {
-    Debug.out("Sequence", what);
   }
 
   public Sequence getReverseSequence() {

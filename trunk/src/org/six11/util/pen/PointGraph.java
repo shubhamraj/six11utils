@@ -1,18 +1,5 @@
 package org.six11.util.pen;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
-import org.six11.util.Debug;
-import static org.six11.util.Debug.num;
-import org.six11.util.pen.Pt;
-import org.six11.util.pen.Sequence;
-//import org.six11.util.tmp.SketchBook;
-
 /**
  * This is a datastructure that stores x,y,t points and may be efficiently searched to locate other
  * points based on search criteria.
