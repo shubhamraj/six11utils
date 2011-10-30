@@ -7,16 +7,22 @@ import java.util.List;
 
 import org.six11.util.Debug;
 import org.six11.util.args.Arguments;
+import org.six11.util.data.Statistics;
 import org.six11.util.pen.Entropy;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 
 import static org.six11.util.Debug.bug;
+import static org.six11.util.Debug.num;
 import static java.lang.Math.toRadians;
+import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
 public class Main {
 
+  public static enum State {
+    Solved, Unsatisfied, Working;
+  }
   public class Demo {
     String label;
     String about;
@@ -68,6 +74,8 @@ public class Main {
   }
 
   public static final String ACCUM_CORRECTION = "accumulated correction";
+  private static final int MAX_ITERATION_N = 100;
+  private static final double MIN_ITERATION_VARIATION = 0.01;
   List<Demo> demos;
   TestSolveUI ui = null;
 
@@ -77,6 +85,7 @@ public class Main {
   Demo currentDemo;
   VariableBank vars;
   Object monitor;
+  private State currentState;
 
   public static void main(String[] in) throws Exception {
     new Main(in);
@@ -308,13 +317,36 @@ public class Main {
     if (fps > 0) {
       naptime = (long) (1000.0 / (double) fps);
     }
+    Statistics errorStats = new Statistics();
+    errorStats.setMaximumN(MAX_ITERATION_N);
+    double prevError = Double.MAX_VALUE;
     while (true) {
       synchronized (monitor) {
         try {
           if (finished) {
+            errorStats.clear();
+            prevError = Double.MAX_VALUE;
             monitor.wait();
           }
-          step();
+          double e = step();
+          errorStats.addData(prevError - e);
+          prevError = e;
+          if (errorStats.getN() == MAX_ITERATION_N
+              && errorStats.getVariance() < MIN_ITERATION_VARIATION) {
+            bug("Can't find a stable solution, so I give up.");
+            bug("        n: " + errorStats.getN());
+            bug("  std_dev: " + errorStats.getStdDev());
+            bug("  variate: " + errorStats.getVariance());
+            bug("     mean: " + errorStats.getMean());
+            bug("   median: " + errorStats.getMedian());
+            bug("    error: " + calcTotalConstraintError());
+            bug("   values: " + num(errorStats.getDataList(), " "));
+            currentState = State.Unsatisfied;
+            finished = true;
+          }
+          if (!finished) {
+            currentState = State.Working;
+          }
           if (ui != null) {
             ui.modelChanged();
           }
@@ -325,11 +357,21 @@ public class Main {
       }
     }
   }
+
+  private double calcTotalConstraintError() {
+    double sum = 0;
+    for (Constraint c : vars.constraints) {
+      sum += abs(c.measureError());
+    }
+    return sum;
+  }
+
   @SuppressWarnings("unchecked")
-  private void step() {
+  private double step() {
+    double totalError = 0;
     // 1: clear any current correction values
     for (Pt pt : vars.points) {
-      
+
       List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
       if (corrections == null) {
         pt.setAttribute(ACCUM_CORRECTION, new ArrayList<Vec>());
@@ -354,6 +396,7 @@ public class Main {
       }
       Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
       double mag = delta.mag();
+      totalError = totalError + mag;
       if (mag > 1.0) {
         pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
       } else if (mag > 0.0) {
@@ -364,7 +407,9 @@ public class Main {
     }
     if (numFinished == vars.points.size()) {
       finished = true;
+      currentState = State.Solved;
     }
+    return totalError;
   }
 
   public List<Pt> getPoints() {
@@ -397,7 +442,12 @@ public class Main {
   public void wakeUp() {
     synchronized (monitor) {
       finished = false;
+      currentState = State.Working;
       monitor.notify();
     }
+  }
+
+  public State getSolutionState() {
+    return currentState;
   }
 }

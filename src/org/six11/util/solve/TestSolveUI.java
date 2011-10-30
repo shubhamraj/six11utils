@@ -277,6 +277,7 @@ public class TestSolveUI {
           bug("current manipulator is null!");
         }
         modelChanged();
+        main.wakeUp();
       }
     };
 
@@ -426,11 +427,22 @@ public class TestSolveUI {
       }
       c.draw(buf);
     }
-    if (main.finished) {
-      DrawingBufferRoutines.text(buf, msgCursor, "Solved", Color.GREEN.darker().darker());
-    } else {
-      DrawingBufferRoutines.text(buf, msgCursor, "Working...", Color.RED.darker());
+    switch (main.getSolutionState()) {
+      case Solved:
+        DrawingBufferRoutines.text(buf, msgCursor, "Solved", Color.GREEN.darker().darker());
+        break;
+      case Unsatisfied:
+        DrawingBufferRoutines.text(buf, msgCursor, "Unsatisfied", Color.YELLOW.darker().darker().darker());
+        break;
+      case Working:
+        DrawingBufferRoutines.text(buf, msgCursor, "Working...", Color.RED.darker());
+        break;
     }
+//    if (main.finished) {
+//      DrawingBufferRoutines.text(buf, msgCursor, "Solved", Color.GREEN.darker().darker());
+//    } else {
+//      DrawingBufferRoutines.text(buf, msgCursor, "Working...", Color.RED.darker());
+//    }
 
     for (Pt pt : points) {
       Color fillColor = Color.BLUE;
