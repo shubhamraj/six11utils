@@ -288,6 +288,23 @@ public class TestSolveUI {
     ret.setLayout(new BorderLayout());
     ret.add(buttonPane, BorderLayout.NORTH);
     ret.add(splitPane, BorderLayout.CENTER);
+    JPanel fpsPane = new JPanel();
+    fpsPane.add(new JLabel("Frames per second:"));
+    final JTextField fpsText = new JTextField("" + main.fps, 6);
+    fpsText.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ev) {
+        bug("actionPerformed");
+        String frameString = fpsText.getText();
+        bug("frameString: " + frameString);
+        try {
+          int frameRate = Integer.parseInt(frameString.trim());
+          main.fps = frameRate;
+          bug("frameRate: " + frameRate);
+        } catch (NumberFormatException ex) { }
+      }
+    });
+    fpsPane.add(fpsText);
+    ret.add(fpsPane, BorderLayout.SOUTH);
     ret.setPreferredSize(new Dimension(400, 600));
     ret.pack();
     return ret;
