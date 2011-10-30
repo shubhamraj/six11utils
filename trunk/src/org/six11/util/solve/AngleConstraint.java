@@ -60,6 +60,30 @@ public class AngleConstraint extends Constraint {
       }
     }
   }
+  
+  /**
+   * This is the accumulateCorrection method assuming a stationary fulcrum.
+   */
+  public void accumulateCorrectionStationaryFulcrum() {
+    int free = 2 - countPinned(a, b);
+    if (free > 0) {
+      double e = measureError();
+      if (abs(e) > TOLERANCE) {
+        // Rotate a and b about f by e/2 and -e/2 radians. (assuming free = 2)
+        double shift = e / free;
+        if (!isPinned(a)) {
+          Pt rotatedA = Functions.rotatePointAboutPivot(a, f, shift);
+          Vec vecA = new Vec(rotatedA.x - a.x, rotatedA.y - a.y);
+          accumulate(a, vecA);
+        }
+        if (!isPinned(b)) {
+          Pt rotatedB = Functions.rotatePointAboutPivot(b, f, -shift);
+          Vec vecB = new Vec(rotatedB.x - b.x, rotatedB.y - b.y);
+          accumulate(b, vecB);
+        }
+      }
+    }
+  }
 
   public double measureError() {
     Vec fa = new Vec(a, f);
