@@ -46,19 +46,9 @@ public class OrientationConstraint extends Constraint {
 
   public void accumulateCorrection() {
     double e = measureError();
-    addMessage("Error is " + num(e) + " (" + num(toDegrees(e)) + " deg) Orientation: "
-        + num(angle.getValue()) + " (" + num(toDegrees(angle.getValue())) + ")");
     if (abs(e) > TOLERANCE) {
-      rotate(lineA1, lineA2, e);
-      rotate(lineB1, lineB2, -e);
-      //      Line lineB = new Line(lineB1, lineB2);
-      //      Pt midB = lineB.getMidpoint();
-      //      Pt rotatedB1 = Functions.rotatePointAboutPivot(lineB1, midB, -e / 2);
-      //      Pt rotatedB2 = Functions.rotatePointAboutPivot(lineB2, midB, -e / 2);
-      //      Vec vecB1 = new Vec(rotatedB1.x - lineB1.x, rotatedB1.y - lineB1.y);
-      //      Vec vecB2 = new Vec(rotatedB2.x - lineB2.x, rotatedB2.y - lineB2.y);
-      //      accumulate(lineB1, vecB1);
-      //      accumulate(lineB2, vecB2);
+      rotate(lineA1, lineA2, -e);
+      rotate(lineB1, lineB2, e);
     }
   }
 
@@ -80,12 +70,11 @@ public class OrientationConstraint extends Constraint {
     } else if (free == 1) {
       Pt pivot = isPinned(pt1) ? pt1 : pt2;
       Pt moveMe = isPinned(pt1) ? pt2 : pt1;
-      //      double signedAmt = isPinned(pt1) ? amt : -amt;
+      bug("Rotating " + moveMe.getString("name") + " about " + pivot.getString("name") + " by " + num(toDegrees(amt/2), 4));
       Pt rotated = Functions.rotatePointAboutPivot(moveMe, pivot, amt / 2);
       Vec vec = new Vec(rotated.x - moveMe.x, rotated.y - moveMe.y);
       accumulate(moveMe, vec);
     }
-
   }
 
   public double measureError() {
@@ -93,7 +82,11 @@ public class OrientationConstraint extends Constraint {
     Vec vA = new Vec(lineA1, lineA2);
     Vec vB = new Vec(lineB1, lineB2);
     double currentAngle = Functions.getSignedAngleBetween(vA, vB);
-    ret = Math.signum(currentAngle) * (Math.abs(currentAngle) - angle.getValue());
+//    ret = Math.signum(currentAngle - angle.getValue())
+//        * (Math.abs(currentAngle) - angle.getValue());
+    ret = angle.getValue() - currentAngle;
+//    bug("Angle: " + num(currentAngle, 4) + ". Desired angle: " + num(angle.getValue(), 4)
+//        + ". Sign: " + Math.signum(currentAngle - angle.getValue()) + ". I return: " + num(ret, 4));
     return ret;
   }
 
@@ -133,7 +126,7 @@ public class OrientationConstraint extends Constraint {
     lineB2 = vars.getPointWithName(paramVals.get("pB2"));
     angle = new NumericValue(toRadians(Double.parseDouble(paramVals.get("angle"))));
   }
-  
+
   /**
    * Create a manipulator that holds the values of this constraint.
    */
@@ -148,11 +141,12 @@ public class OrientationConstraint extends Constraint {
     man.constraint = this;
     return man;
   }
-  
+
   public String getHumanDescriptionString() {
-    return "Orientation " + name(lineA1) + "--" + name(lineA2) + ", " + name(lineB1) + "--" + name(lineB2) + " =  " + num(toDegrees(angle.getValue()));
+    return "Orientation " + name(lineA1) + "--" + name(lineA2) + ", " + name(lineB1) + "--"
+        + name(lineB2) + " =  " + num(toDegrees(angle.getValue()));
   }
-  
+
   public JSONObject toJson() throws JSONException {
     JSONObject ret = new JSONObject();
     ret.put("pA1", lineA1.getString("name"));
