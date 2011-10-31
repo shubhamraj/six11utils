@@ -70,7 +70,6 @@ public class OrientationConstraint extends Constraint {
     } else if (free == 1) {
       Pt pivot = isPinned(pt1) ? pt1 : pt2;
       Pt moveMe = isPinned(pt1) ? pt2 : pt1;
-      bug("Rotating " + moveMe.getString("name") + " about " + pivot.getString("name") + " by " + num(toDegrees(amt/2), 4));
       Pt rotated = Functions.rotatePointAboutPivot(moveMe, pivot, amt / 2);
       Vec vec = new Vec(rotated.x - moveMe.x, rotated.y - moveMe.y);
       accumulate(moveMe, vec);
@@ -79,14 +78,20 @@ public class OrientationConstraint extends Constraint {
 
   public double measureError() {
     double ret = 0;
+    // special case for 0 degrees due to floating point tolerance nonsense.
+    double targetAngle = angle.getValue();
+    if (abs(targetAngle) < TOLERANCE) {
+      targetAngle = Math.PI;
+    }
     Vec vA = new Vec(lineA1, lineA2);
     Vec vB = new Vec(lineB1, lineB2);
     double currentAngle = Functions.getSignedAngleBetween(vA, vB);
-//    ret = Math.signum(currentAngle - angle.getValue())
-//        * (Math.abs(currentAngle) - angle.getValue());
-    ret = angle.getValue() - currentAngle;
-//    bug("Angle: " + num(currentAngle, 4) + ". Desired angle: " + num(angle.getValue(), 4)
-//        + ". Sign: " + Math.signum(currentAngle - angle.getValue()) + ". I return: " + num(ret, 4));
+    ret = abs(currentAngle) - abs(targetAngle);
+    // if the current angle is closer to one of the possible solutions, send it that way.
+    if (abs(currentAngle - targetAngle) < (abs(currentAngle) + targetAngle)) {
+      ret = -1 * ret;
+    }
+
     return ret;
   }
 
