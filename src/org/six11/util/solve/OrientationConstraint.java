@@ -78,6 +78,22 @@ public class OrientationConstraint extends Constraint {
 
   public double measureError() {
     double ret = 0;
+    double targetAngle = angle.getValue();
+    Vec vA = new Vec(lineA1, lineA2);
+    Vec vB = new Vec(lineB1, lineB2);
+    double currentAngle = Functions.getSignedAngleBetween(vA, vB);
+    double sign = Math.signum(currentAngle);
+    double c1 = abs(currentAngle);
+    double c2 = Math.PI - c1;
+    double diff1 = c1 - targetAngle;
+    double diff2 = c2 - targetAngle;
+    double diff = (abs(diff1) < abs(diff2) ? diff1 : diff2);
+    ret = sign * diff;
+    return ret;
+  }
+  
+  public double measureErrorPrev() {
+    double ret = 0;
     // special case for 0 degrees due to floating point tolerance nonsense.
     double targetAngle = angle.getValue();
     if (abs(targetAngle) < TOLERANCE) {
@@ -86,12 +102,15 @@ public class OrientationConstraint extends Constraint {
     Vec vA = new Vec(lineA1, lineA2);
     Vec vB = new Vec(lineB1, lineB2);
     double currentAngle = Functions.getSignedAngleBetween(vA, vB);
+    bug("Angle between " + name(lineA1) + "-" + name(lineA2) + " and " + name(lineB1) + "-"
+        + name(lineB2) + " = " + num(toDegrees(currentAngle)));
     ret = abs(currentAngle) - abs(targetAngle);
     // if the current angle is closer to one of the possible solutions, send it that way.
     if (abs(currentAngle - targetAngle) < (abs(currentAngle) + targetAngle)) {
       ret = -1 * ret;
     }
-
+    bug("current: " + num(toDegrees(currentAngle)) + ", target: " + num(toDegrees(targetAngle))
+        + ", error: " + num(toDegrees(ret)));
     return ret;
   }
 

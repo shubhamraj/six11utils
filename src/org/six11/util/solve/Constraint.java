@@ -7,7 +7,10 @@ import org.json.JSONObject;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
+
+import static java.lang.Math.toDegrees;
 import static org.six11.util.Debug.bug;
+import static org.six11.util.Debug.num;
 
 public abstract class Constraint {
   
@@ -78,7 +81,18 @@ public abstract class Constraint {
 
   public abstract String getHumanDescriptionString();
   
-  public String name(Pt p) {
+  /**
+   * Returns p.getString("name"). This is a debugging method.
+   */
+  protected String name(Pt p) {
     return p.getString("name");
   }
+  
+  /**
+   * Returns num(toDegrees(v)). This is a debugging method.
+   */
+  protected String deg(double v) {
+    return num(toDegrees(v));
+  }
+
 }
