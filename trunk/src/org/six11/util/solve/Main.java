@@ -45,7 +45,7 @@ public class Main {
     args.parseArguments(in);
 
     Debug.useColor = args.hasFlag("use-color");
-    this.fps = 1;
+    this.fps = 60;
     if (args.hasValue("fps")) {
       this.fps = Integer.parseInt(args.getValue("fps"));
     }
