@@ -3,6 +3,7 @@ package org.six11.util;
 import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.six11.util.math.ClusterThing;
@@ -17,7 +18,7 @@ public class Test {
 
   public static void main(String[] args) {
     Debug.useColor = false;
-    ClusterThing<String> clusters = new ClusterThing<String>() {
+    final ClusterThing<String> clusters = new ClusterThing<String>() {
       public double query(String thing) {
         double ret = 0;
         try {
@@ -36,17 +37,39 @@ public class Test {
     bug("Radius of whole thing: " + num(radius));
     Cluster<String> root = clusters.getRootCluster();
     report(root, 0);
+    
+    ClusterThing.ClusterFilter<String> filter = new ClusterThing.ClusterFilter<String>() {
+      public boolean accepts(Cluster<String> cluster) {
+        boolean ret = false;
+        double max = clusters.query(cluster.getMax());
+        double min = clusters.query(cluster.getMin());
+        double ratio = max / min;
+        ret = (ratio <= 2.0);
+        return ret;
+      }
+    };
+    List<Cluster<String>> groups = clusters.search(filter);
+    bug("--");
+    bug("Best groups:");
+    int counter = 1;
+    List<String> best = new ArrayList<String>();
+    for (Cluster<String> group : groups) {
+      if (group.getMembers().size() > 1) {
+        bug("  Group " + counter++ + ": " + num(group.getMembers(), " "));
+        best.addAll(group.getMembers());
+      }
+    }
   }
-  
+
   public static void report(Cluster<String> cluster, int indent) {
-    bug(Debug.spaces(indent) + " " + cluster.getCenter() + " (rank " + cluster.getRank() + ", radius: " + num(cluster.getRadius()) + ", members: " + cluster.getChildCount() + ")");
+    bug(Debug.spaces(indent) + " " + cluster.getCenter() + " (rank " + cluster.getRank()
+        + " radius: " + num(cluster.getRadius()) + ", members: " + cluster.getMembers().size() + ")");
     if (cluster.getChildA() != null) {
-      report(cluster.getChildA(), indent+1);
+      report(cluster.getChildA(), indent + 1);
     }
     if (cluster.getChildB() != null) {
-      report(cluster.getChildB(), indent+1);
+      report(cluster.getChildB(), indent + 1);
     }
   }
-  
 
 }

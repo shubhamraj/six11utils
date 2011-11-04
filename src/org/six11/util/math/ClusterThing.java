@@ -8,10 +8,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+
 import static java.lang.Math.abs;
 import static org.six11.util.Debug.num;
 
 public abstract class ClusterThing<T> {
+
+  public abstract static class ClusterFilter<T> {
+    public abstract boolean accepts(Cluster<T> cluster);
+  }
 
   public static class Cluster<T> {
 
@@ -23,6 +28,9 @@ public abstract class ClusterThing<T> {
 
     // cluster has exemplar: the closest sample to center
     T exemplar;
+    
+    // cluster has minimum and maximum valued members
+    T minimum, maximum;
 
     // cluster has radius r, which is the max dist from r to any point in the cluster
     double radius;
@@ -74,15 +82,8 @@ public abstract class ClusterThing<T> {
       return b;
     }
     
-    public int getChildCount() {
-      int ret = 1;
-      if (a != null) {
-        ret = ret + a.getChildCount();
-      }
-      if (b != null) {
-        ret = ret + b.getChildCount();
-      }
-      return ret;
+    public List<T> getMembers() {
+      return new ArrayList<T>(points);
     }
 
     private final void build(int rank, Collection<T> samps) {
@@ -99,12 +100,23 @@ public abstract class ClusterThing<T> {
 
       // find the sample that is closest to and farthest from this center of mass
       double closest = Double.MAX_VALUE;
+      double smallest = Double.MAX_VALUE;
+      double largest = -Double.MAX_VALUE;
       radius = 0;
       for (T point : points) {
-        double d = abs(ct.query(point) - center);
+        double thisValue = ct.query(point);
+        double d = abs(thisValue - center);
         if (d < closest) {
           exemplar = point;
           closest = d;
+        }
+        if (thisValue < smallest) {
+          minimum = point;
+          smallest = thisValue;
+        }
+        if (thisValue > largest) {
+          maximum = point;
+          largest = thisValue;
         }
         radius = Math.max(radius, d);
       }
@@ -136,6 +148,18 @@ public abstract class ClusterThing<T> {
 
     public Cluster<T> getSubclusterB() {
       return b;
+    }
+    
+    public double getCenterOfMass() {
+      return center;
+    }
+    
+    public T getMin() {
+      return minimum;
+    }
+    
+    public T getMax() {
+      return maximum;
     }
   }
 
@@ -255,5 +279,25 @@ public abstract class ClusterThing<T> {
   
   public Cluster<T> getRootCluster() {
     return rankedClusters.get(0);
+  }
+
+  public List<Cluster<T>> search(ClusterFilter<T> filter) {
+    List<Cluster<T>> ret = new ArrayList<Cluster<T>>();
+    Stack<Cluster<T>> todo = new Stack<Cluster<T>>();
+    todo.push(getRootCluster());
+    while (!todo.isEmpty()) {
+      Cluster<T> cluster = todo.pop();
+      if (filter.accepts(cluster)) {
+        ret.add(cluster);
+      } else {
+        if (cluster.a != null) {
+          todo.push(cluster.a);
+        }
+        if (cluster.b != null) {
+          todo.push(cluster.b);
+        }
+      }
+    }
+    return ret;
   }
 }
