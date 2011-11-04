@@ -1,4 +1,4 @@
-// $Id: Antipodal2.java 55 2010-02-21 00:31:17Z gabe.johnson@gmail.com $
+// $Id$
 
 package org.six11.util.pen;
 
