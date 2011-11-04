@@ -13,7 +13,7 @@ import static org.six11.util.Debug.num;
 
 public abstract class ClusterThing<T> {
 
-  public class Cluster {
+  public static class Cluster<T> {
 
     // a compound cluster has some samples inside it, kept in an array.
     List<T> points;
@@ -31,20 +31,25 @@ public abstract class ClusterThing<T> {
     int rank;
 
     // Clusters might be composed of sub-clusters. Retain references to them.
-    Cluster a, b;
+    Cluster<T> a, b;
+    
+    ClusterThing<T> ct;
 
     // Create a cluster out of some set of samples.
-    public Cluster(int rank, Collection<T> samps) {
+    public Cluster(int rank, Collection<T> samps, ClusterThing<T> ct) {
+      this.ct = ct;
       build(rank, samps);
     }
 
-    public Cluster(T root) {
+    public Cluster(T root, ClusterThing<T> ct) {
+      this.ct = ct;
       Collection<T> s = new ArrayList<T>();
       s.add(root);
       build(0, s);
     }
 
-    public Cluster(int rank, Cluster clusterA, Cluster clusterB) {
+    public Cluster(int rank, Cluster<T> clusterA, Cluster<T> clusterB, ClusterThing<T> ct) {
+      this.ct = ct;
       this.a = clusterA;
       this.b = clusterB;
       List<T> samps = new ArrayList<T>(); // combine data from both clusters
@@ -54,7 +59,30 @@ public abstract class ClusterThing<T> {
     }
     
     public String toString() {
-      return "Cluster[center=" + num(center) + ", exemplar=" + num(query(exemplar)) + ", radius=" + num(radius) + "]";
+      return "Cluster[center=" + num(center) + ", exemplar=" + num(ct.query(exemplar)) + ", radius=" + num(radius) + "]";
+    }
+
+    public int getRank() {
+      return rank;
+    }
+    
+    public Cluster<T> getChildA() {
+      return a;
+    }
+    
+    public Cluster<T> getChildB() {
+      return b;
+    }
+    
+    public int getChildCount() {
+      int ret = 1;
+      if (a != null) {
+        ret = ret + a.getChildCount();
+      }
+      if (b != null) {
+        ret = ret + b.getChildCount();
+      }
+      return ret;
     }
 
     private final void build(int rank, Collection<T> samps) {
@@ -65,7 +93,7 @@ public abstract class ClusterThing<T> {
       // set the cluster center-of-mass
       double sum = 0;
       for (int i = 0; i < points.size(); i++) {
-        sum = sum + query(points.get(i));
+        sum = sum + ct.query(points.get(i));
       }
       center = sum / points.size();
 
@@ -73,7 +101,7 @@ public abstract class ClusterThing<T> {
       double closest = Double.MAX_VALUE;
       radius = 0;
       for (T point : points) {
-        double d = abs(query(point) - center);
+        double d = abs(ct.query(point) - center);
         if (d < closest) {
           exemplar = point;
           closest = d;
@@ -89,8 +117,8 @@ public abstract class ClusterThing<T> {
     // dist between two clusters is the dist between their exemplars, not center of mass. This
     // actually returns the squared distance, but since it would not make a difference in the end, I
     // will spare the cycles and not do the square root.
-    public double dist(Cluster other) {
-      return abs(query(exemplar) - query(other.exemplar));
+    public double dist(Cluster<T> other) {
+      return abs(ct.query(exemplar) - ct.query(other.exemplar));
       //      return exemplar.pcaSquaredDist(other.exemplar);
     }
 
@@ -102,20 +130,20 @@ public abstract class ClusterThing<T> {
       return exemplar;
     }
 
-    public Cluster getSubclusterA() {
+    public Cluster<T> getSubclusterA() {
       return a;
     }
 
-    public Cluster getSubclusterB() {
+    public Cluster<T> getSubclusterB() {
       return b;
     }
   }
 
   private Set<T> samples;
-  private List<Cluster> rankedClusters;
+  private List<Cluster<T>> rankedClusters;
   
-  Comparator<Cluster> clusterSorter = new Comparator<Cluster>() {
-    public int compare(Cluster a, Cluster b) {
+  Comparator<Cluster<T>> clusterSorter = new Comparator<Cluster<T>>() {
+    public int compare(Cluster<T> a, Cluster<T> b) {
       double vA = query(a.exemplar);
       double vB = query(b.exemplar);
       int ret = 0;
@@ -130,7 +158,7 @@ public abstract class ClusterThing<T> {
 
   public ClusterThing() {
     samples = new HashSet<T>();
-    rankedClusters = new ArrayList<Cluster>();
+    rankedClusters = new ArrayList<Cluster<T>>();
   }
 
   public abstract double query(T t);
@@ -140,10 +168,10 @@ public abstract class ClusterThing<T> {
   }
 
   public void computeClusters() {
-    List<Cluster> remainingClusters = new ArrayList<Cluster>();
+    List<Cluster<T>> remainingClusters = new ArrayList<Cluster<T>>();
     rankedClusters.clear();
     for (T s : samples) {
-      Cluster cluster = new Cluster(s);
+      Cluster<T> cluster = new Cluster<T>(s, this);
       remainingClusters.add(cluster);
       rankedClusters.add(cluster);
     }
@@ -154,17 +182,17 @@ public abstract class ClusterThing<T> {
     }
   }
 
-  private void merge(int nextRank, List<Cluster> remainingClusters) {
+  private void merge(int nextRank, List<Cluster<T>> remainingClusters) {
     // one iteration of the clustering algorithm. Determine which two clusters are the closest, call
     // them (a) and (b). Make a new cluster (ab), remove (a) and (b) individually from the
     // remainingClusters list, and add (ab).
     double nearestDist = Double.MAX_VALUE;
-    Cluster nearestA = null;
-    Cluster nearestB = null;
+    Cluster<T> nearestA = null;
+    Cluster<T> nearestB = null;
     for (int i = 0; i < remainingClusters.size(); i++) {
-      Cluster a = remainingClusters.get(i);
+      Cluster<T> a = remainingClusters.get(i);
       for (int j = i + 1; j < remainingClusters.size(); j++) {
-        Cluster b = remainingClusters.get(j);
+        Cluster<T> b = remainingClusters.get(j);
         double thisDist = a.dist(b);
         if (thisDist < nearestDist) {
           nearestDist = thisDist;
@@ -174,7 +202,7 @@ public abstract class ClusterThing<T> {
       }
     }
     if (nearestA != null && nearestB != null) {
-      Cluster ab = new Cluster(nextRank, nearestA, nearestB);
+      Cluster<T> ab = new Cluster<T>(nextRank, nearestA, nearestB, this);
       rankedClusters.add(0, ab);
       remainingClusters.remove(nearestA);
       remainingClusters.remove(nearestB);
@@ -182,8 +210,8 @@ public abstract class ClusterThing<T> {
     }
   }
 
-  public List<Cluster> getClusters(int n) {
-    List<Cluster> ret = new ArrayList<Cluster>();
+  public List<Cluster<T>> getClusters(int n) {
+    List<Cluster<T>> ret = new ArrayList<Cluster<T>>();
     for (int i = 0; i < n; i++) {
       ret.add(rankedClusters.get(i));
     }
@@ -194,14 +222,14 @@ public abstract class ClusterThing<T> {
     return samples.size();
   }
 
-  public List<Cluster> search(T t) {
+  public List<Cluster<T>> search(T t) {
     double worstScore = Double.MAX_VALUE;
-    List<Cluster> ret = new ArrayList<Cluster>();
-    Stack<Cluster> todo = new Stack<Cluster>();
+    List<Cluster<T>> ret = new ArrayList<Cluster<T>>();
+    Stack<Cluster<T>> todo = new Stack<Cluster<T>>();
     todo.push(rankedClusters.get(0));
     int numAvoided = 0;
     while (!todo.isEmpty()) {
-      Cluster cluster = todo.pop();
+      Cluster<T> cluster = todo.pop();
       double dist = abs(query(t) - query(cluster.exemplar));
       if (ret.isEmpty() || dist < worstScore) {
         ret.add(cluster);
@@ -223,5 +251,9 @@ public abstract class ClusterThing<T> {
 
   public double getRadius() {
     return rankedClusters.get(0).radius;
+  }
+  
+  public Cluster<T> getRootCluster() {
+    return rankedClusters.get(0);
   }
 }
