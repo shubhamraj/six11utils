@@ -1,4 +1,4 @@
-// $Id: BoundingBox.java 185 2011-11-04 20:18:32Z gabe.johnson@gmail.com $
+// $Id$
 
 package org.six11.util;
 
