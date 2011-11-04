@@ -29,15 +29,24 @@ public class Test {
       }
     };
     for (String v : args) {
-      bug(v);
       clusters.add(v);
     }
     clusters.computeClusters();
     double radius = clusters.getRadius();
     bug("Radius of whole thing: " + num(radius));
-    for (String v : args) {
-//      List<Cluster> x = clusters.search(v);
+    Cluster<String> root = clusters.getRootCluster();
+    report(root, 0);
+  }
+  
+  public static void report(Cluster<String> cluster, int indent) {
+    bug(Debug.spaces(indent) + " " + cluster.getCenter() + " (rank " + cluster.getRank() + ", radius: " + num(cluster.getRadius()) + ", members: " + cluster.getChildCount() + ")");
+    if (cluster.getChildA() != null) {
+      report(cluster.getChildA(), indent+1);
+    }
+    if (cluster.getChildB() != null) {
+      report(cluster.getChildB(), indent+1);
     }
   }
+  
 
 }
