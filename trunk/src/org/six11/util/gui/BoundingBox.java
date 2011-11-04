@@ -166,46 +166,56 @@ public class BoundingBox {
    * Forces the bounding box to include the extents of the given rectangle.
    */
   public void add(Rectangle2D rec) {
-    add(new Point2D.Double(rec.getX(), rec.getY()));
-    add(new Point2D.Double(rec.getX() + rec.getWidth(), rec.getY() + rec.getHeight()));
+    add(rec.getX(), rec.getY());
+    add(rec.getX() + rec.getWidth(), rec.getY() + rec.getHeight());
   }
 
   public void add(Rectangle2D rec, double padding) {
-    add(new Point2D.Double(rec.getX(), rec.getY()), padding);
-    add(new Point2D.Double(rec.getX() + rec.getWidth(), rec.getY() + rec.getHeight()), padding);
+    add(rec.getX(), rec.getY(), padding);
+    add(rec.getX() + rec.getWidth(), rec.getY() + rec.getHeight(), padding);
   }
 
   /**
    * Forces the bounding box to include points within the given padding distance of the provided
    * point (using manhattan block distance).
    */
+  public void add(double x, double y, double padding) {
+    add(x + padding, y + padding);
+    add(x - padding, y + padding);
+    add(x + padding, y - padding);
+    add(x - padding, y - padding);
+  }
+
   public void add(Point2D pt, double padding) {
-    add(new Point2D.Double(pt.getX() + padding, pt.getY() + padding));
-    add(new Point2D.Double(pt.getX() - padding, pt.getY() + padding));
-    add(new Point2D.Double(pt.getX() + padding, pt.getY() - padding));
-    add(new Point2D.Double(pt.getX() - padding, pt.getY() - padding));
+    add(pt.getX() + padding, pt.getY() + padding);
+    add(pt.getX() - padding, pt.getY() + padding);
+    add(pt.getX() + padding, pt.getY() - padding);
+    add(pt.getX() - padding, pt.getY() - padding);
   }
 
   /**
    * Forces the bounding box to include the following point.
    */
   public void add(Point2D pt) {
+    add(pt.getX(), pt.getY());
+  }
+
+  public void add(double x, double y) {
     if (!hasX) {
-      maxX = pt.getX();
+      maxX = x;
       minX = maxX;
       hasX = true;
     } else {
-      maxX = Math.max(maxX, pt.getX());
-      minX = Math.min(minX, pt.getX());
+      maxX = Math.max(maxX, x);
+      minX = Math.min(minX, x);
     }
-
     if (!hasY) {
-      maxY = pt.getY();
+      maxY = y;
       minY = maxY;
       hasY = true;
     } else {
-      maxY = Math.max(maxY, pt.getY());
-      minY = Math.min(minY, pt.getY());
+      maxY = Math.max(maxY, y);
+      minY = Math.min(minY, y);
     }
   }
 

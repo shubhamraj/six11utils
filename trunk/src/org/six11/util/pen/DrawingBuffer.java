@@ -197,6 +197,8 @@ public class DrawingBuffer {
           AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.DST_OVER);
           g.setComposite(alphaComposite);
           drawToGraphics(g);
+          //          bug("Drew buffer. bb: " + bb + " with img size: " + img.getWidth() + " x"
+          //              + img.getHeight() + " translated graphics by " + (-bb.getX()) + ", " + (-bb.getY()));
         }
       }
       dirty = false;
@@ -302,7 +304,7 @@ public class DrawingBuffer {
       g.transform(defaultXform);
       g.translate(bb.getX(), bb.getY());
       g.drawImage(getImage(), 1, 1, null); // I don't understand how this can be right. should be 0, 0... but it gives weird behavior
-//      Point2D newOrigin = g.getTransform().transform(new Pt(0, 0), null);
+      //      Point2D newOrigin = g.getTransform().transform(new Pt(0, 0), null);
     }
     g.setTransform(before);
   }
@@ -456,7 +458,7 @@ public class DrawingBuffer {
       boolean linearMovement = false;
       boolean circularMovement = false;
       boolean shapeMovement = false;
-
+      //      bug("go");
       if (myPenState != null) {
         if (myPenState.changeFilling) {
           // off -> on = add a new FilledRegion
@@ -522,15 +524,13 @@ public class DrawingBuffer {
         double x1, y1, x2, y2;
         x1 = xform.getTranslateX();
         y1 = xform.getTranslateY();
-        //bb.add(new Point2D.Double(x1, y1), (double) pen.thickness);
-        bb.add(new Point2D.Double(x1, y1));
+        bb.add(new Point2D.Double(x1, y1), (double) pen.thickness);
         if (pen.filling) {
           regions.get(regions.size() - 1).addPoint(x1, y1);
         }
         x2 = change.getTranslateX();
         y2 = change.getTranslateY();
-//        bb.add(new Point2D.Double(x2, y2), (double) pen.thickness);
-        bb.add(new Point2D.Double(x2, y2));
+        bb.add(new Point2D.Double(x2, y2), (double) pen.thickness);
         if (pen.filling) {
           regions.get(regions.size() - 1).addPoint(x2, y2);
         }
@@ -567,8 +567,7 @@ public class DrawingBuffer {
         } else { // shapeMovement!
           shape = arbitraryShape;
         }
-
-        bb.add(shape.getBounds2D());
+        bb.add(shape.getBounds2D(), pen.thickness);
         if (pen.filling) {
           regions.get(regions.size() - 1).addShape(shape);
         }
@@ -654,7 +653,7 @@ public class DrawingBuffer {
     }
   }
 
-  private static class FilledRegion {
+  private static class FilledRegion { // Note: Java now has an Area class that does a lot of the same stuff as this
 
     private Color color;
     private List<Object> points;
