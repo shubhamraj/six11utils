@@ -82,7 +82,7 @@ public class TestSolveUI {
   JComponent canvas;
   JDialog toolBox;
   JPanel editPane;
-  Main main;
+  ConstraintSolver main;
   Pt nearPt;
   Pt dragPt;
   Pt mousePt;
@@ -94,7 +94,7 @@ public class TestSolveUI {
   Preferences prefs;
 
   @SuppressWarnings("serial")
-  public TestSolveUI(Main m) {
+  public TestSolveUI(ConstraintSolver m) {
     try {
       prefs = Preferences.makePrefs("testSolver");
       bug("Loaded prefs: " + prefs.getPropertiesFile().getCanonicalPath());
