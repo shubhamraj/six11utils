@@ -73,7 +73,7 @@ public abstract class Constraint {
       bug("Warning: you are adding a correction vector to point " + pt.getString("name") + ", but it is pinned. Constraint type: " + getType());
     }
     @SuppressWarnings("unchecked")
-    List<Vec> corrections = (List<Vec>) pt.getAttribute(Main.ACCUM_CORRECTION);
+    List<Vec> corrections = (List<Vec>) pt.getAttribute(ConstraintSolver.ACCUM_CORRECTION);
     corrections.add(correction);
   }
   

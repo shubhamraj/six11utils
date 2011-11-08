@@ -16,7 +16,7 @@ import static org.six11.util.Debug.num;
 import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
-public class Main {
+public class ConstraintSolver {
 
   public static enum State {
     Solved, Unsatisfied, Working;
@@ -35,15 +35,14 @@ public class Main {
   private State currentState;
 
   public static void main(String[] in) throws Exception {
-    new Main(in);
+    new ConstraintSolver(in);
   }
 
-  public Main(String[] in) throws SecurityException, NoSuchMethodException {
+  public ConstraintSolver(String[] in) throws SecurityException, NoSuchMethodException {
     monitor = new Object();
     vars = new VariableBank();
     Arguments args = new Arguments();
     args.parseArguments(in);
-
     Debug.useColor = args.hasFlag("use-color");
     this.fps = 60;
     if (args.hasValue("fps")) {
