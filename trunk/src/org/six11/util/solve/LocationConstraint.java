@@ -98,4 +98,15 @@ public class LocationConstraint extends Constraint {
     target = vars.getPointWithName(obj.getString("target"));
   }
 
+  @Override
+  public boolean involves(Pt who) {
+    return (who == p || who == target);
+  }
+
+  @Override
+  public void replace(Pt oldPt, Pt newPt) {
+    if (oldPt == p) { p = newPt; }
+    if (oldPt == target) { target = newPt; }
+  }
+
 }

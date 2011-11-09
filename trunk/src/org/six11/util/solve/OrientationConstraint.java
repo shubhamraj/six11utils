@@ -170,4 +170,25 @@ public class OrientationConstraint extends Constraint {
     lineB2 = vars.getPointWithName(obj.getString("pB2"));
     angle = new NumericValue(obj.getDouble("angle"));
   }
+
+  @Override
+  public boolean involves(Pt who) {
+    return (who == lineA1 || who == lineA2 || who == lineB1 || who == lineB2);
+  }
+
+  @Override
+  public void replace(Pt oldPt, Pt newPt) {
+    if (oldPt == lineA1) {
+      lineA1 = newPt;
+    }
+    if (oldPt == lineA2) {
+      lineA2 = newPt;
+    }
+    if (oldPt == lineB1) {
+      lineB1 = newPt;
+    }
+    if (oldPt == lineB2) {
+      lineB2 = newPt;
+    }
+  }
 }

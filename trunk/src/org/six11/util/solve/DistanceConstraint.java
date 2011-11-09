@@ -125,4 +125,15 @@ public class DistanceConstraint extends Constraint {
     d = new NumericValue(obj.getDouble("dist"));
   }
 
+  @Override
+  public boolean involves(Pt who) {
+    return (who == a || who == b);
+  }
+
+  @Override
+  public void replace(Pt oldPt, Pt newPt) {
+    if (oldPt == a) { a = newPt; }
+    if (oldPt == b) { b = newPt; }
+  }
+
 }

@@ -169,4 +169,17 @@ public class AngleConstraint extends Constraint {
     angle = new NumericValue(obj.getDouble("angle"));
   }
 
+  @Override
+  public boolean involves(Pt who) {
+    return (who == a || who == b || who == f);
+  }
+
+  @Override
+  public void replace(Pt oldPt, Pt newPt) {
+    if (oldPt == a) { a = newPt; } 
+    if (oldPt == b) { b = newPt; }
+    if (oldPt == f) { f = newPt; }
+    
+  }
+
 }

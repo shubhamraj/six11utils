@@ -18,7 +18,7 @@ import static org.six11.util.Debug.num;
 public class PointOnLineConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
-  
+
   Pt a, b, m;
 
   public PointOnLineConstraint(Pt a, Pt b, Pt m) {
@@ -26,9 +26,9 @@ public class PointOnLineConstraint extends Constraint {
     this.b = b;
     this.m = m;
   }
-  
+
   public PointOnLineConstraint() {
-    
+
   }
 
   public String getType() {
@@ -67,10 +67,10 @@ public class PointOnLineConstraint extends Constraint {
 
   public static Manipulator getManipulator() {
     Manipulator man = new Manipulator(PointOnLineConstraint.class, "Point on Line", //
-        new Manipulator.Param("p1", "Point 1 (Line)", true),
-        new Manipulator.Param("p2", "Point 2 (Line)", true),
-        new Manipulator.Param("p3", "Point 3 (Target)", true));
-    return man;  }
+        new Manipulator.Param("p1", "Point 1 (Line)", true), new Manipulator.Param("p2",
+            "Point 2 (Line)", true), new Manipulator.Param("p3", "Point 3 (Target)", true));
+    return man;
+  }
 
   @Override
   public void assume(Manipulator man, VariableBank vars) {
@@ -99,11 +99,11 @@ public class PointOnLineConstraint extends Constraint {
     man.constraint = this;
     return man;
   }
-  
+
   public String getHumanDescriptionString() {
     return "PointAsLineParam " + name(a) + ", " + name(b) + ", " + name(m);
   }
-  
+
   public JSONObject toJson() throws JSONException {
     JSONObject ret = new JSONObject();
     ret.put("p1", a.getString("name"));
@@ -116,6 +116,24 @@ public class PointOnLineConstraint extends Constraint {
     a = vars.getPointWithName(obj.getString("p1"));
     b = vars.getPointWithName(obj.getString("p2"));
     m = vars.getPointWithName(obj.getString("p3"));
+  }
+
+  @Override
+  public boolean involves(Pt who) {
+    return (a == who || b == who || m == who);
+  }
+
+  @Override
+  public void replace(Pt oldPt, Pt newPt) {
+    if (a == oldPt) {
+      a = newPt;
+    }
+    if (b == oldPt) {
+      b = newPt;
+    }
+    if (m == oldPt) {
+      m = newPt;
+    }
   }
 
 }

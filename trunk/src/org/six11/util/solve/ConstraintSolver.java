@@ -18,6 +18,10 @@ import static java.lang.Math.sqrt;
 
 public class ConstraintSolver {
 
+  public static interface Listener {
+    public void constraintStepDone();
+  }
+  
   public static enum State {
     Solved, Unsatisfied, Working;
   }
@@ -25,7 +29,8 @@ public class ConstraintSolver {
   public static final String ACCUM_CORRECTION = "accumulated correction";
   private static final int MAX_ITERATION_N = 100;
   private static final double MIN_ITERATION_VARIATION = 0.01;
-  
+
+  private List<Listener> stepListeners;
   private TestSolveUI ui = null;
   protected String msg = null;
   private boolean finished = false;
@@ -38,24 +43,52 @@ public class ConstraintSolver {
     new ConstraintSolver(in);
   }
 
+  public ConstraintSolver() {
+    init();
+  }
+
   public ConstraintSolver(String[] in) throws SecurityException, NoSuchMethodException {
-    monitor = new Object();
-    vars = new VariableBank();
+    init();
     Arguments args = new Arguments();
     args.parseArguments(in);
     Debug.useColor = args.hasFlag("use-color");
-    this.fps = 60;
     if (args.hasValue("fps")) {
       this.fps = Integer.parseInt(args.getValue("fps"));
     }
-    Entropy.setSeed(System.currentTimeMillis());
-
     if (args.hasFlag("ui")) {
-      ui = new TestSolveUI(this);
+      createUI();
     }
     run();
   }
 
+  private final void init() {
+    this.monitor = new Object();
+    this.vars = new VariableBank();
+    this.fps = 60;
+    this.stepListeners = new ArrayList<Listener>();
+    Entropy.setSeed(System.currentTimeMillis());
+  }
+  
+  public void createUI() {
+    this.ui = new TestSolveUI(this);
+  }
+
+  public void addListener(Listener lis) {
+    if (!stepListeners.contains(lis)) {
+      stepListeners.add(lis);
+    }
+  }
+  
+  public void removeListener(Listener lis) {
+    stepListeners.remove(lis);
+  }
+  
+  protected void fire() {
+    for (Listener lis : stepListeners) {
+      lis.constraintStepDone();
+    }
+  }
+    
   public Pt mkRandomPoint(Component comp) {
     return mkRandomPoint(comp.getWidth(), comp.getHeight());
   }
@@ -63,6 +96,15 @@ public class ConstraintSolver {
   public Pt mkRandomPoint(int i, int j) {
     Entropy rand = Entropy.getEntropy();
     return new Pt(rand.getIntBetween(0, i), rand.getIntBetween(0, j));
+  }
+
+  public void runInBackground() {
+    Runnable runner = new Runnable() {
+      public void run() {
+        ConstraintSolver.this.run();
+      }
+    };
+    new Thread(runner).start();
   }
 
   void run() {
@@ -83,6 +125,7 @@ public class ConstraintSolver {
           if (finished) {
             errorStats.clear();
             prevError = Double.MAX_VALUE;
+            bug("nap...");
             monitor.wait();
           }
           double e = step();
@@ -171,6 +214,7 @@ public class ConstraintSolver {
       finished = true;
       currentState = State.Solved;
     }
+    fire();
     return totalError;
   }
 
@@ -178,11 +222,15 @@ public class ConstraintSolver {
     return vars.points;
   }
 
-  public void addPoint(String name, Pt pt) {
-    pt.setAttribute("name", name);
-    vars.points.add(pt);
-    if (ui != null) {
-      ui.modelChanged();
+  public synchronized void addPoint(String name, Pt pt) {
+    if (!vars.points.contains(pt)) {
+      pt.setAttribute("name", name);
+      vars.points.add(pt);
+      if (ui != null) {
+        ui.modelChanged();
+      }
+    } else {
+      bug("Not adding duplicate point: " + pt.getString("name"));
     }
   }
 
@@ -211,5 +259,20 @@ public class ConstraintSolver {
 
   public State getSolutionState() {
     return currentState;
+  }
+
+  public void replacePoint(Pt oldPt, String name, Pt newPt) {
+    vars.points.remove(oldPt);
+    addPoint(name, newPt);
+    if (newPt.getString("name") == null) {
+      Debug.stacktrace("point has no name", 6);
+    }
+    bug("Replacing " + oldPt.getString("name") + " with " + newPt.getString("name"));
+    for (Constraint c : vars.constraints) {
+      if (c.involves(oldPt)) {
+        c.replace(oldPt, newPt);
+      }
+    }
+    wakeUp();
   }
 }
