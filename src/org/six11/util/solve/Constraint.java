@@ -94,5 +94,8 @@ public abstract class Constraint {
   protected String deg(double v) {
     return num(toDegrees(v));
   }
+  
+  public abstract boolean involves(Pt who);
 
+  public abstract void replace(Pt oldPt, Pt newPt);
 }

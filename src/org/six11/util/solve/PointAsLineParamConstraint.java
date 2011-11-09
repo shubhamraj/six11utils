@@ -129,4 +129,22 @@ public class PointAsLineParamConstraint extends Constraint {
     target = vars.getPointWithName(obj.getString("target"));
     dist = new NumericValue(obj.getDouble("dist"));
   }
+
+  @Override
+  public boolean involves(Pt who) {
+    return (who == lineA || who == lineB || who == target);
+  }
+
+  @Override
+  public void replace(Pt oldPt, Pt newPt) {
+    if (oldPt == lineA) {
+      lineA = newPt;
+    }
+    if (oldPt == lineB) {
+      lineB = newPt;
+    }
+    if (oldPt == target) {
+      target = newPt;
+    }
+  }
 }

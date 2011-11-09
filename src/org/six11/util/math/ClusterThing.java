@@ -11,6 +11,7 @@ import java.util.Stack;
 
 import static java.lang.Math.abs;
 import static org.six11.util.Debug.num;
+import static org.six11.util.Debug.bug;
 
 public abstract class ClusterThing<T> {
 
@@ -68,6 +69,10 @@ public abstract class ClusterThing<T> {
     
     public String toString() {
       return "Cluster[center=" + num(center) + ", exemplar=" + num(ct.query(exemplar)) + ", radius=" + num(radius) + "]";
+    }
+    
+    public double getMinMaxRatio() {
+      return ct.query(minimum) / ct.query(maximum);
     }
 
     public int getRank() {
@@ -179,13 +184,22 @@ public abstract class ClusterThing<T> {
       return ret;
     };
   };
+  
+  public ClusterFilter<T> getRatioFilter(final double threshold) {
+    return new ClusterFilter<T>() {
+      public boolean accepts(Cluster<T> cluster) {
+        bug("Ratio: " + num(cluster.getMinMaxRatio()));
+        return cluster.getMinMaxRatio() > threshold;
+      }
+    };
+  }
 
   public ClusterThing() {
     samples = new HashSet<T>();
     rankedClusters = new ArrayList<Cluster<T>>();
   }
 
-  public abstract double query(T t);
+  public abstract double query(T minimum);
 
   public void add(T s) {
     samples.add(s);
