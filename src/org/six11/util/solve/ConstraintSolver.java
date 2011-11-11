@@ -229,8 +229,6 @@ public class ConstraintSolver {
       if (ui != null) {
         ui.modelChanged();
       }
-    } else {
-      bug("Not adding duplicate point: " + pt.getString("name"));
     }
   }
 
@@ -267,7 +265,6 @@ public class ConstraintSolver {
     if (newPt.getString("name") == null) {
       Debug.stacktrace("point has no name", 6);
     }
-    bug("Replacing " + oldPt.getString("name") + " with " + newPt.getString("name"));
     for (Constraint c : vars.constraints) {
       if (c.involves(oldPt)) {
         c.replace(oldPt, newPt);

@@ -188,7 +188,6 @@ public abstract class ClusterThing<T> {
   public ClusterFilter<T> getRatioFilter(final double threshold) {
     return new ClusterFilter<T>() {
       public boolean accepts(Cluster<T> cluster) {
-        bug("Ratio: " + num(cluster.getMinMaxRatio()));
         return cluster.getMinMaxRatio() > threshold;
       }
     };
