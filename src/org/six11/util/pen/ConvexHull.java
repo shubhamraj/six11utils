@@ -2,6 +2,9 @@
 
 package org.six11.util.pen;
 
+import java.awt.Shape;
+import java.awt.geom.GeneralPath;
+import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -10,23 +13,76 @@ import java.util.ArrayList;
  **/
 public class ConvexHull {
 
+  protected List<Pt> input;
   protected List<Pt> points;
   protected List<Pt> pointsClosed;
   protected List<Pt> rotatedRect;
   protected double rotatedRectArea;
   protected Pt convexCentroid;
   protected double convexArea;
+  protected GeneralPath hullShape;
+  protected boolean dirty = true;
 
   public ConvexHull(List<Pt> input) {
-    points = Functions.getConvexHull(input);
+    reset();
+    this.input = input;
+    calculate();
+  }
+
+  public ConvexHull() {
+    this.input = new ArrayList<Pt>();
+  }
+
+  public final void calculate() {
+    if (dirty) {
+      points = Functions.getConvexHull(input);
+      dirty = false;
+    }
+  }
+
+  private final void reset() {
+    pointsClosed = null;
     rotatedRect = null;
     rotatedRectArea = -1.0;
     convexCentroid = null;
     convexArea = -1.0;
+    hullShape = null;
+    dirty = true;
+  }
+
+  public void addPoints(Pt... pts) {
+    reset();
+    for (Pt pt : pts) {
+      input.add(pt);
+    }
+  }
+
+  public void addPoints(Collection<Pt> pts) {
+    reset();
+    for (Pt pt : pts) {
+      input.add(pt);
+    }
   }
 
   public List<Pt> getHull() {
+    calculate(); 
     return points;
+  }
+
+  public Shape getHullShape() {
+    calculate();
+    if (hullShape == null) {
+      hullShape = new GeneralPath();
+      for (int i = 0; i < points.size(); i++) {
+        Pt pt = points.get(i);
+        if (i == 0) {
+          hullShape.moveTo(pt.getX(), pt.getY());
+        } else {
+          hullShape.lineTo(pt.getX(), pt.getY());
+        }
+      }
+    }
+    return hullShape;
   }
 
   /**
@@ -34,6 +90,7 @@ public class ConvexHull {
    * drawing.
    */
   public List<Pt> getHullClosed() {
+    calculate();
     if (pointsClosed == null) {
       pointsClosed = new ArrayList<Pt>(points);
       pointsClosed.add(points.get(0));
@@ -42,6 +99,7 @@ public class ConvexHull {
   }
 
   public List<Pt> getRotatedRect() {
+    calculate();
     if (rotatedRect == null) {
       // Antipodal anti = new Antipodal(points);
       Antipodal anti = new Antipodal(points);
@@ -51,6 +109,7 @@ public class ConvexHull {
   }
 
   public double getRotatedRectArea() {
+    calculate();
     if (rotatedRectArea < 0.0) {
       List<Pt> rect = getRotatedRect();
       double distA = Functions.getDistanceBetween(rect.get(0), rect.get(1));
@@ -61,6 +120,7 @@ public class ConvexHull {
   }
 
   public Pt getConvexCentroid() {
+    calculate();
     if (convexCentroid == null) {
       calcCentroidAndArea();
     }
@@ -68,6 +128,7 @@ public class ConvexHull {
   }
 
   public double getConvexArea() {
+    calculate();
     if (convexArea < 0.0) {
       calcCentroidAndArea();
     }
@@ -75,6 +136,7 @@ public class ConvexHull {
   }
 
   private void calcCentroidAndArea() {
+    calculate();
     List<Pt> rect = getRotatedRect();
     Pt m = Functions.getMean(rect); // the mean of the rect.
     List<Pt> c = new ArrayList<Pt>(); // triangle centroids

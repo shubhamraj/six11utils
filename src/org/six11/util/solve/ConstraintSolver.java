@@ -2,7 +2,10 @@ package org.six11.util.solve;
 
 import java.awt.Component;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.six11.util.Debug;
 import org.six11.util.args.Arguments;
@@ -21,7 +24,7 @@ public class ConstraintSolver {
   public static interface Listener {
     public void constraintStepDone();
   }
-  
+
   public static enum State {
     Solved, Unsatisfied, Working;
   }
@@ -68,7 +71,7 @@ public class ConstraintSolver {
     this.stepListeners = new ArrayList<Listener>();
     Entropy.setSeed(System.currentTimeMillis());
   }
-  
+
   public void createUI() {
     this.ui = new TestSolveUI(this);
   }
@@ -78,17 +81,17 @@ public class ConstraintSolver {
       stepListeners.add(lis);
     }
   }
-  
+
   public void removeListener(Listener lis) {
     stepListeners.remove(lis);
   }
-  
+
   protected void fire() {
     for (Listener lis : stepListeners) {
       lis.constraintStepDone();
     }
   }
-    
+
   public Pt mkRandomPoint(Component comp) {
     return mkRandomPoint(comp.getWidth(), comp.getHeight());
   }
@@ -173,48 +176,53 @@ public class ConstraintSolver {
 
   @SuppressWarnings("unchecked")
   private double step() {
+
     double totalError = 0;
-    // 1: clear any current correction values
-    for (Pt pt : vars.points) {
+    try {
+      // 1: clear any current correction values
+      for (Pt pt : vars.points) {
 
-      List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
-      if (corrections == null) {
-        pt.setAttribute(ACCUM_CORRECTION, new ArrayList<Vec>());
-        corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
+        List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
+        if (corrections == null) {
+          pt.setAttribute(ACCUM_CORRECTION, new ArrayList<Vec>());
+          corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
+        }
+        corrections.clear();
       }
-      corrections.clear();
-    }
 
-    // 2: poll all constraints and have them add correction vectors to each point
-    for (Constraint c : vars.constraints) {
-      c.clearMessages();
-      c.accumulateCorrection();
-    }
-
-    // 3: now all points have some accumulated correction. sum them and update the point's location.
-    int numFinished = 0;
-    for (Pt pt : vars.points) {
-      List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
-      pt.setBoolean("stable", corrections.size() == 0);
-      if (corrections.size() == 0) {
-        numFinished = numFinished + 1;
+      // 2: poll all constraints and have them add correction vectors to each point
+      for (Constraint c : vars.constraints) {
+        c.clearMessages();
+        c.accumulateCorrection();
       }
-      Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
-      double mag = delta.mag();
-      totalError = totalError + mag;
-      if (mag > 1.0) {
-        pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
-      } else if (mag > 0.0) {
-        if (Entropy.getEntropy().getBoolean()) {
-          pt.move(delta);
+
+      // 3: now all points have some accumulated correction. sum them and update the point's location.
+      int numFinished = 0;
+      for (Pt pt : vars.points) {
+        List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
+        pt.setBoolean("stable", corrections.size() == 0);
+        if (corrections.size() == 0) {
+          numFinished = numFinished + 1;
+        }
+        Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
+        double mag = delta.mag();
+        totalError = totalError + mag;
+        if (mag > 1.0) {
+          pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
+        } else if (mag > 0.0) {
+          if (Entropy.getEntropy().getBoolean()) {
+            pt.move(delta);
+          }
         }
       }
+      if (numFinished == vars.points.size()) {
+        finished = true;
+        currentState = State.Solved;
+      }
+      fire();
+    } catch (ConcurrentModificationException ex) {
+      
     }
-    if (numFinished == vars.points.size()) {
-      finished = true;
-      currentState = State.Solved;
-    }
-    fire();
     return totalError;
   }
 
@@ -258,6 +266,18 @@ public class ConstraintSolver {
   public State getSolutionState() {
     return currentState;
   }
+  
+  public void removePoint(Pt doomed) {
+    vars.points.remove(doomed);
+    Set<Constraint> doomedConstraints = new HashSet<Constraint>();
+    for (Constraint c : vars.constraints) {
+      if (c.involves(doomed)) {
+        doomedConstraints.add(c);
+      }
+    }
+    vars.constraints.removeAll(doomedConstraints);
+    wakeUp();
+  }
 
   public void replacePoint(Pt oldPt, String name, Pt newPt) {
     vars.points.remove(oldPt);
@@ -271,5 +291,9 @@ public class ConstraintSolver {
       }
     }
     wakeUp();
+  }
+
+  public void clearConstraints() {
+    vars.clear();
   }
 }
