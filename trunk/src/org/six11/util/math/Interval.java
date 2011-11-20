@@ -61,5 +61,9 @@ public class Interval {
   public double getSize() {
     return b - a;
   }
+  
+  public boolean contains(double value) {
+    return (a <= value && value <= b);
+  }
 
 }
