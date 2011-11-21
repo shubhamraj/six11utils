@@ -4,6 +4,7 @@ package org.six11.util.math;
 
 import static org.six11.util.data.Statistics.maximum;
 import static org.six11.util.data.Statistics.minimum;
+import static org.six11.util.Debug.num;
 import static java.lang.Math.min;
 import static java.lang.Math.max;
 
@@ -64,6 +65,10 @@ public class Interval {
   
   public boolean contains(double value) {
     return (a <= value && value <= b);
+  }
+  
+  public String toString() {
+    return num(a) + " to " + num(b);
   }
 
 }
