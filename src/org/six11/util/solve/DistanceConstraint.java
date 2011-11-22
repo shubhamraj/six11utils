@@ -136,4 +136,8 @@ public class DistanceConstraint extends Constraint {
     if (oldPt == b) { b = newPt; }
   }
 
+  public NumericValue getValue() {
+    return d;
+  }
+  
 }
