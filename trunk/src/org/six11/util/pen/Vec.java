@@ -139,4 +139,5 @@ public class Vec {
     boolean ySame = Functions.eq(getY(), dir.getY(), Functions.EQ_TOL);
     return xSame && ySame;
   }
+
 }

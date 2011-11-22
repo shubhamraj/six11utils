@@ -21,7 +21,7 @@ public abstract class Lists {
       list.set(list.size() - 1, obj);
     }
   }
-
+  
   public static boolean isLast(List<?> list, Object obj) {
     return (list.size() > 0 && getLast(list).equals(obj));
   }

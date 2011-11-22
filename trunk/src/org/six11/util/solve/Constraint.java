@@ -15,9 +15,18 @@ import static org.six11.util.Debug.num;
 public abstract class Constraint {
   
   StringBuffer messages;
+  protected String secretName;
     
   public Constraint() {
     this.messages = new StringBuffer();
+  }
+  
+  public String getSecretName() {
+    return secretName;
+  }
+  
+  public void setSecretName(String val) {
+    this.secretName = val;
   }
   
   public void addMessage(String msg) {
@@ -98,4 +107,5 @@ public abstract class Constraint {
   public abstract boolean involves(Pt who);
 
   public abstract void replace(Pt oldPt, Pt newPt);
+
 }

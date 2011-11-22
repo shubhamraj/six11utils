@@ -1,24 +1,37 @@
 package org.six11.util.solve;
 
 import static org.six11.util.Debug.num;
+
 public class NumericValue {
 
+  private int numValues;
   private double val;
   String variableName;
 
-  public NumericValue(double val) {
-    this.val = val;
-    this.variableName = null;
+  public NumericValue(double... vals) {
+    for (double v : vals) {
+      addValue(v);
+    }
+  }
+  
+  public void setValue(double v) {
+    val = v;
+    numValues = 1;
+  }
+
+  public void addValue(double v) {
+    numValues++;
+    val = (val + v);
   }
   
   public void setVariableName(String n) {
     this.variableName = n;
   }
-  
+
   public String getVariableName() {
     return variableName;
   }
-  
+
   public String toString() {
     String ret = variableName;
     if (ret == null) {
@@ -26,8 +39,8 @@ public class NumericValue {
     }
     return ret;
   }
-  
+
   public double getValue() {
-    return val;
+    return val / (double) numValues;
   }
 }
