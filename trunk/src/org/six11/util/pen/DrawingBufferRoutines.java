@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -538,6 +539,28 @@ public abstract class DrawingBufferRoutines {
       System.out.println("   Pt " + rp.getID() + " at " + Debug.num(rp));
     }
     System.out.println("-------------------------------------------------------------------------");
+  }
+
+  public static void acuteHash(DrawingBuffer buf, Pt mid, Vec refDir, double length, double thickness, Color color) {
+    Pt tip = mid.getTranslated(refDir, length / 2);
+    AffineTransform xform = Functions.getRotationInstance(mid, Math.toRadians(45));
+    Pt tip2 = new Pt();
+    xform.transform(tip, tip2);
+    Vec toOtherTip = new Vec(mid, tip2).getFlip();
+    Pt otherTip = mid.getTranslated(toOtherTip.getX(), toOtherTip.getY());
+    line(buf, tip2, otherTip, color, thickness);
+//    double length = start.distance(tip);
+//    double headLength = length / 10.0;
+//    Vec tipToStart = new Vec(tip, start).getVectorOfMagnitude(headLength);
+//    Pt cross = tip.getTranslated(tipToStart.getX(), tipToStart.getY());
+//    Vec outward = tipToStart.getNormal();
+//    Pt head1 = cross.getTranslated(outward.getX(), outward.getY());
+//    outward = outward.getFlip();
+//    Pt head2 = cross.getTranslated(outward.getX(), outward.getY());
+//    line(db, new Line(start, tip), color, thick);
+//    line(db, new Line(head1, tip), color, thick);
+//    line(db, new Line(head2, tip), color, thick);
+
   }
 
 }
