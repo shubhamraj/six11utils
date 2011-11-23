@@ -220,8 +220,8 @@ public class ConstraintSolver {
         currentState = State.Solved;
       }
       fire();
-    } catch (ConcurrentModificationException ex) {
-      
+    } catch (Exception ex) {
+      // and they say I have a software engineering background.
     }
     return totalError;
   }
@@ -266,7 +266,7 @@ public class ConstraintSolver {
   public State getSolutionState() {
     return currentState;
   }
-  
+
   public void removePoint(Pt doomed) {
     vars.points.remove(doomed);
     Set<Constraint> doomedConstraints = new HashSet<Constraint>();
