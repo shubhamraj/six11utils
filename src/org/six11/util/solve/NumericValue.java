@@ -6,7 +6,7 @@ public class NumericValue {
 
   private int numValues;
   private double val;
-  String variableName;
+  protected String variableName;
 
   public NumericValue(double... vals) {
     for (double v : vals) {
@@ -22,6 +22,10 @@ public class NumericValue {
   public void addValue(double v) {
     numValues++;
     val = (val + v);
+  }
+  
+  public double getValue() {
+    return val / (double) numValues;
   }
   
   public void setVariableName(String n) {
@@ -40,7 +44,5 @@ public class NumericValue {
     return ret;
   }
 
-  public double getValue() {
-    return val / (double) numValues;
-  }
+  
 }
