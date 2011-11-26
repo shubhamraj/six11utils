@@ -112,6 +112,10 @@ public class Colors {
   public Color get(String name) {
     return vals.get(name);
   }
+  
+  public void set(String name, Color color) {
+    vals.put(name, color);
+  }
 
   public static Colors getNamed(String name) {
     return named.get(name);
