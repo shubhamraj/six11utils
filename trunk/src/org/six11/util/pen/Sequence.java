@@ -52,14 +52,14 @@ public class Sequence implements Shape, Iterable<Pt> {
     attributes = new HashMap<String, Object>();
     ID_COUNTER = Math.max(ID_COUNTER, id);
   }
-  
+
   public Sequence(List<Pt> data) {
     this();
     for (Pt pt : data) {
       add(pt);
     }
   }
-  
+
   /**
    * Returns true if the sequence is nondecreasing in time.
    */
@@ -744,8 +744,34 @@ public class Sequence implements Shape, Iterable<Pt> {
 
   public Sequence getReverseSequence() {
     Sequence ret = new Sequence();
-    for (int i=points.size() - 1; i >= 0; i--){ 
+    for (int i = points.size() - 1; i >= 0; i--) {
       ret.add(points.get(i));
+    }
+    return ret;
+  }
+
+  /**
+   * Returns a rough downsample of the input sequence. The returned list of points are at least d
+   * units apart along the sequence, except for the last one, which might be close to penultimate
+   * point.
+   */
+  public List<Pt> getDownsample(double d) {
+    List<Pt> ret = new ArrayList<Pt>();
+    Pt cursor = null;
+    double distSinceLast = 0;
+    for (Pt pt : points) {
+      if (cursor != null) {
+        double thisDist = cursor.distance(pt);
+        distSinceLast = distSinceLast + thisDist;
+        if (distSinceLast > d) {
+          ret.add(pt);
+          distSinceLast = 0;
+        }
+      }
+      cursor = pt;
+    }
+    if (ret.get(ret.size() - 1) != cursor) {
+      ret.add(cursor);
     }
     return ret;
   }
