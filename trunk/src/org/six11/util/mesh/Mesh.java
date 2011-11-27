@@ -76,11 +76,6 @@ public class Mesh {
         db.addText(msg, Color.BLACK, DrawingBufferRoutines.defaultFont);
       }
       DrawingBufferRoutines.meshDebug(db, mesh);
-//      try {
-//        Main.savePDF(db, new File(outDir, baseName + (fileCounter++) + ".pdf"));
-//      } catch (FileNotFoundException ex) {
-//        ex.printStackTrace();
-//      }
     }
   }
 
@@ -172,6 +167,7 @@ public class Mesh {
    * Classify each triangle as Where.Inside or Where.Outside.
    */
   public void classifyTriangles() {
+    bug("classifying triangles on mesh that is " + (dirty ? "dirty" : "clean"));
     if (dirty) {
       Stack<Triangle> infinite = new Stack<Triangle>();
       for (Triangle t : triangles) {
@@ -180,6 +176,8 @@ public class Mesh {
           infinite.push(t);
         }
       }
+      bug("Initialized all triangles to Unknown. I have " + infinite.size()
+          + " infinite triangles.");
       classifyTriangles(infinite);
       for (Triangle t : triangles) {
         if (t.getMeshLocation() == Where.Unknown) {
@@ -192,13 +190,17 @@ public class Mesh {
 
   private void classifyTriangles(Stack<Triangle> uncategorized) {
     if (!uncategorized.isEmpty()) {
+      String sp = Debug.spaces(uncategorized.size() * 2);
       Triangle classifyMe = uncategorized.pop();
       classifyMe.setLocation(Where.Outside);
       Set<Triangle> neighbors = classifyMe.getAdjacentTriangles();
+      bug(sp + classifyMe.id + " has " + neighbors.size() + " neighbors...");
       for (Triangle n : neighbors) {
         if (n.getMeshLocation() == Where.Unknown) {
           HalfEdge common = classifyMe.getCommonEdge(n);
           if (common != null) {
+            bug(sp + "common edge is non-null between " + classifyMe.id + " and " + n.id
+                + ". Is it a boundary? " + common.isBoundary());
             if (!common.isBoundary()) {
               uncategorized.push(n);
             }
@@ -622,17 +624,17 @@ public class Mesh {
     }
   }
 
-//  private Set<HalfEdge> findBoundaryEdges(HalfEdge... eds) {
-//    Set<HalfEdge> bounds = new HashSet<HalfEdge>();
-//    for (HalfEdge ed : eds) {
-//      if (ed.isBoundary()) {
-//        // bug("Boundary edge: " + ed.getPair().getPoint().getID() + " -> " +
-//        // ed.getPoint().getID());
-//        bounds.add(ed);
-//      }
-//    }
-//    return bounds;
-//  }
+  //  private Set<HalfEdge> findBoundaryEdges(HalfEdge... eds) {
+  //    Set<HalfEdge> bounds = new HashSet<HalfEdge>();
+  //    for (HalfEdge ed : eds) {
+  //      if (ed.isBoundary()) {
+  //        // bug("Boundary edge: " + ed.getPair().getPoint().getID() + " -> " +
+  //        // ed.getPoint().getID());
+  //        bounds.add(ed);
+  //      }
+  //    }
+  //    return bounds;
+  //  }
 
   // /**
   // * returns true if one triangle is Inside, and the other is Outside.

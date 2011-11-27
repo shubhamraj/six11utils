@@ -128,7 +128,6 @@ public class ConstraintSolver {
           if (finished) {
             errorStats.clear();
             prevError = Double.MAX_VALUE;
-            bug("nap...");
             monitor.wait();
           }
           double e = step();
