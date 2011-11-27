@@ -24,6 +24,9 @@ import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.Sequence;
 import org.six11.util.pen.Vec;
+import static org.six11.util.Debug.num;
+import static org.six11.util.Debug.bug;
+
 
 /**
  * A collection of drawing routines for DrawingBuffer instances.
@@ -93,10 +96,6 @@ public abstract class DrawingBufferRoutines {
       }
     }
     db.up();
-  }
-
-  public static void bug(String what) {
-    Debug.out("DrawingBufferRoutines", what);
   }
 
   public static void line(DrawingBuffer db, Pt start, Pt end, Color color, double thick) {
@@ -438,6 +437,7 @@ public abstract class DrawingBufferRoutines {
     Set<Triangle> triangles = mesh.getTriangles();
     List<Line> boundary = new ArrayList<Line>(); // NOT IN ORDER
     for (Triangle t : triangles) {
+      bug("triangle location: " + t.getMeshLocation());
       HalfEdge he = t.getEdge();
       if (he.isBoundary() && he.getPoint().getID() < he.getPair().getPoint().getID()) {
         boundary.add(new Line(he.getPoint(), he.getPair().getPoint()));
@@ -451,7 +451,9 @@ public abstract class DrawingBufferRoutines {
         boundary.add(new Line(he.getPoint(), he.getPair().getPoint()));
       }
     }
+    bug("There are " + boundary.size() + " boundary lines for this mesh.");
     for (Line line : boundary) {
+      bug("mesh boundary from " + num(line));
       DrawingBufferRoutines.line(db, line, color, thick);
     }
   }

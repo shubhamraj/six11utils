@@ -297,5 +297,16 @@ public abstract class ShapeFactory {
     }
     return ret;
   }
+  
+  public static List<Pt> makePointList(PathIterator iter) {
+    List<Pt> ret = new ArrayList<Pt>();
+    double[] coords = new double[6];
+    while(!iter.isDone()) {
+      iter.currentSegment(coords);
+      ret.add(new Pt(coords[0], coords[1]));
+      iter.next();
+    }
+    return ret;
+  }
 
 }

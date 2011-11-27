@@ -125,7 +125,7 @@ public class Colors {
     named.put(name, colors);
   }
 
-  protected static Color getRandomLightColor() {
+  public static Color getRandomLightColor() {
     if (rand == null) {
       rand = new Random(System.currentTimeMillis());
     }
