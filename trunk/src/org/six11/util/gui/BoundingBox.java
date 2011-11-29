@@ -44,6 +44,10 @@ public class BoundingBox {
     return ret;
   }
 
+  public void translate(Pt amt) {
+    translate(amt.getX(), amt.getY());
+  }
+  
   public void translate(double dx, double dy) {
     minX = minX + dx;
     maxX = maxX + dx;
@@ -251,6 +255,26 @@ public class BoundingBox {
 
   public void bug(String what) {
     Debug.out("BoundingBox", what);
+  }
+
+  public Pt getTopRight() {
+    return new Pt(minY, maxX);
+  }
+
+  public Pt getBotRight() {
+    return new Pt(maxY, maxX);
+  }
+
+  public Pt getTopLeft() {
+    return new Pt(minY, minX);
+  }
+  
+  public Pt getBotLeft() {
+    return new Pt(maxY, minX);
+  }
+
+  public void translateToOrigin() {
+    translate(-minX, -minY);
   }
 
 }
