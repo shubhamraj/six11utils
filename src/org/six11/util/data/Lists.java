@@ -3,12 +3,24 @@
 package org.six11.util.data;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * 
  **/
 public abstract class Lists {
+  
+  public static boolean hasOverlap(Collection<?> bunchA, Collection<?> bunchB) {
+    boolean ret = false;
+    for (Object t : bunchA) {
+      if (bunchB.contains(t)) {
+        ret = true;
+        break;
+      }
+    }
+    return ret;
+  }
 
   public static Object getLast(List<?> list) {
     return list.get(list.size() - 1);

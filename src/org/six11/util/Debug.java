@@ -261,6 +261,18 @@ public class Debug {
     return num(l, separator);
   }
 
+  public static String num(Map<?, ?> map) {
+    StringBuilder buf = new StringBuilder();
+    buf.append("{");
+    for (Map.Entry<?, ?> entry : map.entrySet()) {
+      buf.append(" [" + entry.getKey());
+      buf.append(" = ");
+      buf.append(entry.getValue() + "] ");
+    }
+    buf.append(" }");
+    return buf.toString();
+  }
+  
   public static String num(Collection<?> col, String separator) {
     boolean first = true;
     StringBuffer buf = new StringBuffer();
