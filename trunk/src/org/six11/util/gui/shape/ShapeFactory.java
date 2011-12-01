@@ -84,6 +84,11 @@ public abstract class ShapeFactory {
       return center != null;
     }
   }
+  
+  public static Rectangle2D getTranslated(Rectangle2D source, double dx, double dy) {
+    Rectangle2D ret = new Rectangle2D.Double(source.getMinX() + dx, source.getMinY() + dx, source.getWidth(), source.getHeight());
+    return ret;
+  }
 
   public static class RotatedEllipseShape implements Shape {
 

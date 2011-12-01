@@ -33,6 +33,11 @@ public class BoundingBox {
     }
   }
 
+  public BoundingBox(Rectangle2D rect) {
+    add(rect.getMinX(), rect.getMinY());
+    add(rect.getMaxX(), rect.getMaxY());
+  }
+
   public BoundingBox copy() {
     BoundingBox ret = new BoundingBox();
     ret.hasX = hasX;
