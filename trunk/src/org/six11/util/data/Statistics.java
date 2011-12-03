@@ -197,4 +197,23 @@ public class Statistics {
     return ret;
   }
 
+  public void printDebug() {
+//    private double average;
+//    private double sum;
+//    private double variance;
+//    private double variation;
+//    private double min;
+//    private double max;
+//    private double median;
+    System.out.println("        n: " + getN());
+    System.out.println("  average: " + getMean());
+    System.out.println("      sum: " + getSum());
+    System.out.println(" variance: " + getVariance());
+    System.out.println("variation: " + getVariation());
+    System.out.println("      min: " + getMin());
+    System.out.println("      max: " + getMax());
+    System.out.println("   median: " + getMedian());
+    System.out.println("  std_dev: " + getStdDev());
+  }
+
 }

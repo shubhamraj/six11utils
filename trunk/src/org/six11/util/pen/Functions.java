@@ -5,6 +5,7 @@ package org.six11.util.pen;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.AffineTransform;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -152,7 +153,7 @@ public abstract class Functions {
   /**
    * This returns the centroid of a point cloud.
    */
-  public static Pt getMean(List<Pt> points) {
+  public static Pt getMean(Collection<Pt> points) {
     double sumX = 0.0;
     double sumY = 0.0;
     for (Pt pt : points) {

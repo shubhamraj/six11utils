@@ -19,6 +19,8 @@ import org.six11.util.pen.IntersectionData;
 import org.six11.util.pen.Line;
 import org.six11.util.pen.Pt;
 import org.six11.util.pen.RotatedEllipse;
+import org.six11.util.pen.Vec;
+
 import static org.six11.util.Debug.bug;
 
 /**
@@ -84,9 +86,10 @@ public abstract class ShapeFactory {
       return center != null;
     }
   }
-  
+
   public static Rectangle2D getTranslated(Rectangle2D source, double dx, double dy) {
-    Rectangle2D ret = new Rectangle2D.Double(source.getMinX() + dx, source.getMinY() + dx, source.getWidth(), source.getHeight());
+    Rectangle2D ret = new Rectangle2D.Double(source.getMinX() + dx, source.getMinY() + dx,
+        source.getWidth(), source.getHeight());
     return ret;
   }
 
@@ -302,16 +305,47 @@ public abstract class ShapeFactory {
     }
     return ret;
   }
-  
+
   public static List<Pt> makePointList(PathIterator iter) {
     List<Pt> ret = new ArrayList<Pt>();
     double[] coords = new double[6];
-    while(!iter.isDone()) {
+    while (!iter.isDone()) {
       iter.currentSegment(coords);
       ret.add(new Pt(coords[0], coords[1]));
       iter.next();
     }
     return ret;
+  }
+
+  public static Rectangle2D getFuzzyRectangle(Point2D pt, double fuzzyFactor) {
+    double f2 = fuzzyFactor / 2;
+    double tlx = pt.getX() - f2;
+    double tly = pt.getY() - f2;
+    Rectangle2D ret = new Rectangle2D.Double(tlx, tly, fuzzyFactor, fuzzyFactor);
+    return ret;
+  }
+
+  /**
+   * Returns a rotated rectangle, where the boundary is 'fuzzyFactor' units away from the line
+   * defined by points a and b.
+   * 
+   * @param a
+   * @param b
+   * @param fuzzyFactor
+   * @return
+   */
+  public static Shape getFuzzyRectangle(Pt a, Pt b, double fuzzyFactor) {
+    Vec aToB = new Vec(a, b);
+    Vec fuz = aToB.getVectorOfMagnitude(fuzzyFactor);
+    Vec fuzFlip = fuz.getFlip();
+    Vec fuzNorm = fuz.getNormal();
+    Vec fuzNormFlip = fuzNorm.getFlip();
+    List<Pt> corners = new ArrayList<Pt>();
+    corners.add(a.getTranslated(fuzFlip.getX() + fuzNorm.getX(), fuzFlip.getY() + fuzNorm.getY())); 
+    corners.add(a.getTranslated(fuzFlip.getX() + fuzNormFlip.getX(), fuzFlip.getY() + fuzNormFlip.getY()));
+    corners.add(b.getTranslated(fuz.getX() + fuzNormFlip.getX(), fuz.getY() + fuzNormFlip.getY()));
+    corners.add(b.getTranslated(fuz.getX() + fuzNorm.getX(), fuz.getY() + fuzNorm.getY()));
+    return makeLinePath(corners, true);
   }
 
 }
