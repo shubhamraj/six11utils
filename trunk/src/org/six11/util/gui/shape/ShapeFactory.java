@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
+import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
@@ -322,6 +323,14 @@ public abstract class ShapeFactory {
     double tlx = pt.getX() - f2;
     double tly = pt.getY() - f2;
     Rectangle2D ret = new Rectangle2D.Double(tlx, tly, fuzzyFactor, fuzzyFactor);
+    return ret;
+  }
+  
+  public static Area getFuzzyArea(List<Pt> points, double fuzzyFactor) {
+    Area ret = new Area();
+    for (int i=0; i < points.size() - 1; i++) {
+      ret.add(new Area(getFuzzyRectangle(points.get(i), points.get(i+1), fuzzyFactor)));
+    }
     return ret;
   }
 
