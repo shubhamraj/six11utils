@@ -248,9 +248,11 @@ public class ConstraintSolver {
   }
 
   public void addConstraint(Constraint c) {
-    vars.constraints.add(c);
-    if (ui != null) {
-      ui.modelChanged();
+    if (!vars.constraints.contains(c)) {
+      vars.constraints.add(c);
+      if (ui != null) {
+        ui.modelChanged();
+      }
     }
   }
 

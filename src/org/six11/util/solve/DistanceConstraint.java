@@ -35,6 +35,14 @@ public class DistanceConstraint extends Constraint {
   public Line getCurrentSegment() {
     return new Line(a, b);
   }
+  
+  public Pt getP1() {
+    return a;
+  }
+  
+  public Pt getP2() {
+    return b;
+  }
 
   public String getType() {
     return "Distance";
