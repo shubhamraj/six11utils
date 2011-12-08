@@ -206,6 +206,11 @@ public class ConstraintSolver {
         Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
         double mag = delta.mag();
         totalError = totalError + mag;
+        
+        // straightforward way:
+//        pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
+        
+        // respects the shape of root function:
         if (mag > 1.0) {
           pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
         } else if (mag > 0.0) {
@@ -268,7 +273,7 @@ public class ConstraintSolver {
     return currentState;
   }
 
-  public void removePoint(Pt doomed) {
+  public Set<Constraint> removePoint(Pt doomed) {
     vars.points.remove(doomed);
     Set<Constraint> doomedConstraints = new HashSet<Constraint>();
     for (Constraint c : vars.constraints) {
@@ -278,6 +283,7 @@ public class ConstraintSolver {
     }
     vars.constraints.removeAll(doomedConstraints);
     wakeUp();
+    return doomedConstraints;
   }
 
   public void replacePoint(Pt oldPt, String name, Pt newPt) {
