@@ -148,4 +148,8 @@ public class DistanceConstraint extends Constraint {
     return d;
   }
   
+  public void setValue(NumericValue nv) {
+    d = nv;
+  }
+  
 }
