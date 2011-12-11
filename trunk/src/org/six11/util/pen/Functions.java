@@ -15,7 +15,9 @@ import java.util.TreeSet;
 
 import static java.lang.Math.*;
 
-import org.six11.util.Debug;
+import static org.six11.util.Debug.bug;
+import static org.six11.util.Debug.num;
+import static org.six11.util.Debug.stacktrace;
 import org.six11.util.data.Statistics;
 import org.six11.util.math.EllipseFit;
 
@@ -893,7 +895,7 @@ public abstract class Functions {
    * @param epicenter
    *          A target point
    * @param polyline
-   *          A list of points that defien a polyline.
+   *          A list of points that define a polyline.
    * @return a point that appears somewhere along the interpolated polyline, or null if no such
    *         point can be found. If the return value is non-null, a the "nearest-polyline" double
    *         value is set to the distance to the polyline.
@@ -901,6 +903,8 @@ public abstract class Functions {
   public static Pt getNearestPointOnPolyline(Pt epicenter, List<Pt> polyline) {
     double minDist = Double.MAX_VALUE;
     Pt nearest = null;
+    double paramDist = 0;
+    Pt prev = null;
     if (polyline.size() > 1) {
       for (int i = 0; i < polyline.size() - 1; i++) {
         Pt vert = polyline.get(i);
@@ -1315,7 +1319,7 @@ public abstract class Functions {
     if (desiredDistance < knownDistance)
       throw new RuntimeException(
           "desiredDistance must be greater than or equal to known distance: "
-              + Debug.num(desiredDistance) + " !< " + Debug.num(knownDistance));
+              + num(desiredDistance) + " !< " + num(knownDistance));
     if (direction != 1 && direction != -1)
       throw new RuntimeException("Direction must be -1 or 1. Provided: " + direction);
 
@@ -1682,10 +1686,6 @@ public abstract class Functions {
     return value;
   }
 
-  public static void bug(String what) {
-    Debug.out("Functions", what);
-  }
-
   /**
    * Returns true iff there are three or more points in the provided list and either of the
    * following two conditions: (1) they are all at the same location, or (2) all fall directly on
@@ -1741,7 +1741,7 @@ public abstract class Functions {
   public static RotatedEllipse createEllipse(List<Pt> somePoints) {
     for (Pt pt : somePoints) {
       if (pt.getTime() == 0) {
-        Debug.stacktrace("zero time in createEllipse.", 8);
+        stacktrace("zero time in createEllipse.", 8);
         System.exit(0);
       }
     }
@@ -1892,23 +1892,23 @@ public abstract class Functions {
       double thresh, boolean stopWhenThresholdExceeded) {
     SortedSet<Pt> sorterA = new TreeSet<Pt>(Pt.sortByT);
     SortedSet<Pt> sorterB = new TreeSet<Pt>(Pt.sortByT);
-//    if (a.size() == b.size()) {
-//      boolean same = true;
-//      bug("List a: " + num(a, " "));
-//      bug("List b: " + num(b, " "));
-//      for (int i=0; i < a.size(); i++) {
-//        bug(num(a.get(i)) + " == " + num(b.get(i)) + "?");
-//        if (a.get(i).isSameLocation(b.get(i))) {
-//          bug("Same so far (" + i + ")...");
-//        } else { 
-//          same = false;
-//          break;
-//        }
-//      }
-//      if (same) {
-//        bug("Doh, same point lists.");
-//      }
-//    }
+    //    if (a.size() == b.size()) {
+    //      boolean same = true;
+    //      bug("List a: " + num(a, " "));
+    //      bug("List b: " + num(b, " "));
+    //      for (int i=0; i < a.size(); i++) {
+    //        bug(num(a.get(i)) + " == " + num(b.get(i)) + "?");
+    //        if (a.get(i).isSameLocation(b.get(i))) {
+    //          bug("Same so far (" + i + ")...");
+    //        } else { 
+    //          same = false;
+    //          break;
+    //        }
+    //      }
+    //      if (same) {
+    //        bug("Doh, same point lists.");
+    //      }
+    //    }
     for (Pt pt : a) {
       Pt near = getNearestPointOnPolyline(pt, b);
       if (near != null) {
@@ -1956,5 +1956,29 @@ public abstract class Functions {
       }
     }
     return bestIdx;
+  }
+
+  /**
+   * 
+   * @param pt
+   * @param line1
+   * @param line2
+   */
+  public static boolean isPointInLineSegment(Pt pt, Pt line1, Pt line2) {
+    double u = getPointSegmentParam(pt, line1, line2);
+    bug("Line segment param: " + num(u));
+    return (u <= 1.0 && u >= 0.0);
+  }
+
+  public static double getPointSegmentParam(Pt pt, Pt line1, Pt line2) {
+    double x1 = line1.getX();
+    double x2 = line2.getX();
+    double x3 = pt.getX();
+    double y1 = line1.getY();
+    double y2 = line2.getY();
+    double y3 = pt.getY();
+    double denom = ((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)); // line length squared
+    double u = ((x3 - x1) * (x2 - x1) + (y3 - y1) * (y2 - y1)) / denom;
+    return u;
   }
 }
