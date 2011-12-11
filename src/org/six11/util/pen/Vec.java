@@ -139,5 +139,9 @@ public class Vec {
     boolean ySame = Functions.eq(getY(), dir.getY(), Functions.EQ_TOL);
     return xSame && ySame;
   }
-
+  
+  public boolean isZero() {
+    return (x == 0 && y == 0);
+  }
+ 
 }
