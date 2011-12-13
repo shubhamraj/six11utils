@@ -36,6 +36,8 @@ public abstract class ShapeFactory {
    * the endpoints of the desired arc. mid is used only to define the circle, and must not be equal
    * to or colinear with the other two points.
    * 
+   * Note: mid is NOT the circle center. It appears on the outside of the arc. 
+   * 
    * See http://johnsogg.blogspot.com/2010/01/how-to-use-javas-javaawtgeomarc2d.html for a pretty
    * graphic.
    */
