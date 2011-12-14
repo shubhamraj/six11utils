@@ -187,13 +187,14 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
     // boolean advanced = basic ? getAttribs().equals(other.getAttribs()) : false;
     //
     // return basic && advanced;
-    return this == other;
+    return this.id == other.id;
   }
 
   public int hashCode() {
-    // this is totally a guess
-    int hash = super.hashCode() ^ ((Long) time).hashCode() ^ getAttribs().hashCode();
-    return hash;
+//    // this is totally a guess
+//    int hash = super.hashCode() ^ ((Long) time).hashCode() ^ getAttribs().hashCode();
+//    return hash;
+    return ((Integer) id).hashCode();
   }
 
   public Pt copyXYT() {
