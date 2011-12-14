@@ -206,10 +206,10 @@ public class ConstraintSolver {
         Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
         double mag = delta.mag();
         totalError = totalError + mag;
-        
+
         // straightforward way:
-//        pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
-        
+        //        pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
+
         // respects the shape of root function:
         if (mag > 1.0) {
           pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
@@ -235,12 +235,22 @@ public class ConstraintSolver {
   }
 
   public synchronized void addPoint(String name, Pt pt) {
+    if (hasName(pt) && !getName(pt).equals(name)) {
+      bug("warning: do you really want to change the name of this point from " + getName(pt) + " to " + name + "?");
+    }
+    setName(pt, name);
+    addPoint(pt);
+  }
+  
+  public synchronized void addPoint(Pt pt) {
     if (!vars.points.contains(pt)) {
-      pt.setAttribute("name", name);
-      vars.points.add(pt);
-      if (ui != null) {
-        ui.modelChanged();
+      if (!hasName(pt)) {
+        bug("warning: adding a point with no name");
       }
+      vars.points.add(pt);
+    }
+    if (ui != null) {
+      ui.modelChanged();
     }
   }
 
@@ -286,10 +296,10 @@ public class ConstraintSolver {
     return doomedConstraints;
   }
 
-  public void replacePoint(Pt oldPt, String name, Pt newPt) {
+  public void replacePoint(Pt oldPt, Pt newPt) {
     vars.points.remove(oldPt);
-    addPoint(name, newPt);
-    if (newPt.getString("name") == null) {
+    addPoint(newPt);
+    if (!hasName(newPt)) {
       Debug.stacktrace("point has no name", 6);
     }
     for (Constraint c : vars.constraints) {
@@ -299,8 +309,29 @@ public class ConstraintSolver {
     }
     wakeUp();
   }
+  
+  public void replacePoint(Pt oldPt, String name, Pt newPt) {
+    setName(newPt, name);
+    replacePoint(oldPt, newPt);
+  }
 
   public void clearConstraints() {
     vars.clear();
+  }
+
+  /**
+   * Sets the name of the point, even if it is not involved in the solver's variables or
+   * constraints.
+   */
+  public static void setName(Pt pt, String name) {
+    pt.setString("name", name);
+  }
+
+  public static String getName(Pt pt) {
+    return pt.getString("name");
+  }
+
+  public static boolean hasName(Pt pt) {
+    return pt.hasAttribute("name");
   }
 }
