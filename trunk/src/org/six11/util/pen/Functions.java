@@ -1645,8 +1645,10 @@ public abstract class Functions {
   }
 
   /**
-   * Gives a positive angle measured counter-clockwise from the x-positive axis. I need to work with
-   * angles that do not have discontinuities.
+   * Gives a positive angle measured counter-clockwise from the x-positive axis. The purpose of this
+   * is to work with angles that do not have discontinuities at 360.
+   * 
+   * @return an angle in degrees that is positive.
    */
   public static double makeAnglePositive(double angleDegrees) {
     double ret = angleDegrees;

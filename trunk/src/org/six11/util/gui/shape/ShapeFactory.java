@@ -6,14 +6,19 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
+import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import static java.lang.Math.toDegrees;
 
 import org.six11.util.Debug;
 import static org.six11.util.Debug.num;
+
+import org.six11.util.data.Statistics;
 import org.six11.util.gui.BoundingBox;
 import org.six11.util.pen.Functions;
 import org.six11.util.pen.IntersectionData;
@@ -36,7 +41,7 @@ public abstract class ShapeFactory {
    * the endpoints of the desired arc. mid is used only to define the circle, and must not be equal
    * to or colinear with the other two points.
    * 
-   * Note: mid is NOT the circle center. It appears on the outside of the arc. 
+   * Note: mid is NOT the circle center. It appears on the outside of the arc.
    * 
    * See http://johnsogg.blogspot.com/2010/01/how-to-use-javas-javaawtgeomarc2d.html for a pretty
    * graphic.
@@ -241,11 +246,12 @@ public abstract class ShapeFactory {
       }
     }
 
-    private List<Pt> getSegmentedSurface() {
+    public List<Pt> getSegmentedSurface() {
       double step = (Math.PI * 2.0) / (double) numSegments;
       List<Pt> ret = new ArrayList<Pt>();
       for (double t = 0; t < Math.PI * 2.0; t += step) {
         Pt pt = ellie.getEllipticalPoint(t);
+        pt.setDouble("ellipse_t", t);
         ret.add(pt);
       }
       return ret;
@@ -327,11 +333,11 @@ public abstract class ShapeFactory {
     Rectangle2D ret = new Rectangle2D.Double(tlx, tly, fuzzyFactor, fuzzyFactor);
     return ret;
   }
-  
+
   public static Area getFuzzyArea(List<Pt> points, double fuzzyFactor) {
     Area ret = new Area();
-    for (int i=0; i < points.size() - 1; i++) {
-      ret.add(new Area(getFuzzyRectangle(points.get(i), points.get(i+1), fuzzyFactor)));
+    for (int i = 0; i < points.size() - 1; i++) {
+      ret.add(new Area(getFuzzyRectangle(points.get(i), points.get(i + 1), fuzzyFactor)));
     }
     return ret;
   }
@@ -352,8 +358,9 @@ public abstract class ShapeFactory {
     Vec fuzNorm = fuz.getNormal();
     Vec fuzNormFlip = fuzNorm.getFlip();
     List<Pt> corners = new ArrayList<Pt>();
-    corners.add(a.getTranslated(fuzFlip.getX() + fuzNorm.getX(), fuzFlip.getY() + fuzNorm.getY())); 
-    corners.add(a.getTranslated(fuzFlip.getX() + fuzNormFlip.getX(), fuzFlip.getY() + fuzNormFlip.getY()));
+    corners.add(a.getTranslated(fuzFlip.getX() + fuzNorm.getX(), fuzFlip.getY() + fuzNorm.getY()));
+    corners.add(a.getTranslated(fuzFlip.getX() + fuzNormFlip.getX(),
+        fuzFlip.getY() + fuzNormFlip.getY()));
     corners.add(b.getTranslated(fuz.getX() + fuzNormFlip.getX(), fuz.getY() + fuzNormFlip.getY()));
     corners.add(b.getTranslated(fuz.getX() + fuzNorm.getX(), fuz.getY() + fuzNorm.getY()));
     return makeLinePath(corners, true);
