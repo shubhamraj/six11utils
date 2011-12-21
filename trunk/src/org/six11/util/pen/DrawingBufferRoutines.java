@@ -27,7 +27,6 @@ import org.six11.util.pen.Vec;
 import static org.six11.util.Debug.num;
 import static org.six11.util.Debug.bug;
 
-
 /**
  * A collection of drawing routines for DrawingBuffer instances.
  * 
@@ -77,8 +76,8 @@ public abstract class DrawingBufferRoutines {
     Sequence spline = new Sequence();
     int last = ctrl.size() - 1;
     for (int i = 0; i < last; i++) {
-      Functions.getSplinePatch(ctrl.get(Math.max(0, i - 1)), ctrl.get(i), ctrl.get(i + 1), ctrl
-          .get(Math.min(last, i + 2)), spline, numSteps);
+      Functions.getSplinePatch(ctrl.get(Math.max(0, i - 1)), ctrl.get(i), ctrl.get(i + 1),
+          ctrl.get(Math.min(last, i + 2)), spline, numSteps);
     }
     db.up();
     if (lineColor != null) {
@@ -173,8 +172,7 @@ public abstract class DrawingBufferRoutines {
     }
   }
 
-  public static void drawShape(DrawingBuffer db, Shape shape, Color color,
-      double thickness) {
+  public static void drawShape(DrawingBuffer db, Shape shape, Color color, double thickness) {
     db.up();
     db.setColor(color);
     db.setThickness(thickness);
@@ -353,13 +351,17 @@ public abstract class DrawingBufferRoutines {
     }
   }
 
-  public static void cross(DrawingBuffer db, Pt spot, double lineLength, Color color) {
+  public static void cross(DrawingBuffer db, Pt spot, double lineLength, Color color, double thick) {
     Pt p1 = spot.getTranslated(-lineLength, -lineLength);
     Pt p2 = spot.getTranslated(-lineLength, lineLength);
     Pt p3 = spot.getTranslated(lineLength, lineLength);
     Pt p4 = spot.getTranslated(lineLength, -lineLength);
-    line(db, p1, p3, color, 2);
-    line(db, p2, p4, color, 2);
+    line(db, p1, p3, color, thick);
+    line(db, p2, p4, color, thick);
+  }
+
+  public static void cross(DrawingBuffer db, Pt spot, double lineLength, Color color) {
+    cross(db, spot, lineLength, color, 2.0);
   }
 
   public static void screenLine(DrawingBuffer db, Rectangle bounds, Line geometryLine, Color color,
@@ -543,7 +545,8 @@ public abstract class DrawingBufferRoutines {
     System.out.println("-------------------------------------------------------------------------");
   }
 
-  public static void acuteHash(DrawingBuffer buf, Pt mid, Vec refDir, double length, double thickness, Color color) {
+  public static void acuteHash(DrawingBuffer buf, Pt mid, Vec refDir, double length,
+      double thickness, Color color) {
     Pt tip = mid.getTranslated(refDir, length / 2);
     AffineTransform xform = Functions.getRotationInstance(mid, Math.toRadians(45));
     Pt tip2 = new Pt();
@@ -551,17 +554,17 @@ public abstract class DrawingBufferRoutines {
     Vec toOtherTip = new Vec(mid, tip2).getFlip();
     Pt otherTip = mid.getTranslated(toOtherTip.getX(), toOtherTip.getY());
     line(buf, tip2, otherTip, color, thickness);
-//    double length = start.distance(tip);
-//    double headLength = length / 10.0;
-//    Vec tipToStart = new Vec(tip, start).getVectorOfMagnitude(headLength);
-//    Pt cross = tip.getTranslated(tipToStart.getX(), tipToStart.getY());
-//    Vec outward = tipToStart.getNormal();
-//    Pt head1 = cross.getTranslated(outward.getX(), outward.getY());
-//    outward = outward.getFlip();
-//    Pt head2 = cross.getTranslated(outward.getX(), outward.getY());
-//    line(db, new Line(start, tip), color, thick);
-//    line(db, new Line(head1, tip), color, thick);
-//    line(db, new Line(head2, tip), color, thick);
+    //    double length = start.distance(tip);
+    //    double headLength = length / 10.0;
+    //    Vec tipToStart = new Vec(tip, start).getVectorOfMagnitude(headLength);
+    //    Pt cross = tip.getTranslated(tipToStart.getX(), tipToStart.getY());
+    //    Vec outward = tipToStart.getNormal();
+    //    Pt head1 = cross.getTranslated(outward.getX(), outward.getY());
+    //    outward = outward.getFlip();
+    //    Pt head2 = cross.getTranslated(outward.getX(), outward.getY());
+    //    line(db, new Line(start, tip), color, thick);
+    //    line(db, new Line(head1, tip), color, thick);
+    //    line(db, new Line(head2, tip), color, thick);
 
   }
 
