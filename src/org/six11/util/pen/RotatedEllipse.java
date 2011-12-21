@@ -4,13 +4,16 @@ import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.Math.min;
 import static java.lang.Math.max;
+import static java.lang.Math.abs;
 import static java.lang.Math.atan2;
 import static java.lang.Math.toDegrees;
 
 import static org.six11.util.Debug.num;
+import static org.six11.util.Debug.bug;
 import org.six11.util.Debug;
 import org.six11.util.gui.shape.ShapeFactory;
 
+import java.awt.Color;
 import java.awt.geom.PathIterator;
 import java.util.ArrayList;
 import java.util.List;
@@ -122,10 +125,6 @@ public class RotatedEllipse {
     }
   }
 
-  public static void bug(String what) {
-    Debug.out("RotatedEllipse", what);
-  }
-
   public List<Pt> getRegionPoints() {
     return regionPoints;
   }
@@ -179,7 +178,130 @@ public class RotatedEllipse {
     double y = (b * sin(t));
     double xRot = x * cos(ellipseRotation) + y * sin(ellipseRotation);
     double yRot = -x * sin(ellipseRotation) + y * cos(ellipseRotation);
-    return new Pt(xRot + center.x, yRot + center.y);
+    Pt ret = new Pt(xRot + center.x, yRot + center.y);
+    ret.setDouble("ellipse_t", t);
+    return ret;
+  }
+
+  /**
+   * Given some point pt on the ellipse surface, what is the parameter t for which pt =
+   * getEllipticalPoint(t)? I am nearly certain there is an analytic way to calculate this, but I
+   * don't know what that is. So instead I do a binary search and return when the angle is within
+   * 0.0001 radians.
+   * 
+   * @param pt
+   * @return
+   */
+  public double searchForParameter(Pt pt) {
+    double ret = 0;
+    double ptTheta = getSignedEllipticalAngle(pt);
+    bug("-------------- Target has theta: " + num(toDegrees(ptTheta)));
+    // find a lower and uppper bound
+    Pt closest = null;
+    double bestDiff = Double.POSITIVE_INFINITY;
+    double step = (Math.PI * 2.0) / (double) 60;
+    for (double t = 0; t <= (Math.PI * 2.0); t += step) {
+      Pt stepPt = getEllipticalPoint(t);
+      double stepTheta = getSignedEllipticalAngle(stepPt);
+      System.out.println(getAngleBugStr(stepPt));
+      double diff = Math.abs(ptTheta - stepTheta);
+      if (diff < bestDiff) {
+        closest = stepPt;
+        bestDiff = diff;
+      }
+    }
+    bug("Closest: " + getAngleBugStr(closest));
+    //    DrawingBufferRoutines.dot(buf, closest, 4, 0.4, Color.BLACK, Color.ORANGE);
+
+    Pt left = getEllipticalPoint(getT(closest) - step);
+    Pt right = getEllipticalPoint(getT(closest) + step);
+    //    if (left.distance(closest) < right.distance(closest)) {
+    //      ret = searchForParameter(left, closest, pt);
+    //    } else {
+    //      ret = searchForParameter(closest, right, pt);
+    //    }
+    ret = searchForParameter(left, right, pt);
+    return ret;
+  }
+
+  private double getT(Pt p) {
+    return p.getDouble("ellipse_t");
+  }
+
+  private double getA(Pt p) {
+    return p.getDouble("ellipse_theta");
+  }
+
+  private double searchForParameter(Pt left, Pt right, Pt target) {
+    double ret = Double.MAX_VALUE;
+    double midM = Double.MAX_VALUE;
+    do {
+      double midT = (getT(left) + getT(right)) / 2.0;
+      Pt mid = getEllipticalPoint(midT);
+      Vec leftV = new Vec(center, left);
+      Vec targetV = new Vec(center, target);
+      //      Vec rightV = new Vec(center, right);
+      Vec midV = new Vec(center, mid);
+      double leftM = targetV.cross(leftV);
+      midM = targetV.cross(midV);
+      //      double rightM = targetV.cross(rightV);
+      if (Math.signum(leftM) == Math.signum(midM)) {
+        left = mid;
+        bug("Bump left = mid");
+      } else {
+        right = mid;
+        bug("Bump right = mid");
+      }
+
+      double deltaT = abs(ret - getT(mid));
+      ret = getT(mid);
+      bug("Error mag: " + abs(midM) + ", deltaT: " + deltaT);
+    } while (abs(midM) > 0.01);
+    return ret;
+  }
+
+  private double searchForParameterOld(Pt left, Pt right, Pt target) {
+    double prevDiff = 0;
+    double diff = Double.MAX_VALUE;
+    double ret = Double.MAX_VALUE;
+    do {
+      double midT = (getT(left) + getT(right)) / 2.0;
+      Pt mid = getEllipticalPoint(midT);
+      getSignedEllipticalAngle(mid); // enables mid.getA() to work
+      diff = Math.abs(getA(target) - getA(mid));
+      if (diff == prevDiff) {
+        bug("No change detected. Bailing.");
+        break;
+      }
+      prevDiff = diff;
+      bug(getAngleBugStr(left) + " :: " + getAngleBugStr(mid) + " :: " + getAngleBugStr(right)
+          + " :: Diff: " + num(diff, 5));
+      if (getA(mid) < getA(target)) {
+        left = mid; // right stays put 
+        bug("Bump left");
+      } else {
+        right = mid; // left stays put
+        bug("Bump right");
+      }
+      ret = midT;
+    } while (diff > 0.001);
+    return ret;
+  }
+
+  private String getAngleBugStr(Pt p) {
+    StringBuilder buf = new StringBuilder();
+    if (p.hasAttribute("ellipse_t")) {
+      buf.append(num(toDegrees(p.getDouble("ellipse_t"))));
+    } else {
+      buf.append("----");
+    }
+    buf.append("\t");
+    if (p.hasAttribute("ellipse_theta")) {
+      buf.append(num(toDegrees(p.getDouble("ellipse_theta"))));
+    } else {
+      buf.append("----");
+    }
+    return buf.toString();
   }
 
   public double getArea() {
@@ -193,5 +315,39 @@ public class RotatedEllipse {
   public String getDebugString() {
     return "RotatedEllipse[maj:" + num(getMajorRadius()) + ", min: " + num(getMinorRadius())
         + ", rot: " + num(getRotation()) + ", center: " + num(center) + "]";
+  }
+
+  public Vec getAxisA() {
+    return getVector(0).getScaled(a);
+  }
+
+  public Vec getAxisB() {
+    return getVector(Math.PI / 2).getScaled(b);
+  }
+
+  public Vec getVector(double ang) {
+    double x = (a * cos(ang));
+    double y = (b * sin(ang));
+    double xRot = x * cos(ellipseRotation) + y * sin(ellipseRotation);
+    double yRot = -x * sin(ellipseRotation) + y * cos(ellipseRotation);
+    return new Vec(xRot, yRot).getUnitVector();
+  }
+
+  /**
+   * Returns the angle of the point on the ellipse in radians.
+   * 
+   * @param pt
+   * @return
+   */
+  public double getEllipticalAngle(Pt target) {
+    double ang = Math.toRadians(Functions.makeAnglePositive(toDegrees(-atan2(target.y - center.y,
+        target.x - center.x))));
+    return ang;
+  }
+
+  public double getSignedEllipticalAngle(Pt target) {
+    double ang = atan2(target.y - center.y, target.x - center.x);
+    target.setDouble("ellipse_theta", ang);
+    return ang;
   }
 }

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -156,6 +157,12 @@ public class Debug {
   public static String now() {
     Date currentDate = new Date();
     return DateFormat.getTimeInstance(DateFormat.MEDIUM).format(currentDate).toString();
+  }
+  
+  public static String nowFilenameFriendly() {
+    Date currentDate = new Date();
+    SimpleDateFormat sdf = new SimpleDateFormat("yy-mm-dd");
+    return sdf.format(currentDate);
   }
 
   public static String num(double[] d) {
