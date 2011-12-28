@@ -10,10 +10,11 @@ import static java.lang.Math.toDegrees;
 
 import static org.six11.util.Debug.num;
 import static org.six11.util.Debug.bug;
-import org.six11.util.gui.shape.ShapeFactory;
+//import org.six11.util.gui.shape.ShapeFactory;
 
-import java.awt.geom.PathIterator;
+//import java.awt.geom.PathIterator;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -28,6 +29,8 @@ public class RotatedEllipse {
   double b; // the 'vertical' radius when the ellipse isn't rotated.
   double ellipseRotation; // the radian angle of rotation
 
+  private double arc1T, arc2T, arc3T; // angular parameter for the start, mid, and end points on an arc path.
+
   private boolean restrictedArc;
   private double extent;
   private double startAngle;
@@ -35,7 +38,7 @@ public class RotatedEllipse {
   private double endAngle;
 
   public List<Pt> regionPoints;
-  private List<Pt> restrictedArcPath;
+//  private List<Pt> restrictedArcPath;
 
   public RotatedEllipse(Pt center, double a, double b, double ellipseRotation) {
     this.center = center;
@@ -48,34 +51,34 @@ public class RotatedEllipse {
     return restrictedArc;
   }
 
-  public List<Pt> getRestrictedArcPath() {
-    if (restrictedArcPath == null) {
-      getRestrictedArcPath(60);
-    }
-    return restrictedArcPath;
-  }
+//  public List<Pt> getRestrictedArcPath() {
+//    if (restrictedArcPath == null) {
+//      getRestrictedArcPath(60);
+//    }
+//    return restrictedArcPath;
+//  }
 
-  public List<Pt> getRestrictedArcPath(int numPoints) {
-    if (restrictedArcPath == null) {
-      PathIterator path = new ShapeFactory.RotatedEllipseShape(this, numPoints)
-          .getPathIterator(null);
-      restrictedArcPath = new ArrayList<Pt>();
-      long startTime = regionPoints.get(0).getTime();
-      long dt = regionPoints.get(2).getTime() - startTime;
-      double[] coords = new double[6];
-      while (!path.isDone()) {
-        path.currentSegment(coords);
-        restrictedArcPath.add(new Pt(coords[0], coords[1]));
-        path.next();
-      }
-      for (int i = 0; i < restrictedArcPath.size(); i++) {
-        double frac = (double) i / (double) restrictedArcPath.size();
-        long t = startTime + (long) (frac * dt);
-        restrictedArcPath.get(i).setTime(t);
-      }
-    }
-    return restrictedArcPath;
-  }
+//  public List<Pt> getRestrictedArcPath(int numPoints) {
+//    if (restrictedArcPath == null) {
+//      PathIterator path = new ShapeFactory.RotatedEllipseShape(this, numPoints)
+//          .getPathIterator(null);
+//      restrictedArcPath = new ArrayList<Pt>();
+//      long startTime = regionPoints.get(0).getTime();
+//      long dt = regionPoints.get(2).getTime() - startTime;
+//      double[] coords = new double[6];
+//      while (!path.isDone()) {
+//        path.currentSegment(coords);
+//        restrictedArcPath.add(new Pt(coords[0], coords[1]));
+//        path.next();
+//      }
+//      for (int i = 0; i < restrictedArcPath.size(); i++) {
+//        double frac = (double) i / (double) restrictedArcPath.size();
+//        long t = startTime + (long) (frac * dt);
+//        restrictedArcPath.get(i).setTime(t);
+//      }
+//    }
+//    return restrictedArcPath;
+//  }
 
   public double getStartAngle() {
     return startAngle;
@@ -283,5 +286,87 @@ public class RotatedEllipse {
     double ang = atan2(target.y - center.y, target.x - center.x);
     target.setDouble("ellipse_theta", ang);
     return ang;
+  }
+
+  public final List<Pt> initArc() {
+    Pt arc1 = getRegionPoints().get(0);
+    Pt arc2 = getRegionPoints().get(1);
+    Pt arc3 = getRegionPoints().get(2);
+    arc1T = searchForParameter(arc1);
+    arc2T = searchForParameter(arc2);
+    arc3T = searchForParameter(arc3);
+    List<Pt> surface = new ArrayList<Pt>();
+    List<Double> arcParams = makeMonotonicallyIncreasingAngles(arc1T, arc2T, arc3T);
+    double numSteps = 60;
+    double start = arcParams.get(0);
+    double end = arcParams.get(2);
+    double step = (end - start) / numSteps;
+    for (double t = start; t <= end; t += step) {
+      surface.add(getEllipticalPoint(t));
+    }
+    return surface;
+  }
+  
+  /**
+   * Given some input points that are on the ellipse surface, return a list of angles (in radians)
+   * that increase. The input points may be on different sides of the 0-degree line, so for example
+   * your points might be at 10, 350, and 320. This means the ellipse arc starts just above the
+   * 0-degree line and moves clockwise. The return list of angles would be 320, 350, 370. (370 is
+   * equivalent to 10 degrees plus a full rotation of the circle).
+   * 
+   * @param regionPoints
+   *          a list of exactly three points that are on the ellipse arc surface.
+   * @return three doubles representing the increasing angles, in radians. If the arc passes through
+   *         the 0-degree line, some of the values will be greater than 2*pi.
+   */
+  private List<Double> makeMonotonicallyIncreasingAngles(double t1, double t2, double t3) {
+    double twoPi = Math.PI * 2;
+    StringBuilder buf = new StringBuilder();
+    buf.append(getAngleCode(t1, t2)); // a to b
+    buf.append(getAngleCode(t2, t3)); // b to c
+    buf.append(getAngleCode(t1, t3)); // a to c
+    String code = buf.toString();
+    // there are eight possible values for the angle code. +++, ++-, +-+, etc.
+    // two aren't possible (++- and --+).
+    // two others don't require adjustment (+++ and ---).
+    // the remaining four require us to add 2pi to one or two values.
+    if (code.equals("+-+")) {
+      t1 = t1 + twoPi; // adjust a
+    }
+    if (code.equals("+--")) {
+      t3 = t3 + twoPi; // adjust c
+    }
+    if (code.equals("-++")) {
+      t1 = t1 + twoPi; // adjust a and b
+      t2 = t2 + twoPi;
+    }
+    if (code.equals("-+-")) {
+      t2 = t2 + twoPi; // adjust b and c
+      t3 = t3 + twoPi;
+    }
+    if (code.equals("++-") || code.equals("--+")) {
+      bug("Ugh, encountered an 'impossible' code.");
+    }
+    buf.setLength(0);
+    buf.append(getAngleCode(t1, t2)); // a to b
+    buf.append(getAngleCode(t2, t3)); // b to c
+    buf.append(getAngleCode(t1, t3)); // a to c
+    code = buf.toString();
+    List<Double> angles = new ArrayList<Double>();
+    angles.add(t1);
+    angles.add(t2);
+    angles.add(t3);
+    if (code.equals("---")) {
+      Collections.reverse(angles);
+    }
+    return angles;
+  }
+
+  private char getAngleCode(double m, double n) {
+    char ret = '+'; // non-decreasing: m < n
+    if (m > n) {
+      ret = '-';
+    }
+    return ret;
   }
 }
