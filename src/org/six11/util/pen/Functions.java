@@ -1779,7 +1779,7 @@ public abstract class Functions {
   public static double getEllipseError(RotatedEllipse ellie, List<Pt> points) {
     int numPoints = (int) Math.ceil(Functions.getCurvilinearLength(points));
     double ret = 0;
-    List<Pt> ellipseSurface = ellie.getRestrictedArcPath(numPoints);
+    List<Pt> ellipseSurface = ellie.initArc();//ellie.getRestrictedArcPath(numPoints);
     double errorSum = 0;
     for (Pt pt : points) {
       Pt nearest = Functions.getNearestPointOnSequence(pt, ellipseSurface);
@@ -1795,9 +1795,9 @@ public abstract class Functions {
    * to be a restricted arc.
    */
   public static double getEllipseError(RotatedEllipse ellie, Sequence target) {
-    int numPoints = (int) Math.ceil(target.length());
+//    int numPoints = (int) Math.ceil(target.length());
     double ret = 0;
-    List<Pt> ellipseSurface = ellie.getRestrictedArcPath(numPoints);
+    List<Pt> ellipseSurface = ellie.initArc();//ellie.getRestrictedArcPath(numPoints);
     double errorSum = 0;
     for (Pt pt : target) {
       Pt nearest = Functions.getNearestPointOnSequence(pt, ellipseSurface);

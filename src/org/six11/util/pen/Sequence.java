@@ -775,4 +775,8 @@ public class Sequence implements Shape, Iterable<Pt> {
     }
     return ret;
   }
+
+  public long getDuration() {
+    return getLast().getTime() - getFirst().getTime();
+  }
 }
