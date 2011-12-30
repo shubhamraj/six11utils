@@ -1983,4 +1983,67 @@ public abstract class Functions {
     double u = ((x3 - x1) * (x2 - x1) + (y3 - y1) * (y2 - y1)) / denom;
     return u;
   }
+  
+  /**
+   * Given some input points that are on the ellipse surface, return a list of angles (in radians)
+   * that increase. The input points may be on different sides of the 0-degree line, so for example
+   * your points might be at 10, 350, and 320. This means the ellipse arc starts just above the
+   * 0-degree line and moves clockwise. The return list of angles would be 320, 350, 370. (370 is
+   * equivalent to 10 degrees plus a full rotation of the circle).
+   * 
+   * @param regionPoints
+   *          a list of exactly three points that are on the ellipse arc surface.
+   * @return three doubles representing the increasing angles, in radians. If the arc passes through
+   *         the 0-degree line, some of the values will be greater than 2*pi.
+   */
+  public static List<Double> makeMonotonicallyIncreasingAngles(double t1, double t2, double t3) {
+    double twoPi = Math.PI * 2;
+    StringBuilder buf = new StringBuilder();
+    buf.append(getAngleCode(t1, t2)); // a to b
+    buf.append(getAngleCode(t2, t3)); // b to c
+    buf.append(getAngleCode(t1, t3)); // a to c
+    String code = buf.toString();
+    // there are eight possible values for the angle code. +++, ++-, +-+, etc.
+    // two aren't possible (++- and --+).
+    // two others don't require adjustment (+++ and ---).
+    // the remaining four require us to add 2pi to one or two values.
+    if (code.equals("+-+")) {
+      t1 = t1 + twoPi; // adjust a
+    }
+    if (code.equals("+--")) {
+      t3 = t3 + twoPi; // adjust c
+    }
+    if (code.equals("-++")) {
+      t1 = t1 + twoPi; // adjust a and b
+      t2 = t2 + twoPi;
+    }
+    if (code.equals("-+-")) {
+      t2 = t2 + twoPi; // adjust b and c
+      t3 = t3 + twoPi;
+    }
+    if (code.equals("++-") || code.equals("--+")) {
+      bug("Ugh, encountered an 'impossible' code.");
+    }
+    buf.setLength(0);
+    buf.append(getAngleCode(t1, t2)); // a to b
+    buf.append(getAngleCode(t2, t3)); // b to c
+    buf.append(getAngleCode(t1, t3)); // a to c
+    code = buf.toString();
+    List<Double> angles = new ArrayList<Double>();
+    angles.add(t1);
+    angles.add(t2);
+    angles.add(t3);
+    if (code.equals("---")) {
+      Collections.reverse(angles);
+    }
+    return angles;
+  }
+
+  private static char getAngleCode(double m, double n) {
+    char ret = '+'; // non-decreasing: m < n
+    if (m > n) {
+      ret = '-';
+    }
+    return ret;
+  }
 }
