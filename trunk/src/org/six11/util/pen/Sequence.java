@@ -17,6 +17,8 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
+import org.six11.util.data.Statistics;
+
 import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
 
@@ -32,6 +34,8 @@ public class Sequence implements Shape, Iterable<Pt> {
   protected List<Pt> points;
   //  protected DrawFunction drawFunction;
   protected Map<String, Object> attributes;
+  Statistics statsX, statsY;
+  double roughDensity, roughArea;
 
   protected int id;
 
@@ -778,5 +782,35 @@ public class Sequence implements Shape, Iterable<Pt> {
 
   public long getDuration() {
     return getLast().getTime() - getFirst().getTime();
+  }
+
+  public double getRoughDensity() {
+    if (statsX == null || statsY == null) {
+      initRough();
+    }
+    return roughDensity;
+  }
+  
+  private void initRough() {
+    statsX = new Statistics();
+    statsY = new Statistics();
+    Sequence seq = Functions.getNormalizedSequence(this, 5.0);
+    for (Pt pt : seq) {
+      statsX.addData(pt.getX());
+      statsY.addData(pt.getY());
+    }
+    double dx = (statsX.getMax() - statsX.getMin());
+    double dy = (statsY.getMax() - statsY.getMin());
+    double densityX = ((double) statsX.getN()) / dx;
+    double densityY = ((double) statsY.getN()) / dy;
+    roughArea = dx * dy;
+    roughDensity = densityX * densityY;
+  }
+
+  public double getRoughArea() {
+    if (statsX == null || statsY == null) {
+      initRough();
+    }
+    return roughArea;
   }
 }
