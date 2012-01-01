@@ -22,7 +22,7 @@ import static java.lang.Math.sqrt;
 public class ConstraintSolver {
 
   public static interface Listener {
-    public void constraintStepDone();
+    public void constraintStepDone(State state);
   }
 
   public static enum State {
@@ -88,7 +88,8 @@ public class ConstraintSolver {
 
   protected void fire() {
     for (Listener lis : stepListeners) {
-      lis.constraintStepDone();
+      bug("" + currentState);
+      lis.constraintStepDone(currentState);
     }
   }
 
@@ -148,6 +149,8 @@ public class ConstraintSolver {
           }
           if (!finished) {
             currentState = State.Working;
+          } else {
+            bug("done-ish");
           }
           if (ui != null) {
             ui.modelChanged();
