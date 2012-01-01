@@ -1688,6 +1688,14 @@ public abstract class Functions {
     return value;
   }
 
+  public static boolean arePointsColinear(Pt[] pts) {
+    List<Pt> pointList = new ArrayList<Pt>();
+    for (Pt pt : pts) {
+      pointList.add(pt);
+    }
+    return arePointsColinear(pointList);
+  }
+  
   /**
    * Returns true iff there are three or more points in the provided list and either of the
    * following two conditions: (1) they are all at the same location, or (2) all fall directly on
@@ -2046,4 +2054,5 @@ public abstract class Functions {
     }
     return ret;
   }
+
 }
