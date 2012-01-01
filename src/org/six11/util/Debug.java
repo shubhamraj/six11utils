@@ -158,7 +158,7 @@ public class Debug {
     Date currentDate = new Date();
     return DateFormat.getTimeInstance(DateFormat.MEDIUM).format(currentDate).toString();
   }
-  
+
   public static String nowFilenameFriendly() {
     Date currentDate = new Date();
     SimpleDateFormat sdf = new SimpleDateFormat("yy-mm-dd");
@@ -219,7 +219,11 @@ public class Debug {
   }
 
   public static String num(Vec vec) {
-    return "(" + Debug.num(vec.getX()) + ", " + Debug.num(vec.getY()) + ")";
+    if (vec == null) {
+      return "null";
+    } else {
+      return "(" + Debug.num(vec.getX()) + ", " + Debug.num(vec.getY()) + ")";
+    }
   }
 
   public static String num(Dimension d) {
@@ -279,7 +283,7 @@ public class Debug {
     buf.append(" }");
     return buf.toString();
   }
-  
+
   public static String num(Collection<?> col, String separator) {
     boolean first = true;
     StringBuffer buf = new StringBuffer();
