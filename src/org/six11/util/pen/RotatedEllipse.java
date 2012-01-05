@@ -221,11 +221,9 @@ public class RotatedEllipse {
   private double searchForParameter(Pt left, Pt right, Pt target) {
     double ret = Double.MAX_VALUE;
     double midM = Double.MAX_VALUE;
-    List<Pt> mids = new ArrayList<Pt>();
     do {
       double midT = (getT(left) + getT(right)) / 2.0;
       Pt mid = getEllipticalPoint(midT);
-      mids.add(mid);
       Vec leftV = new Vec(center, left);
       Vec targetV = new Vec(center, target);
       Vec midV = new Vec(center, mid);
