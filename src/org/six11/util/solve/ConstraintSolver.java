@@ -88,7 +88,6 @@ public class ConstraintSolver {
 
   protected void fire() {
     for (Listener lis : stepListeners) {
-      bug("" + currentState);
       lis.constraintStepDone(currentState);
     }
   }
@@ -149,8 +148,6 @@ public class ConstraintSolver {
           }
           if (!finished) {
             currentState = State.Working;
-          } else {
-            bug("done-ish");
           }
           if (ui != null) {
             ui.modelChanged();
