@@ -1052,6 +1052,47 @@ public abstract class Functions {
     points.get(points.size() - 1).setDouble("curvature", 0.0);
   }
 
+  /**
+   * Calculate curvilinear distances for the given list of points away from the target point. This
+   * is used in flow selection, for example.
+   * 
+   * @param points
+   * @param target
+   *          a point that should be in the point list.
+   * @return curvilinear distances corresponding to the indices of the points parameter, or an array
+   *         of zeros if it can't be calculated for some reason.
+   */
+  public static double[] calculateCurvilinearDistance(List<Pt> points, Pt target) {
+    double[] ret = new double[points.size()];
+    // first find the index of 'target'
+    int idxTarget = -1;
+    double bestDist = Double.MAX_VALUE;
+    for (int i = 0; i < points.size(); i++) {
+      Pt pt = points.get(i);
+      double d = pt.distance(target);
+      if (d < bestDist) {
+        idxTarget = i;
+        bestDist = d;
+      }
+    }
+    if (idxTarget >= 0) {
+      // calculate curvilinear distance starting at idxTarget, first ascending then descending.
+      double curveDist = 0;
+      for (int i = idxTarget + 1; i < points.size(); i++) {
+        double d = points.get(i - 1).distance(points.get(i));
+        curveDist = curveDist + d;
+        ret[i] = curveDist;
+      }
+      curveDist = 0;
+      for (int i = idxTarget - 1; i >= 0; i--) {
+        double d = points.get(i + 1).distance(points.get(i));
+        curveDist = curveDist + d;
+        ret[i] = curveDist;
+      }
+    }
+    return ret;
+  }
+
   public static Rectangle2D getSequenceBoundingBox(Sequence seq) {
 
     double maxX = Double.MIN_VALUE;
@@ -1695,7 +1736,7 @@ public abstract class Functions {
     }
     return arePointsColinear(pointList);
   }
-  
+
   /**
    * Returns true iff there are three or more points in the provided list and either of the
    * following two conditions: (1) they are all at the same location, or (2) all fall directly on
@@ -1803,7 +1844,7 @@ public abstract class Functions {
    * to be a restricted arc.
    */
   public static double getEllipseError(RotatedEllipse ellie, Sequence target) {
-//    int numPoints = (int) Math.ceil(target.length());
+    //    int numPoints = (int) Math.ceil(target.length());
     double ret = 0;
     List<Pt> ellipseSurface = ellie.initArc();//ellie.getRestrictedArcPath(numPoints);
     double errorSum = 0;
@@ -1991,7 +2032,7 @@ public abstract class Functions {
     double u = ((x3 - x1) * (x2 - x1) + (y3 - y1) * (y2 - y1)) / denom;
     return u;
   }
-  
+
   /**
    * Given some input points that are on the ellipse surface, return a list of angles (in radians)
    * that increase. The input points may be on different sides of the 0-degree line, so for example
