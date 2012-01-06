@@ -184,6 +184,7 @@ public class DrawingBuffer {
         if (bb.getWidthInt() * bb.getHeightInt() == 0) {
           if (!emptyOK) {
             bug("Not drawing buffer with zero size... check for NaNs");
+            throw new RuntimeException("Buffer '" + getHumanReadableName() + "' has zero size.");
           }
         } else if (bb.getWidth() * bb.getHeight() > (1500 * 1500)) {
           bug("Buffer size would be " + bb + ". I refuse.");
