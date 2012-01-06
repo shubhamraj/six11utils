@@ -151,9 +151,15 @@ public class FSM { // This class implements a Flying Spaghetti Monster
   /**
    * Establish a new transition. You might use this method something like this:
    * 
-   * fsm.addTransition(new FSM.Transition("someEvent", "firstState", "secondState") { public void
-   * doBeforeTransition() { System.out.println("about to transition..."); } public void
-   * doAfterTransition() { fancyOperation(); } });
+   * <pre>
+   * fsm.addTransition(new FSM.Transition("someEvent", "firstState", "secondState") { 
+   *  public void doBeforeTransition() { 
+   *    System.out.println("about to transition..."); 
+   *  } 
+   *  public void doAfterTransition() { 
+   *    fancyOperation(); 
+   *  }
+   * });
    */
   public void addTransition(Transition trans) {
     State st = states.get(trans.startState);
@@ -195,16 +201,20 @@ public class FSM { // This class implements a Flying Spaghetti Monster
       if (debug) {
         Debug.out("FSM", "Event: " + evtName + ", " + trans.startState + " --> " + trans.endState);
       }
-      trans.doBeforeTransition();
-      setState(trans.endState, false);
-      trans.doAfterTransition();
-      fireChangeEvent();
-      if (states.get(trans.endState).autoTransitionState != null) {
-        if (debug) {
-          Debug.out("FSM", "Automatically transitioning from " + trans.endState + " to "
-              + states.get(trans.endState).autoTransitionState);
+      if (!trans.veto()) {
+        trans.doBeforeTransition();
+        setState(trans.endState, false);
+        trans.doAfterTransition();
+        fireChangeEvent();
+        if (states.get(trans.endState).autoTransitionState != null) {
+          if (debug) {
+            Debug.out(
+                "FSM",
+                "Automatically transitioning from " + trans.endState + " to "
+                    + states.get(trans.endState).autoTransitionState);
+          }
+          addEvent("(auto)");
         }
-        addEvent("(auto)");
       }
     }
   }
@@ -288,6 +298,15 @@ public class FSM { // This class implements a Flying Spaghetti Monster
      * Override this to have FSM execute code immediately after following a state transition.
      */
     public void doAfterTransition() {
+    }
+
+    /**
+     * Override this to test if the transition shouldn't occur. By default this returns false.
+     * 
+     * @return true if the transition should not take place.
+     */
+    public boolean veto() {
+      return false;
     }
   }
 }
