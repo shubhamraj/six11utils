@@ -161,7 +161,7 @@ public class Debug {
 
   public static String nowFilenameFriendly() {
     Date currentDate = new Date();
-    SimpleDateFormat sdf = new SimpleDateFormat("yy-mm-dd");
+    SimpleDateFormat sdf = new SimpleDateFormat("MMM-dd-yyyy");
     return sdf.format(currentDate);
   }
 
