@@ -790,10 +790,12 @@ public class Sequence implements Shape, Iterable<Pt> {
     }
     return roughDensity;
   }
-  
+
   private void initRough() {
     statsX = new Statistics();
     statsY = new Statistics();
+    // Note: there is a better way to do this. Normalizing the sequence is expensive. 
+    // We could use the line length when calculating density instead.
     Sequence seq = Functions.getNormalizedSequence(this, 5.0);
     for (Pt pt : seq) {
       statsX.addData(pt.getX());
@@ -813,4 +815,19 @@ public class Sequence implements Shape, Iterable<Pt> {
     }
     return roughArea;
   }
+  
+  public double getRoughDX() {
+    if (statsX == null || statsY == null) {
+      initRough();
+    }
+    return (statsX.getMax() - statsX.getMin());
+  }
+  
+  public double getRoughDY() {
+    if (statsX == null || statsY == null) {
+      initRough();
+    }
+    return (statsY.getMax() - statsY.getMin());
+  }
+
 }
