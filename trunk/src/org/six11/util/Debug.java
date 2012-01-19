@@ -458,6 +458,13 @@ public class Debug {
     }
   }
 
+  public static void out(Collection<?> collection, boolean indent, boolean showNumbers) {
+    int count = 0;
+    for (Object item : collection) {
+      System.out.println((indent ? "\t" : "") + (showNumbers ? count + ": " : "") + item);
+    }
+  }
+  
   /**
    * 
    */
