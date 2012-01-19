@@ -67,6 +67,8 @@ public class Debug {
   private static final Map<String, String> colorbag = new HashMap<String, String>();
   private static int colorCounter = 0;
   private static NumberFormat df = new DecimalFormat("0.0#");
+  private static Map<Integer, NumberFormat> dfs = new HashMap<Integer, NumberFormat>();
+  private static Map<Integer, String> dfFormatStrings = new HashMap<Integer, String>();
   private static Map<String, FileWriter> logFiles = new HashMap<String, FileWriter>();
 
   static int largestWho = 12;
@@ -88,6 +90,28 @@ public class Debug {
     df = new DecimalFormat(formatString);
   }
 
+  public static NumberFormat getNumberFormat(int numSigFigs) {
+    if (!dfs.containsKey(numSigFigs)) {
+      String format = getFormatString(numSigFigs);
+      NumberFormat f = new DecimalFormat(format);
+      dfs.put(numSigFigs, f);
+    }
+    return dfs.get(numSigFigs);
+  }
+  
+  public static String getFormatString(int numSigFigs) {
+    String format = dfFormatStrings.get(numSigFigs);
+    if (format == null) {
+      StringBuilder buf = new StringBuilder("0.0");
+      for (int i = 1; i < numSigFigs; i++) {
+        buf.append("#");
+      }
+      format = buf.toString();
+      dfFormatStrings.put(numSigFigs, format);
+    }
+    return format;
+  }
+  
   public static void stacktrace(String message, int levelsIn) {
     stacktraceIf(null, message, levelsIn);
   }
@@ -210,6 +234,11 @@ public class Debug {
     if (pt == null)
       return "null";
     return "(" + Debug.num(pt.getX()) + ", " + Debug.num(pt.getY()) + ")";
+  }
+  
+  public static String num(Pt pt, int digits) {
+    NumberFormat f = getNumberFormat(digits);
+    return "(" + f.format(pt.getX()) + ", " + f.format(pt.getY()) + ")";
   }
 
   public static String num(Point2D p2) {
