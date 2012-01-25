@@ -30,6 +30,10 @@ public class MultisourceNumericValue extends NumericValue {
     sources.add(val);
   }
 
+  public Set<Source> getSources() {
+    return sources;
+  }
+  
   @Override
   public double getValue() {
     double ret = 0;

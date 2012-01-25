@@ -230,6 +230,17 @@ public class ConstraintSolver {
     return totalError;
   }
 
+  public boolean hasPoints(Pt...pts) {
+    boolean ret = true;
+    for (Pt pt : pts) {
+      if (!vars.points.contains(pt)) {
+        ret = false;
+        break;
+      }
+    }
+    return ret;
+  }
+  
   public List<Pt> getPoints() {
     return vars.points;
   }
@@ -268,6 +279,13 @@ public class ConstraintSolver {
       if (ui != null) {
         ui.modelChanged();
       }
+    }
+  }
+  
+  public void removeConstraint(Constraint c) {
+    vars.constraints.remove(c);
+    if (ui != null) {
+      ui.modelChanged();
     }
   }
 

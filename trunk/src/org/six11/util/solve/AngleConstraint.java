@@ -182,4 +182,9 @@ public class AngleConstraint extends Constraint {
     
   }
 
+  @Override
+  public Pt[] getRelatedPoints() {
+    return new Pt[] { a, b, f };
+  }
+
 }

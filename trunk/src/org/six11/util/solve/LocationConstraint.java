@@ -109,4 +109,11 @@ public class LocationConstraint extends Constraint {
     if (oldPt == target) { target = newPt; }
   }
 
+  @Override
+  public Pt[] getRelatedPoints() {
+    return new Pt[] { p, target };
+  }
+  
+
+
 }

@@ -105,6 +105,8 @@ public abstract class Constraint {
   }
   
   public abstract boolean involves(Pt who);
+  
+  public abstract Pt[] getRelatedPoints();
 
   public abstract void replace(Pt oldPt, Pt newPt);
 

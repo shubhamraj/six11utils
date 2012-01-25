@@ -37,10 +37,7 @@ public class RankedList<T> {
   }
 
   public void add(double val, T obj) {
-    RankedNode node = new RankedNode(val, obj);
-    bug("Adding rank: " + num(val) + " " + obj);
-    bug("There are now " + data.size() + " entries");
-    data.add(node);
+    data.add(new RankedNode(val, obj));
   }
 
   public double[] getRanks() {
