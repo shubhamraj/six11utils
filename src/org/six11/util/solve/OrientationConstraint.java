@@ -22,8 +22,8 @@ public class OrientationConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
 
-  Pt lineA1, lineA2, lineB1, lineB2;
-  NumericValue angle;
+  public Pt lineA1, lineA2, lineB1, lineB2;
+  public NumericValue angle;
 
   /**
    * This constrains two lines to some angle.
@@ -190,5 +190,10 @@ public class OrientationConstraint extends Constraint {
     if (oldPt == lineB2) {
       lineB2 = newPt;
     }
+  }
+
+  @Override
+  public Pt[] getRelatedPoints() {
+    return new Pt[] { lineA1, lineA2, lineB1, lineB2 };
   }
 }

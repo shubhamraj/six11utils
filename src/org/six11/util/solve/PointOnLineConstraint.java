@@ -136,4 +136,9 @@ public class PointOnLineConstraint extends Constraint {
     }
   }
 
+  @Override
+  public Pt[] getRelatedPoints() {
+    return new Pt[] { a, b, m };
+  }
+
 }

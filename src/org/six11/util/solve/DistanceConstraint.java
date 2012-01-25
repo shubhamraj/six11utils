@@ -19,8 +19,8 @@ public class DistanceConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
 
-  Pt a, b;
-  NumericValue d;
+  public Pt a, b;
+  public NumericValue d;
 
   public DistanceConstraint(Pt a, Pt b, NumericValue d) {
     this.a = a;
@@ -150,6 +150,11 @@ public class DistanceConstraint extends Constraint {
   
   public void setValue(NumericValue nv) {
     d = nv;
+  }
+
+  @Override
+  public Pt[] getRelatedPoints() {
+    return new Pt[] { a, b };
   }
   
 }

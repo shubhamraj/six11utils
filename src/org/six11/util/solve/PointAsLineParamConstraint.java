@@ -147,4 +147,9 @@ public class PointAsLineParamConstraint extends Constraint {
       target = newPt;
     }
   }
+
+  @Override
+  public Pt[] getRelatedPoints() {
+    return new Pt[] { lineA, lineB, target };
+  }
 }
