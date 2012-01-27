@@ -5,6 +5,7 @@ package org.six11.util.data;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 
@@ -57,5 +58,22 @@ public abstract class Lists {
     }
     return ret;
   }
+  
 
+  public static <T> T getOne(Set<T> items) {
+    T ret = null;
+    if (!items.isEmpty()) {
+      ret = items.iterator().next();
+    }
+    return ret;
+  }
+  
+  public static <T> T removeOne(Set<T> items) {
+    T ret = null;
+    if (!items.isEmpty()) {
+      ret = items.iterator().next();
+      items.remove(ret);
+    }
+    return ret;
+  }
 }
