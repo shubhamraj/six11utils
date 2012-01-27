@@ -4,6 +4,7 @@ package org.six11.util.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -73,6 +74,16 @@ public abstract class Lists {
     if (!items.isEmpty()) {
       ret = items.iterator().next();
       items.remove(ret);
+    }
+    return ret;
+  }
+  
+  public static <T> Collection<T> intersect(Collection<T> groupA, Collection<T> groupB) {
+    Collection<T> ret = new HashSet<T>();
+    for (T t: groupA) {
+      if (groupB.contains(t)) {
+        ret.add(t);
+      }
     }
     return ret;
   }
