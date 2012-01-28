@@ -1789,7 +1789,7 @@ public abstract class Functions {
    * ellipse has a minor radius less than 2, this returns null. Be careful to check the return
    * value.
    */
-  public static RotatedEllipse createEllipse(List<Pt> somePoints) {
+  public static RotatedEllipse createEllipse(List<Pt> somePoints, boolean isArc) {
     for (Pt pt : somePoints) {
       if (pt.getTime() == 0) {
         stacktrace("zero time in createEllipse.", 8);
@@ -1803,7 +1803,9 @@ public abstract class Functions {
       RotatedEllipse ellie = EllipseFit.ellipseFit(somePoints);
       // don't want to work with very skinny ellipses.
       if (ellie.getMinorRadius() > 2) {
-        ellie.setArcRegion(somePointsSeq.getFirst(), midPt, somePointsSeq.getLast());
+        if (isArc) {
+          ellie.setArcRegion(somePointsSeq.getFirst(), midPt, somePointsSeq.getLast());
+        }
         ret = ellie;
       }
     }
@@ -1859,7 +1861,7 @@ public abstract class Functions {
 
   public static double getEllipseError(List<Pt> points) {
     double ret = Double.MAX_VALUE;
-    RotatedEllipse ellie = createEllipse(points);
+    RotatedEllipse ellie = createEllipse(points, false);
     if (ellie != null) {
       int n = points.size();
       ellie.setArcRegion(points.get(0), points.get(n / 2), points.get(n - 1));
