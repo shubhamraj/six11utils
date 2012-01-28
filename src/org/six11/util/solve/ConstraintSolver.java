@@ -247,7 +247,7 @@ public class ConstraintSolver {
 
   public synchronized void addPoint(String name, Pt pt) {
     if (hasName(pt) && !getName(pt).equals(name)) {
-      bug("warning: do you really want to change the name of this point from " + getName(pt) + " to " + name + "?");
+      Debug.stacktrace("warning: do you really want to change the name of this point from " + getName(pt) + " to " + name + "?", 10);
     }
     setName(pt, name);
     addPoint(pt);
