@@ -109,7 +109,6 @@ public abstract class ShapeFactory {
     Rectangle bounds;
 
     public RotatedEllipseShape(RotatedEllipse ellie, int numSegments) {
-      Debug.stacktrace("made it", 6);
       this.ellie = ellie;
       this.numSegments = numSegments;
     }
