@@ -2,6 +2,8 @@
 
 package org.six11.util;
 
+import static org.six11.util.Debug.bug;
+
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Date;
@@ -12,6 +14,7 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -98,7 +101,7 @@ public class Debug {
     }
     return dfs.get(numSigFigs);
   }
-  
+
   public static String getFormatString(int numSigFigs) {
     String format = dfFormatStrings.get(numSigFigs);
     if (format == null) {
@@ -111,7 +114,7 @@ public class Debug {
     }
     return format;
   }
-  
+
   public static void stacktrace(String message, int levelsIn) {
     stacktraceIf(null, message, levelsIn);
   }
@@ -235,7 +238,7 @@ public class Debug {
       return "null";
     return "(" + Debug.num(pt.getX()) + ", " + Debug.num(pt.getY()) + ")";
   }
-  
+
   public static String num(Pt pt, int digits) {
     NumberFormat f = getNumberFormat(digits);
     return "(" + f.format(pt.getX()) + ", " + f.format(pt.getY()) + ")";
@@ -464,7 +467,7 @@ public class Debug {
       System.out.println((indent ? "\t" : "") + (showNumbers ? count + ": " : "") + item);
     }
   }
-  
+
   /**
    * 
    */
@@ -485,5 +488,34 @@ public class Debug {
 
   public static void warn(Object source, String what) {
     out(source.getClass().getSimpleName(), "*** warning *** " + what);
+  }
+
+  public static String getPathIteratorDebug(PathIterator pi) {
+    StringBuilder buf = new StringBuilder();
+    float[] vals = new float[6];
+    while (!pi.isDone()) {
+      int type = pi.currentSegment(vals);
+      String which = "?";
+      switch (type) {
+        case PathIterator.SEG_CLOSE:
+          which = "close";
+          break;
+        case PathIterator.SEG_CUBICTO:
+          which = "cubic";
+          break;
+        case PathIterator.SEG_LINETO:
+          which = "line";
+          break;
+        case PathIterator.SEG_MOVETO:
+          which = "move";
+          break;
+        case PathIterator.SEG_QUADTO:
+          which = "quad";
+          break;
+      }
+      buf.append(which + " ");
+      pi.next();
+    }
+    return buf.toString();
   }
 }

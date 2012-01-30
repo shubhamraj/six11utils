@@ -51,35 +51,6 @@ public class RotatedEllipse {
     return restrictedArc;
   }
 
-//  public List<Pt> getRestrictedArcPath() {
-//    if (restrictedArcPath == null) {
-//      getRestrictedArcPath(60);
-//    }
-//    return restrictedArcPath;
-//  }
-
-//  public List<Pt> getRestrictedArcPath(int numPoints) {
-//    if (restrictedArcPath == null) {
-//      PathIterator path = new ShapeFactory.RotatedEllipseShape(this, numPoints)
-//          .getPathIterator(null);
-//      restrictedArcPath = new ArrayList<Pt>();
-//      long startTime = regionPoints.get(0).getTime();
-//      long dt = regionPoints.get(2).getTime() - startTime;
-//      double[] coords = new double[6];
-//      while (!path.isDone()) {
-//        path.currentSegment(coords);
-//        restrictedArcPath.add(new Pt(coords[0], coords[1]));
-//        path.next();
-//      }
-//      for (int i = 0; i < restrictedArcPath.size(); i++) {
-//        double frac = (double) i / (double) restrictedArcPath.size();
-//        long t = startTime + (long) (frac * dt);
-//        restrictedArcPath.get(i).setTime(t);
-//      }
-//    }
-//    return restrictedArcPath;
-//  }
-
   public double getStartAngle() {
     return startAngle;
   }
@@ -94,6 +65,15 @@ public class RotatedEllipse {
 
   public double getMinorRadius() {
     return min(a, b);
+  }
+  
+  public double getEccentricity() {
+    double big = getMajorRadius();
+    double small = getMinorRadius();
+    big = big * big;
+    small = small * small;
+    double rootMe = ((big - small) / big);
+    return Math.sqrt(rootMe);
   }
 
   /**
