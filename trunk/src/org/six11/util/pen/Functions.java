@@ -1287,6 +1287,50 @@ public abstract class Functions {
     return ret;
   }
 
+  public static Sequence makeClosedNaturalSpline(int numSteps, List<Pt> controlPoints) {
+    Sequence ret = new Sequence();
+    int n = controlPoints.size();
+
+    int idxA, idxB, idxC, idxD;
+    Pt a, b, c, d;
+    for (int i = 0; i < n; i++) {
+
+      idxA = wrapMod(i - 1, n);
+      idxB = wrapMod(i, n);
+      idxC = wrapMod(i + 1, n);
+      idxD = wrapMod(i + 2, n);
+
+      a = controlPoints.get(idxA);
+      b = controlPoints.get(idxB);
+      c = controlPoints.get(idxC);
+      d = controlPoints.get(idxD);
+
+      getSplinePatch(a, b, c, d, ret, numSteps);
+    }
+    return ret;
+  }
+
+  /**
+   * Modulo function that allows the first parameter to be negative, allowing array index access for
+   * negative values to wrap around to the end. Example output (using @ as the operator symbol):
+   * 
+   * <pre>
+   * -2 @ 5 = 3
+   * -1 @ 5 = 4
+   * 0 @ 5 = 0
+   * 1 @ 5 = 1
+   * 2 @ 5 = 2
+   * 3 @ 5 = 3
+   * </pre>
+   */
+  public static int wrapMod(int i, int n) {
+    int res = i % n;
+    if (res < 0) {
+      res = n + res;
+    }
+    return res;
+  }
+
   public static Sequence makeNaturalSpline(int numSteps, List<Pt> controlPoints) {
     Sequence ret = new Sequence();
     int numPatches = controlPoints.size() - 1;

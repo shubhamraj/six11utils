@@ -2,17 +2,24 @@
 
 package org.six11.util;
 
-import org.six11.util.args.Arguments;
+import static java.lang.System.out;
 
 public class Test {
 
   public static void main(String[] in) {
-    Arguments args = new Arguments(in);
-    System.out.println("Do we have the flag --foo? " + args.hasFlag("--foo"));
-    System.out.println("How about just foo? " + args.hasFlag("foo"));
-    System.out.println("What is the value of the foo flag? " + args.getValue("foo"));
-    System.out.println("How many positional params are there? " + args.getPositionCount());
-    System.out.println("What's in positional param 2? " + args.getPosition(2));
+    out.println("Modulus test");
+    int n = 5;
+    for (int i=-10; i < n + 10; i++) {
+      out.println(String.format("%d @ %d = %d", i, n, wrapMod(i, n)));
+    }
+  }
+  
+  public static int wrapMod(int i, int n) {
+    int res = i % n;
+    if (res < 0) {
+      res = n + res;
+    }
+    return res;
   }
 
 }
