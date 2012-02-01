@@ -1834,12 +1834,12 @@ public abstract class Functions {
    * value.
    */
   public static RotatedEllipse createEllipse(List<Pt> somePoints, boolean isArc) {
-    for (Pt pt : somePoints) {
-      if (pt.getTime() == 0) {
-        stacktrace("zero time in createEllipse.", 8);
-        System.exit(0);
-      }
-    }
+//    for (Pt pt : somePoints) {
+//      if (pt.getTime() == 0) {
+//        stacktrace("zero time in createEllipse.", 8);
+//        System.exit(0);
+//      }
+//    }
     Sequence somePointsSeq = new Sequence(somePoints);
     RotatedEllipse ret = null;
     if (!Functions.arePointsColinear(somePoints)) {
@@ -2063,8 +2063,10 @@ public abstract class Functions {
    */
   public static boolean isPointInLineSegment(Pt pt, Pt line1, Pt line2) {
     double u = getPointSegmentParam(pt, line1, line2);
-    bug("Line segment param: " + num(u));
-    return (u <= 1.0 && u >= 0.0);
+//    bug("Line segment param: " + num(u));
+    boolean ret = (u <= 1.0 && u >= 0.0);
+//    bug("isPointInLineSegment: " + num(u) + " --> " + ret);
+    return ret;
   }
 
   public static double getPointSegmentParam(Pt pt, Pt line1, Pt line2) {
