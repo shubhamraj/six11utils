@@ -830,4 +830,10 @@ public class Sequence implements Shape, Iterable<Pt> {
     return (statsY.getMax() - statsY.getMin());
   }
 
+  public Pt replace(int i, Pt pt) {
+    Pt old = points.remove(i);
+    points.add(i, pt);
+    return old;
+  }
+
 }
