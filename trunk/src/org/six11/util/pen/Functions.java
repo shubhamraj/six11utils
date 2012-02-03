@@ -1834,12 +1834,12 @@ public abstract class Functions {
    * value.
    */
   public static RotatedEllipse createEllipse(List<Pt> somePoints, boolean isArc) {
-//    for (Pt pt : somePoints) {
-//      if (pt.getTime() == 0) {
-//        stacktrace("zero time in createEllipse.", 8);
-//        System.exit(0);
-//      }
-//    }
+    //    for (Pt pt : somePoints) {
+    //      if (pt.getTime() == 0) {
+    //        stacktrace("zero time in createEllipse.", 8);
+    //        System.exit(0);
+    //      }
+    //    }
     Sequence somePointsSeq = new Sequence(somePoints);
     RotatedEllipse ret = null;
     if (!Functions.arePointsColinear(somePoints)) {
@@ -2060,12 +2060,22 @@ public abstract class Functions {
    * @param pt
    * @param line1
    * @param line2
+   * @param slop
    */
-  public static boolean isPointInLineSegment(Pt pt, Pt line1, Pt line2) {
+  public static boolean isPointInLineSegment(Pt pt, Pt line1, Pt line2, double slop) {
+    boolean ret = false;
     double u = getPointSegmentParam(pt, line1, line2);
-//    bug("Line segment param: " + num(u));
-    boolean ret = (u <= 1.0 && u >= 0.0);
-//    bug("isPointInLineSegment: " + num(u) + " --> " + ret);
+    //    bug("u: " + num(u));
+    //    bug("Line segment param: " + num(u));
+    if (u <= 1.0 && u >= 0.0) {
+      double d = getDistanceBetweenPointAndLine(pt, new Line(line1, line2));
+      //      bug("d: " + num(d));
+      double minusSlop = d - slop;
+      //      bug("minusSlop: " + num(minusSlop));
+      ret = lt(minusSlop, 0, EQ_TOL);
+      //      bug("ret: " + ret);
+    }
+    //    bug("isPointInLineSegment: " + num(u) + " --> " + ret);
     return ret;
   }
 
@@ -2140,6 +2150,17 @@ public abstract class Functions {
     char ret = '+'; // non-decreasing: m < n
     if (m > n) {
       ret = '-';
+    }
+    return ret;
+  }
+
+  public static boolean isPointOnPolyline(Pt target, List<Pt> points, double slop) {
+    boolean ret = false;
+    for (int i = 0; i < points.size() - 1; i++) {
+      if (isPointInLineSegment(target, points.get(i), points.get(i + 1), slop)) {
+        ret = true;
+        break;
+      }
     }
     return ret;
   }

@@ -5,6 +5,7 @@ package org.six11.util.gui;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Point2D;
 import java.util.Collection;
+import java.util.List;
 
 import org.six11.util.Debug;
 import org.six11.util.pen.Pt;
@@ -280,6 +281,12 @@ public class BoundingBox {
 
   public void translateToOrigin() {
     translate(-minX, -minY);
+  }
+
+  public void addAll(List<Pt> points) {
+    for (Pt pt : points) {
+      add(pt);
+    }
   }
 
 }

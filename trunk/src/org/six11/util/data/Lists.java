@@ -23,6 +23,10 @@ public abstract class Lists {
     }
     return ret;
   }
+  
+  public static <T> boolean isSameObject(List<T> list, int idx, T obj) {
+    return list.size() > idx && list.get(idx) == obj;
+  }
 
   public static Object getLast(List<?> list) {
     return list.get(list.size() - 1);
@@ -61,7 +65,7 @@ public abstract class Lists {
   }
   
 
-  public static <T> T getOne(Set<T> items) {
+  public static <T> T getOne(Collection<T> items) {
     T ret = null;
     if (!items.isEmpty()) {
       ret = items.iterator().next();
