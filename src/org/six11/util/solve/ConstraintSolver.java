@@ -258,6 +258,7 @@ public class ConstraintSolver {
       if (!hasName(pt)) {
         bug("warning: adding a point with no name");
       }
+//      Debug.stacktrace("made point " + pt.getString("name"), 8);
       vars.points.add(pt);
     }
     if (ui != null) {
