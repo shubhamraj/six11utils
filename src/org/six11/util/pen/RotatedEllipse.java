@@ -10,9 +10,9 @@ import static java.lang.Math.toDegrees;
 
 import static org.six11.util.Debug.num;
 import static org.six11.util.Debug.bug;
-//import org.six11.util.gui.shape.ShapeFactory;
+// import org.six11.util.gui.shape.ShapeFactory;
 
-//import java.awt.geom.PathIterator;
+// import java.awt.geom.PathIterator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +38,8 @@ public class RotatedEllipse {
   private double endAngle;
 
   public List<Pt> regionPoints;
-//  private List<Pt> restrictedArcPath;
+
+  //  private List<Pt> restrictedArcPath;
 
   public RotatedEllipse(Pt center, double a, double b, double ellipseRotation) {
     this.center = center;
@@ -66,7 +67,7 @@ public class RotatedEllipse {
   public double getMinorRadius() {
     return min(a, b);
   }
-  
+
   public double getEccentricity() {
     double big = getMajorRadius();
     double small = getMinorRadius();
@@ -190,6 +191,10 @@ public class RotatedEllipse {
     }
     Pt left = getEllipticalPoint(getT(closest) - step);
     Pt right = getEllipticalPoint(getT(closest) + step);
+    if (left.isSameLocation(right)) {
+      bug("hmm... left same spot as right. step: " + step + ", left: " + num(left) + ", right: "
+          + num(right));
+    }
     ret = searchForParameter(left, right, pt);
     return ret;
   }
@@ -201,21 +206,41 @@ public class RotatedEllipse {
   private double searchForParameter(Pt left, Pt right, Pt target) {
     double ret = Double.MAX_VALUE;
     double midM = Double.MAX_VALUE;
+    double leftT, rightT;
+    int numIterations = 0;
+    StringBuilder logData = new StringBuilder();
     do {
-      double midT = (getT(left) + getT(right)) / 2.0;
+      //      logData.setLength(0);
+      leftT = getT(left);
+      rightT = getT(right);
+      double midT = (leftT + rightT) / 2.0;
       Pt mid = getEllipticalPoint(midT);
       Vec leftV = new Vec(center, left);
       Vec targetV = new Vec(center, target);
       Vec midV = new Vec(center, mid);
       double leftM = targetV.cross(leftV);
       midM = targetV.cross(midV);
+      logData.append(String.format(
+          "%1.2f\t%1.2f\t%1.2f\t%1.2f\t%1.2f\t%1.2f\t%1.2f\t%1.2f\t%1.2f\t%1.2f\t%1.2f\t%1.2f\n",
+          leftT, midT, rightT, left.x, left.y, mid.x, mid.y, right.x, right.y, leftM, midM,
+          getT(mid)));
       if (Math.signum(leftM) == Math.signum(midM)) {
         left = mid;
       } else {
         right = mid;
       }
       ret = getT(mid);
-    } while (abs(midM) > 0.01);
+
+      if (numIterations > 40) {
+        System.out.println("numIterations: " + numIterations);
+        System.out
+            .println("leftT\tmidT\trightT\tleft.x\tleft.y\tmid.x\tmid.y\tright.x\tright.y\tleftM\tmidM\tmidT");
+        System.out.println(logData.toString());
+        break;
+      }
+      numIterations++;
+    } while (rightT - leftT > 0.01);
+    //    } while (abs(midM) > 0.01);
     return ret;
   }
 
@@ -270,6 +295,7 @@ public class RotatedEllipse {
     Pt arc1 = getRegionPoints().get(0);
     Pt arc2 = getRegionPoints().get(1);
     Pt arc3 = getRegionPoints().get(2);
+    bug(num(arc1) + ", " + num(arc2) + ", " + num(arc3));
     arc1T = searchForParameter(arc1);
     arc2T = searchForParameter(arc2);
     arc3T = searchForParameter(arc3);
@@ -279,11 +305,11 @@ public class RotatedEllipse {
     double start = arcParams.get(0);
     double end = arcParams.get(2);
     double step = (end - start) / numSteps;
+    //    bug("initArc from " + start + " to " + end + ", step " + step);
     for (double t = start; t <= end; t += step) {
       surface.add(getEllipticalPoint(t));
     }
     return surface;
   }
-  
-  
+
 }
