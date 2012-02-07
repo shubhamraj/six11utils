@@ -21,6 +21,8 @@ import static java.lang.Math.sqrt;
 
 public class ConstraintSolver {
 
+  private String f = "%#.10f";
+  private StringBuilder buf;
   public static interface Listener {
     public void constraintStepDone(State state);
   }
@@ -69,6 +71,7 @@ public class ConstraintSolver {
     this.vars = new VariableBank();
     this.fps = 60;
     this.stepListeners = new ArrayList<Listener>();
+    this.buf = new StringBuilder();
     Entropy.setSeed(System.currentTimeMillis());
   }
 
@@ -107,7 +110,7 @@ public class ConstraintSolver {
         ConstraintSolver.this.run();
       }
     };
-    new Thread(runner).start();
+    new Thread(runner, "Constraint Solver").start();
   }
 
   void run() {
@@ -133,6 +136,7 @@ public class ConstraintSolver {
           double e = step();
           errorStats.addData(prevError - e);
           prevError = e;
+          
           if (errorStats.getN() == MAX_ITERATION_N
               && errorStats.getVariance() < MIN_ITERATION_VARIATION) {
             bug("Can't find a stable solution, so I give up.");
@@ -175,7 +179,7 @@ public class ConstraintSolver {
 
   @SuppressWarnings("unchecked")
   private double step() {
-
+    buf.setLength(0);
     double totalError = 0;
     try {
       // 1: clear any current correction values
@@ -206,7 +210,7 @@ public class ConstraintSolver {
         Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
         double mag = delta.mag();
         totalError = totalError + mag;
-
+        buf.append(String.format(f + " ", mag));
         // straightforward way:
         //        pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
 
@@ -227,6 +231,8 @@ public class ConstraintSolver {
     } catch (Exception ex) {
       // and they say I have a software engineering background.
     }
+    buf.insert(0, String.format(f + " ", totalError));
+    System.out.println(buf.toString());
     return totalError;
   }
 

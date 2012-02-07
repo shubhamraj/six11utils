@@ -81,6 +81,7 @@ public class DrawingBuffer {
   }
 
   public void clear() {
+//    bug("Clearing " + getHumanReadableName());
     this.img = new BufferedImage(defaultSize.width, defaultSize.height,
         BufferedImage.TYPE_INT_ARGB_PRE);
     this.turtles = new ArrayList<TurtleOp>();
