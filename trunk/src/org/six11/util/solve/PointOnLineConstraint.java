@@ -35,22 +35,22 @@ public class PointOnLineConstraint extends Constraint {
     return "Point On Line";
   }
 
-  public void accumulateCorrection() {
+  public void accumulateCorrection(double heat) {
     double e = measureError();
     if (e > TOLERANCE) {
       int pins = countPinned(a, b, m);
-      maybeMove(pins, a, b, m); // possible move a towards the line formed by b and m
-      maybeMove(pins, b, a, m); // b --> a-m
-      maybeMove(pins, m, a, b); // m --> a-b
+      maybeMove(pins, a, b, m, heat); // possible move a towards the line formed by b and m
+      maybeMove(pins, b, a, m, heat); // b --> a-m
+      maybeMove(pins, m, a, b, heat); // m --> a-b
     }
   }
 
-  private void maybeMove(int pins, Pt move, Pt pt1, Pt pt2) {
+  private void maybeMove(int pins, Pt move, Pt pt1, Pt pt2, double heat) {
     if (!isPinned(move)) {
       Pt near = Functions.getNearestPointOnLine(move, new Line(pt1, pt2));
       double shift = near.distance(move) / (3 - pins);
       Vec delta = new Vec(move, near).getVectorOfMagnitude(shift);
-      accumulate(move, delta);
+      accumulate(move, delta, heat);
     }
   }
 

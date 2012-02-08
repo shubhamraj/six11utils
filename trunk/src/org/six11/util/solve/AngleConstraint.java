@@ -40,7 +40,7 @@ public class AngleConstraint extends Constraint {
     return "Angle";
   }
 
-  public void accumulateCorrection() {
+  public void accumulateCorrection(double heat) {
     int free = 2 - countPinned(a, b);
     if (free > 0) {
       double e = measureError();
@@ -50,12 +50,12 @@ public class AngleConstraint extends Constraint {
         if (!isPinned(a)) {
           Pt rotatedA = Functions.rotatePointAboutPivot(a, f, shift);
           Vec vecA = new Vec(rotatedA.x - a.x, rotatedA.y - a.y);
-          accumulate(a, vecA);
+          accumulate(a, vecA, heat);
         }
         if (!isPinned(b)) {
           Pt rotatedB = Functions.rotatePointAboutPivot(b, f, -shift);
           Vec vecB = new Vec(rotatedB.x - b.x, rotatedB.y - b.y);
-          accumulate(b, vecB);
+          accumulate(b, vecB, heat);
         }
       }
     }
@@ -64,7 +64,7 @@ public class AngleConstraint extends Constraint {
   /**
    * This is the accumulateCorrection method assuming a stationary fulcrum.
    */
-  public void accumulateCorrectionStationaryFulcrum() {
+  public void accumulateCorrectionStationaryFulcrum(double heat) {
     int free = 2 - countPinned(a, b);
     if (free > 0) {
       double e = measureError();
@@ -74,12 +74,12 @@ public class AngleConstraint extends Constraint {
         if (!isPinned(a)) {
           Pt rotatedA = Functions.rotatePointAboutPivot(a, f, shift);
           Vec vecA = new Vec(rotatedA.x - a.x, rotatedA.y - a.y);
-          accumulate(a, vecA);
+          accumulate(a, vecA, heat);
         }
         if (!isPinned(b)) {
           Pt rotatedB = Functions.rotatePointAboutPivot(b, f, -shift);
           Vec vecB = new Vec(rotatedB.x - b.x, rotatedB.y - b.y);
-          accumulate(b, vecB);
+          accumulate(b, vecB, heat);
         }
       }
     }
