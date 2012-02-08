@@ -44,15 +44,15 @@ public class OrientationConstraint extends Constraint {
     return "Orientation";
   }
 
-  public void accumulateCorrection() {
+  public void accumulateCorrection(double heat) {
     double e = measureError();
     if (abs(e) > TOLERANCE) {
-      rotate(lineA1, lineA2, -e);
-      rotate(lineB1, lineB2, e);
+      rotate(lineA1, lineA2, -e, heat);
+      rotate(lineB1, lineB2, e, heat);
     }
   }
 
-  private void rotate(Pt pt1, Pt pt2, double amt) {
+  private void rotate(Pt pt1, Pt pt2, double amt, double heat) {
     // three cases: 
     // both points are free = rotate about mid by (amt / 2)
     // one point free = rotate free point about pinned point by amt
@@ -63,16 +63,16 @@ public class OrientationConstraint extends Constraint {
       Pt pivot = line.getMidpoint();
       Pt rotated1 = Functions.rotatePointAboutPivot(pt1, pivot, amt / 2);
       Vec vec1 = new Vec(rotated1.x - pt1.x, rotated1.y - pt1.y);
-      accumulate(pt1, vec1);
+      accumulate(pt1, vec1, heat);
       Pt rotated2 = Functions.rotatePointAboutPivot(pt2, pivot, amt / 2);
       Vec vec2 = new Vec(rotated2.x - pt2.x, rotated2.y - pt2.y);
-      accumulate(pt2, vec2);
+      accumulate(pt2, vec2, heat);
     } else if (free == 1) {
       Pt pivot = isPinned(pt1) ? pt1 : pt2;
       Pt moveMe = isPinned(pt1) ? pt2 : pt1;
       Pt rotated = Functions.rotatePointAboutPivot(moveMe, pivot, amt / 2);
       Vec vec = new Vec(rotated.x - moveMe.x, rotated.y - moveMe.y);
-      accumulate(moveMe, vec);
+      accumulate(moveMe, vec, heat);
     }
   }
 

@@ -48,19 +48,20 @@ public class DistanceConstraint extends Constraint {
     return "Distance";
   }
 
-  public void accumulateCorrection() {
+  public void accumulateCorrection(double heat) {
     int free = 2 - countPinned(a, b);
     if (free > 0) {
       double e = measureError();
       if (abs(e) > TOLERANCE) {
         double shift = e / free; // move each free point its fair share of the way to the goal
+//        shift = makeRandom(shift, heat);
         if (!isPinned(a)) {
           Vec aToB = new Vec(a, b).getUnitVector().getScaled(shift);
-          accumulate(a, aToB);
+          accumulate(a, aToB, heat);
         }
         if (!isPinned(b)) {
           Vec bToA = new Vec(b, a).getUnitVector().getScaled(shift);
-          accumulate(b, bToA);
+          accumulate(b, bToA, heat);
         }
       }
     }

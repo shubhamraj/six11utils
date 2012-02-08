@@ -27,7 +27,6 @@ public class RankedList<T> {
       } else if (this.val > that.val) {
         ret = 1;
       }
-      bug(num(this.val) + " compared to " + num(that.val) + " = " + ret);
       return ret;
     }
   }

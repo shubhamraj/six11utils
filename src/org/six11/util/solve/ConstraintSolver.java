@@ -1,10 +1,12 @@
 package org.six11.util.solve;
 
 import java.awt.Component;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.six11.util.Debug;
@@ -15,14 +17,19 @@ import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 
 import static org.six11.util.Debug.bug;
-import static org.six11.util.Debug.num;
-import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 public class ConstraintSolver {
 
-  private String f = "%#.10f";
+  private boolean debugOutput = false;
+  private BufferedWriter debugOutWriter = null;
+  private String f = "%+#.10f";
   private StringBuilder buf;
+
+  private Random random;
+
   public static interface Listener {
     public void constraintStepDone(State state);
   }
@@ -33,7 +40,7 @@ public class ConstraintSolver {
 
   public static final String ACCUM_CORRECTION = "accumulated correction";
   private static final int MAX_ITERATION_N = 100;
-  private static final double MIN_ITERATION_VARIATION = 0.01;
+  //  private static final double MIN_ITERATION_VARIATION = 0.01;
 
   private List<Listener> stepListeners;
   private TestSolveUI ui = null;
@@ -69,10 +76,18 @@ public class ConstraintSolver {
   private final void init() {
     this.monitor = new Object();
     this.vars = new VariableBank();
-    this.fps = 60;
+//    this.fps = 60;
     this.stepListeners = new ArrayList<Listener>();
     this.buf = new StringBuilder();
-    Entropy.setSeed(System.currentTimeMillis());
+    this.random = new Random(System.currentTimeMillis());
+  }
+
+  public void setDebugOut(boolean v) {
+    this.debugOutput = v;
+  }
+
+  public void setDebugOutWriter(BufferedWriter bw) {
+    this.debugOutWriter = bw;
   }
 
   public void createUI() {
@@ -114,7 +129,7 @@ public class ConstraintSolver {
   }
 
   void run() {
-    bug("Entering run(). You should only see this one time!");
+    //    bug("Entering run(). You should only see this one time!");
     finished = false;
     long naptime = 0;
     if (fps > 0) {
@@ -122,41 +137,63 @@ public class ConstraintSolver {
     } else {
       naptime = 0;
     }
-    Statistics errorStats = new Statistics();
-    errorStats.setMaximumN(MAX_ITERATION_N);
+//    Statistics errorStats = new Statistics();
+//    errorStats.setMaximumN(MAX_ITERATION_N);
     double prevError = Double.MAX_VALUE;
+    double heat = 1.0;
+    double heatStep = -0.001;
+    int numSteps = 0;
     while (true) {
       synchronized (monitor) {
         try {
           if (finished) {
-            errorStats.clear();
+//            errorStats.clear();
             prevError = Double.MAX_VALUE;
+            heat = 1.0;
             monitor.wait();
+            numSteps = 0;
           }
-          double e = step();
-          errorStats.addData(prevError - e);
+          double e = step(prevError, heat);
+          numSteps = numSteps + 1;
+          if (debugOutput && debugOutWriter != null) {
+            try {
+              debugOutWriter.flush();
+            } catch (IOException ex) {
+              ex.printStackTrace();
+            }
+          }
+//          errorStats.addData(prevError - e);
           prevError = e;
-          
-          if (errorStats.getN() == MAX_ITERATION_N
-              && errorStats.getVariance() < MIN_ITERATION_VARIATION) {
-            bug("Can't find a stable solution, so I give up.");
-            bug("        n: " + errorStats.getN());
-            bug("  std_dev: " + errorStats.getStdDev());
-            bug("  variate: " + errorStats.getVariance());
-            bug("     mean: " + errorStats.getMean());
-            bug("   median: " + errorStats.getMedian());
-            bug("    error: " + calcTotalConstraintError());
-            bug("   values: " + num(errorStats.getDataList(), " "));
-            currentState = State.Unsatisfied;
-            finished = true;
-          }
+          heat = heat + heatStep;
+//          if (heat < 0.1) {
+//            heatStep = -heatStep;
+//          } else if (heat > 1.0) {
+//            heatStep = -heatStep;
+//          }
+//          heat = min(1.0, heat);
+          heat = max(0.1, heat);
+          //          if (errorStats.getN() == MAX_ITERATION_N
+          //              && errorStats.getVariance() < MIN_ITERATION_VARIATION) {
+          //            bug("Can't find a stable solution, so I give up.");
+          //            bug("        n: " + errorStats.getN());
+          //            bug("  std_dev: " + errorStats.getStdDev());
+          //            bug("  variate: " + errorStats.getVariance());
+          //            bug("     mean: " + errorStats.getMean());
+          //            bug("   median: " + errorStats.getMedian());
+          //            bug("    error: " + calcTotalConstraintError());
+          //            bug("   values: " + num(errorStats.getDataList(), " "));
+          //            currentState = State.Unsatisfied;
+          //            finished = true;
+          //          }
           if (!finished) {
             currentState = State.Working;
+          } else {
+            bug("Finished in " + numSteps + " iterations");
           }
           if (ui != null) {
             ui.modelChanged();
           }
-          if (fps > 0) { // the framerate can change
+          if (fps > 0) { // the framerate can change from the UI.
             naptime = (long) (1000.0 / (double) fps);
           } else {
             naptime = 0;
@@ -169,22 +206,23 @@ public class ConstraintSolver {
     }
   }
 
-  private double calcTotalConstraintError() {
-    double sum = 0;
-    for (Constraint c : vars.constraints) {
-      sum += abs(c.measureError());
-    }
-    return sum;
-  }
+  //  private double calcTotalConstraintError() {
+  //    double sum = 0;
+  //    for (Constraint c : vars.constraints) {
+  //      sum += abs(c.measureError());
+  //    }
+  //    return sum;
+  //  }
 
   @SuppressWarnings("unchecked")
-  private double step() {
-    buf.setLength(0);
+  private double step(double prevError, double heat) {
+    if (debugOutput) {
+      buf.setLength(0);
+    }
     double totalError = 0;
     try {
       // 1: clear any current correction values
       for (Pt pt : vars.points) {
-
         List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
         if (corrections == null) {
           pt.setAttribute(ACCUM_CORRECTION, new ArrayList<Vec>());
@@ -194,36 +232,57 @@ public class ConstraintSolver {
       }
 
       // 2: poll all constraints and have them add correction vectors to each point
+      Constraint worst = null;
+      double worstError = 0;
       for (Constraint c : vars.constraints) {
         c.clearMessages();
-        c.accumulateCorrection();
+        if (heat > 0.6) {
+          c.accumulateCorrection(heat);
+        } else {
+          double e = c.measureError();
+          if (Math.abs(e) > Math.abs(worstError)) {
+            worst = c;
+            worstError = e;
+          }
+        }
+        c.pushLastError();
+      }
+      for (Constraint c : vars.constraints) {
+        if (debugOutput) {
+          if (c == worst) {
+            buf.append("[" + String.format(f + "] ", c.measureError()));
+          } else {
+            buf.append(String.format(f + " ", c.measureError()));
+          }
+        }
+      }
+      if (worst != null) {
+//        bug("Worst offender: " + worst);
+        worst.accumulateCorrection(heat);
       }
 
       // 3: now all points have some accumulated correction. sum them and update the point's location.
       int numFinished = 0;
       for (Pt pt : vars.points) {
         List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
-        pt.setBoolean("stable", corrections.size() == 0);
+        pt.setBoolean("stable", corrections.size() == 0); // used by the UI
         if (corrections.size() == 0) {
           numFinished = numFinished + 1;
         }
         Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
         double mag = delta.mag();
         totalError = totalError + mag;
-        buf.append(String.format(f + " ", mag));
-        // straightforward way:
-        //        pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
-
+        //        double r = random.nextDouble() * heat;
+        //        double dampedMag = mag * r;
+        double dampedMag = mag;
         // respects the shape of root function:
-        if (mag > 1.0) {
-          pt.move(delta.getVectorOfMagnitude(sqrt(mag)));
-        } else if (mag > 0.0) {
-          if (Entropy.getEntropy().getBoolean()) {
-            pt.move(delta);
-          }
+        if (dampedMag > 1.0) {
+          pt.move(delta.getVectorOfMagnitude(sqrt(dampedMag)));
+        } else if (dampedMag > 0.0) {
+          pt.move(delta);
         }
       }
-      if (numFinished == vars.points.size()) {
+      if (totalError < 0.0001 || numFinished == vars.points.size()) {
         finished = true;
         currentState = State.Solved;
       }
@@ -231,12 +290,28 @@ public class ConstraintSolver {
     } catch (Exception ex) {
       // and they say I have a software engineering background.
     }
-    buf.insert(0, String.format(f + " ", totalError));
-    System.out.println(buf.toString());
+    if (debugOutput) {
+      buf.insert(0, String.format(f + " ", totalError));
+      buf.insert(0, (prevError < totalError ? "*WORSE* " : "better! "));
+      buf.insert(0, String.format("%#.3f ", heat));
+      if (finished) {
+        buf.insert(0, "done ");
+      }
+      if (debugOutWriter == null) {
+        System.out.println(buf.toString());
+      } else {
+        try {
+          debugOutWriter.write(buf.toString() + "\n");
+        } catch (IOException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+      }
+    }
     return totalError;
   }
 
-  public boolean hasPoints(Pt...pts) {
+  public boolean hasPoints(Pt... pts) {
     boolean ret = true;
     for (Pt pt : pts) {
       if (!vars.points.contains(pt)) {
@@ -246,25 +321,26 @@ public class ConstraintSolver {
     }
     return ret;
   }
-  
+
   public List<Pt> getPoints() {
     return vars.points;
   }
 
   public synchronized void addPoint(String name, Pt pt) {
     if (hasName(pt) && !getName(pt).equals(name)) {
-      Debug.stacktrace("warning: do you really want to change the name of this point from " + getName(pt) + " to " + name + "?", 10);
+      Debug.stacktrace("warning: do you really want to change the name of this point from "
+          + getName(pt) + " to " + name + "?", 10);
     }
     setName(pt, name);
     addPoint(pt);
   }
-  
+
   public synchronized void addPoint(Pt pt) {
     if (!vars.points.contains(pt)) {
       if (!hasName(pt)) {
         bug("warning: adding a point with no name");
       }
-//      Debug.stacktrace("made point " + pt.getString("name"), 8);
+      //      Debug.stacktrace("made point " + pt.getString("name"), 8);
       vars.points.add(pt);
     }
     if (ui != null) {
@@ -288,7 +364,7 @@ public class ConstraintSolver {
       }
     }
   }
-  
+
   public void removeConstraint(Constraint c) {
     vars.constraints.remove(c);
     if (ui != null) {
@@ -334,7 +410,7 @@ public class ConstraintSolver {
     }
     wakeUp();
   }
-  
+
   public void replacePoint(Pt oldPt, String name, Pt newPt) {
     setName(newPt, name);
     replacePoint(oldPt, newPt);

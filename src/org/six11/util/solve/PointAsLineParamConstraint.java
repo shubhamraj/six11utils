@@ -41,7 +41,7 @@ public class PointAsLineParamConstraint extends Constraint {
     return "Point As Line Param";
   }
 
-  public void accumulateCorrection() {
+  public void accumulateCorrection(double heat) {
     double e = measureError();
     if (e > TOLERANCE) {
       Pt auth = getAuthority();

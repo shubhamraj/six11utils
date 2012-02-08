@@ -88,5 +88,9 @@ public class Entropy {
     return d;
   }
 
+  public double getDouble(double d) {
+    return random.nextDouble() * d;
+  }
+
   
 }

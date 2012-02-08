@@ -32,13 +32,13 @@ public class LocationConstraint extends Constraint {
     return "Pin";
   }
 
-  public void accumulateCorrection() {
+  public void accumulateCorrection(double heat) {
     double error = measureError();
     addMessage(p.getString("name") + ": " + num(error) + ". correction vector: "
         + num(target.x - p.x) + ", " + num(target.y - p.y));
     if (!isPinned(p) && error > TOLERANCE) {
       Vec toTarget = new Vec(target.x - p.x, target.y - p.y);
-      accumulate(p, toTarget);
+      accumulate(p, toTarget, heat);
     }
   }
 
