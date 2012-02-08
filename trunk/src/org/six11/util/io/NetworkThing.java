@@ -161,33 +161,35 @@ public class NetworkThing {
     return ht;
   }
 
-  @SuppressWarnings("unchecked")
-  private void upload() {
-    bug("Upload thread is working.");
-    while (running) {
-      try {
-        SynchronizedQueue<Message> messageQueue = (SynchronizedQueue<Message>) multiState
-            .getValue("transmit queue");
-        Collection<Message> outbound = null;
-        synchronized (messageQueue) {
-          while (messageQueue.isEmpty()) {
-            messageQueue.wait((long) 5000);
-          }
-          if (!messageQueue.isEmpty()) {
-            outbound = messageQueue.getAll(true);
-          }
-        }
-        if (outbound != null && outbound.size() > 0) {
-          upload(outbound);
-        } else {
-          bug("No outbound messages. This should not happen.");
-        }
-      } catch (InterruptedException ex) {
-
-      }
+@SuppressWarnings("unchecked")
+private void upload() {
+bug("Upload thread is working.");
+while (running) {
+ try {
+ SynchronizedQueue<Message> messageQueue = (SynchronizedQueue<Message>) multiState
+  .getValue("transmit queue");
+      Collection<Message> outbound = null;
+ synchronized (messageQueue) {
+    while (messageQueue.isEmpty()) {
+       messageQueue.wait((long) 5000);
+         }
+         if (!messageQueue.isEmpty()) {
+       outbound = messageQueue.getAll(true);
+}
     }
-    bug("Upload thread finished.");
-  }
+      if (outbound != null && outbound.size() > 0) {
+  upload(outbound);
+       } 
+      else
+      {
+ bug("No outbound messages. This should not happen.");
+}
+} catch (InterruptedException ex) {
+
+}
+}
+bug("Upload thread finished.");
+}
 
   private void upload(Collection<Message> outbound) {
     try {
