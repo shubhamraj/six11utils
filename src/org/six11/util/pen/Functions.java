@@ -463,6 +463,13 @@ public abstract class Functions {
     return getAngleBetween(va, vb);
   }
 
+  /**
+   * Gets the angle between two vectors by using arc tangent (atan2). Since arc tangent is an
+   * error-prone method of calculating angle, use this with caution. Consider using
+   * getSignedAngleBetween(a, b) and taking the absolute value if needed.
+   * 
+   * @deprecated
+   */
   public static double getAngleBetween(Vec a, Vec b) {
     double a1 = Math.atan2(b.getY(), b.getX());
     double a2 = Math.atan2(a.getY(), a.getX());
