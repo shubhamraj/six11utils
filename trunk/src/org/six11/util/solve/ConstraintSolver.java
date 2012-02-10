@@ -170,8 +170,6 @@ public class ConstraintSolver {
           heat = max(0.1, heat);
           if (!finished) {
             currentState = State.Working;
-          } else {
-            bug("Finished in " + numIterations + " iterations");
           }
           if (ui != null) {
             ui.modelChanged();
@@ -421,9 +419,6 @@ public class ConstraintSolver {
   }
 
   public void setPaused(boolean v) {
-    if (v != paused) {
-      bug("Paused: " + v);
-    }
     paused = v;
   }
 
