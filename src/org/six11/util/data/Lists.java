@@ -28,7 +28,7 @@ public abstract class Lists {
     return list.size() > idx && list.get(idx) == obj;
   }
 
-  public static Object getLast(List<?> list) {
+  public static <T> T getLast(List<T> list) {
     return list.get(list.size() - 1);
   }
 
