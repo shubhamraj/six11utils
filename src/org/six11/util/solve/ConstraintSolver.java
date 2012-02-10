@@ -28,10 +28,9 @@ public class ConstraintSolver {
   private String f = "%+#.10f";
   private StringBuilder buf;
 
-  private Random random;
-
   public static interface Listener {
-    public void constraintStepDone(State state);
+    public void constraintStepDone(State state, int numIterations, double err, int numPoints,
+        int numConstraints);
   }
 
   public static enum State {
@@ -39,8 +38,6 @@ public class ConstraintSolver {
   }
 
   public static final String ACCUM_CORRECTION = "accumulated correction";
-  private static final int MAX_ITERATION_N = 100;
-  //  private static final double MIN_ITERATION_VARIATION = 0.01;
 
   private List<Listener> stepListeners;
   private TestSolveUI ui = null;
@@ -50,6 +47,9 @@ public class ConstraintSolver {
   protected VariableBank vars;
   private Object monitor;
   private State currentState;
+  private double residual;
+  private int numIterations;
+  private boolean paused;
 
   public static void main(String[] in) throws Exception {
     new ConstraintSolver(in);
@@ -76,10 +76,15 @@ public class ConstraintSolver {
   private final void init() {
     this.monitor = new Object();
     this.vars = new VariableBank();
-//    this.fps = 60;
     this.stepListeners = new ArrayList<Listener>();
     this.buf = new StringBuilder();
-    this.random = new Random(System.currentTimeMillis());
+  }
+
+  public void setFrameRate(int frameRate) {
+    if (frameRate != fps) {
+      bug("Changing framerate to " + frameRate);
+    }
+    this.fps = frameRate;
   }
 
   public void setDebugOut(boolean v) {
@@ -106,7 +111,8 @@ public class ConstraintSolver {
 
   protected void fire() {
     for (Listener lis : stepListeners) {
-      lis.constraintStepDone(currentState);
+      lis.constraintStepDone(currentState, numIterations, residual, vars.points.size(),
+          vars.constraints.size());
     }
   }
 
@@ -129,7 +135,6 @@ public class ConstraintSolver {
   }
 
   void run() {
-    //    bug("Entering run(). You should only see this one time!");
     finished = false;
     long naptime = 0;
     if (fps > 0) {
@@ -137,24 +142,22 @@ public class ConstraintSolver {
     } else {
       naptime = 0;
     }
-//    Statistics errorStats = new Statistics();
-//    errorStats.setMaximumN(MAX_ITERATION_N);
     double prevError = Double.MAX_VALUE;
     double heat = 1.0;
     double heatStep = -0.001;
-    int numSteps = 0;
+    numIterations = 0;
     while (true) {
       synchronized (monitor) {
         try {
-          if (finished) {
-//            errorStats.clear();
+          if (paused || finished) {
             prevError = Double.MAX_VALUE;
             heat = 1.0;
+            residual = Double.MAX_VALUE;
             monitor.wait();
-            numSteps = 0;
+            numIterations = 0;
           }
           double e = step(prevError, heat);
-          numSteps = numSteps + 1;
+          numIterations = numIterations + 1;
           if (debugOutput && debugOutWriter != null) {
             try {
               debugOutWriter.flush();
@@ -162,38 +165,18 @@ public class ConstraintSolver {
               ex.printStackTrace();
             }
           }
-//          errorStats.addData(prevError - e);
           prevError = e;
           heat = heat + heatStep;
-//          if (heat < 0.1) {
-//            heatStep = -heatStep;
-//          } else if (heat > 1.0) {
-//            heatStep = -heatStep;
-//          }
-//          heat = min(1.0, heat);
           heat = max(0.1, heat);
-          //          if (errorStats.getN() == MAX_ITERATION_N
-          //              && errorStats.getVariance() < MIN_ITERATION_VARIATION) {
-          //            bug("Can't find a stable solution, so I give up.");
-          //            bug("        n: " + errorStats.getN());
-          //            bug("  std_dev: " + errorStats.getStdDev());
-          //            bug("  variate: " + errorStats.getVariance());
-          //            bug("     mean: " + errorStats.getMean());
-          //            bug("   median: " + errorStats.getMedian());
-          //            bug("    error: " + calcTotalConstraintError());
-          //            bug("   values: " + num(errorStats.getDataList(), " "));
-          //            currentState = State.Unsatisfied;
-          //            finished = true;
-          //          }
           if (!finished) {
             currentState = State.Working;
           } else {
-            bug("Finished in " + numSteps + " iterations");
+            bug("Finished in " + numIterations + " iterations");
           }
           if (ui != null) {
             ui.modelChanged();
           }
-          if (fps > 0) { // the framerate can change from the UI.
+          if (fps > 0) { // the framerate can change from the UI or from the user program.
             naptime = (long) (1000.0 / (double) fps);
           } else {
             naptime = 0;
@@ -257,7 +240,7 @@ public class ConstraintSolver {
         }
       }
       if (worst != null) {
-//        bug("Worst offender: " + worst);
+        //        bug("Worst offender: " + worst);
         worst.accumulateCorrection(heat);
       }
 
@@ -282,6 +265,7 @@ public class ConstraintSolver {
           pt.move(delta);
         }
       }
+      residual = totalError;
       if (totalError < 0.0001 || numFinished == vars.points.size()) {
         finished = true;
         currentState = State.Solved;
@@ -434,5 +418,16 @@ public class ConstraintSolver {
 
   public static boolean hasName(Pt pt) {
     return pt.hasAttribute("name");
+  }
+
+  public void setPaused(boolean v) {
+    if (v != paused) {
+      bug("Paused: " + v);
+    }
+    paused = v;
+  }
+
+  public boolean isPaused() {
+    return paused;
   }
 }
