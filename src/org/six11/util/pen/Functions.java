@@ -89,13 +89,23 @@ public abstract class Functions {
    * point. If that location is outside the boundary of the segment, this returns null. Otherwise it
    * returns a point somewhere in the range between the start and end locations of the segment.
    */
-  private static Pt getNearestPointWithinSegment(Pt pt, Line segment) {
+  public static Pt getNearestPointWithinSegment(Pt pt, Line segment) {
+    return getNearestPointWithinSegment(pt, segment, false);
+  }
+  
+  public static Pt getNearestPointWithinSegment(Pt pt, Line segment, boolean allowEndpoints) {
     Pt ret = null;
     Pt ixResult;
     ixResult = getNearestPointOnLine(pt, segment, true);
     double r = ixResult.getDouble("r");
     if (r >= 0 && r <= 1) {
       ret = ixResult;
+    } else if (allowEndpoints) {
+      if (r < 0) {
+        ret = segment.a;
+      } else {
+        ret = segment.b;
+      }
     }
     return ret;
   }
