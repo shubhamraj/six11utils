@@ -36,6 +36,7 @@ public class DrawingBuffer {
   public Dimension defaultSize = new Dimension(400, 400);
   private AffineTransform defaultXform;
   private boolean dirty;
+  private boolean empty;
   private boolean visible;
   private long lastModified;
   private boolean complain;
@@ -86,6 +87,7 @@ public class DrawingBuffer {
         BufferedImage.TYPE_INT_ARGB_PRE);
     this.turtles = new ArrayList<TurtleOp>();
     this.dirty = true;
+    this.empty = true;
   }
 
   public void copy(DrawingBuffer src) {
@@ -183,13 +185,16 @@ public class DrawingBuffer {
       }
       if (bb.isValid()) {
         if (bb.getWidthInt() * bb.getHeightInt() == 0) {
+          empty = true;
           if (!emptyOK) {
-            bug("Not drawing buffer with zero size... check for NaNs");
+            bug("Not drawing buffer '" + getHumanReadableName() + "' with zero size... check for NaNs");
             throw new RuntimeException("Buffer '" + getHumanReadableName() + "' has zero size.");
           }
         } else if (bb.getWidth() * bb.getHeight() > (1500 * 1500)) {
+          empty = false;
           bug("Buffer size would be " + bb + ". I refuse.");
         } else {
+          empty = false;
           img = new BufferedImage(bb.getWidthInt(), bb.getHeightInt(),
               BufferedImage.TYPE_INT_ARGB_PRE);
           Graphics2D g = img.createGraphics();
