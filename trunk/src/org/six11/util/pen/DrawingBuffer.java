@@ -95,6 +95,10 @@ public class DrawingBuffer {
       addOp(op);
     }
   }
+  
+  public boolean isEmpty() {
+    return empty;
+  }
 
   public int getLayer() {
     return layer;
