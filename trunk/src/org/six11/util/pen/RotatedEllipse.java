@@ -295,7 +295,6 @@ public class RotatedEllipse {
     Pt arc1 = getRegionPoints().get(0);
     Pt arc2 = getRegionPoints().get(1);
     Pt arc3 = getRegionPoints().get(2);
-    bug(num(arc1) + ", " + num(arc2) + ", " + num(arc3));
     arc1T = searchForParameter(arc1);
     arc2T = searchForParameter(arc2);
     arc3T = searchForParameter(arc3);
@@ -305,7 +304,6 @@ public class RotatedEllipse {
     double start = arcParams.get(0);
     double end = arcParams.get(2);
     double step = (end - start) / numSteps;
-    //    bug("initArc from " + start + " to " + end + ", step " + step);
     for (double t = start; t <= end; t += step) {
       surface.add(getEllipticalPoint(t));
     }
