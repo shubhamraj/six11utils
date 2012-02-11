@@ -92,7 +92,7 @@ public abstract class Functions {
   public static Pt getNearestPointWithinSegment(Pt pt, Line segment) {
     return getNearestPointWithinSegment(pt, segment, false);
   }
-  
+
   public static Pt getNearestPointWithinSegment(Pt pt, Line segment, boolean allowEndpoints) {
     Pt ret = null;
     Pt ixResult;
@@ -1081,17 +1081,7 @@ public abstract class Functions {
    */
   public static double[] calculateCurvilinearDistance(List<Pt> points, Pt target) {
     double[] ret = new double[points.size()];
-    // first find the index of 'target'
-    int idxTarget = -1;
-    double bestDist = Double.MAX_VALUE;
-    for (int i = 0; i < points.size(); i++) {
-      Pt pt = points.get(i);
-      double d = pt.distance(target);
-      if (d < bestDist) {
-        idxTarget = i;
-        bestDist = d;
-      }
-    }
+    int idxTarget = getClosestIndex(points, target);
     if (idxTarget >= 0) {
       // calculate curvilinear distance starting at idxTarget, first ascending then descending.
       double curveDist = 0;
@@ -1106,6 +1096,56 @@ public abstract class Functions {
         curveDist = curveDist + d;
         ret[i] = curveDist;
       }
+    }
+    return ret;
+  }
+
+  public static int getClosestIndex(List<Pt> points, Pt target) {
+    // first find the index of 'target'
+    int idxTarget = -1;
+    double bestDist = Double.MAX_VALUE;
+    for (int i = 0; i < points.size(); i++) {
+      Pt pt = points.get(i);
+      double d = pt.distance(target);
+      if (d < bestDist) {
+        idxTarget = i;
+        bestDist = d;
+      }
+    }
+    return idxTarget;
+  }
+
+  public static double[] calculateCurvilinearDistanceClosedCircuit(List<Pt> points, Pt target) {
+    int n = points.size();
+    double[] ret = new double[n];
+    int idxTarget = getClosestIndex(points, target);
+//    bug("target index: " + idxTarget + " of " + n);
+    if (idxTarget >= 0) {
+      // do this the easy way: iterate through the list forward then
+      // backward, and keep the shortest distance for each.
+      //
+      // forward
+      double dist = 0;
+      for (int counter = 1; counter < points.size(); counter++) {
+        int i = wrapMod(idxTarget + counter, n);
+        int j = wrapMod(i-1, n);
+        double d = points.get(i).distance(points.get(j));
+        dist = dist + d;
+//        bug("forewards dist at " + i + ", " + j + ": " + num(dist));
+        ret[i] = dist;
+      }
+//      bug("forward: " + num(ret));
+      // backward
+      dist = 0;
+      for (int counter = 1; counter < points.size(); counter++) {
+        int i = wrapMod(idxTarget - counter, n);
+        int j = wrapMod(i+1, n);
+        double d = points.get(i).distance(points.get(j));
+        dist = dist + d;
+//        bug("backwards dist at " + i + ", " + j + ": either " + num(dist) + " or " + num(ret[i]));
+        ret[i] = min(ret[i], dist);
+      }
+//      bug("backward: " + num(ret));
     }
     return ret;
   }
@@ -1339,6 +1379,11 @@ public abstract class Functions {
    * 2 @ 5 = 2
    * 3 @ 5 = 3
    * </pre>
+   * 
+   * @param i
+   *          the index. may be any integer
+   * @param n
+   *          the denominator
    */
   public static int wrapMod(int i, int n) {
     int res = i % n;
