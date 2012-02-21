@@ -1119,7 +1119,6 @@ public abstract class Functions {
     int n = points.size();
     double[] ret = new double[n];
     int idxTarget = getClosestIndex(points, target);
-//    bug("target index: " + idxTarget + " of " + n);
     if (idxTarget >= 0) {
       // do this the easy way: iterate through the list forward then
       // backward, and keep the shortest distance for each.
@@ -1131,10 +1130,8 @@ public abstract class Functions {
         int j = wrapMod(i-1, n);
         double d = points.get(i).distance(points.get(j));
         dist = dist + d;
-//        bug("forewards dist at " + i + ", " + j + ": " + num(dist));
         ret[i] = dist;
       }
-//      bug("forward: " + num(ret));
       // backward
       dist = 0;
       for (int counter = 1; counter < points.size(); counter++) {
@@ -1142,10 +1139,8 @@ public abstract class Functions {
         int j = wrapMod(i+1, n);
         double d = points.get(i).distance(points.get(j));
         dist = dist + d;
-//        bug("backwards dist at " + i + ", " + j + ": either " + num(dist) + " or " + num(ret[i]));
         ret[i] = min(ret[i], dist);
       }
-//      bug("backward: " + num(ret));
     }
     return ret;
   }
