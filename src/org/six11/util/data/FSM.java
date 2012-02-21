@@ -187,6 +187,7 @@ public class FSM { // This class implements a Flying Spaghetti Monster
    * 
    * <ol>
    * <li>Execute the transition's "doBeforeTransition" method</li>
+   * <li>Exectue the "veto" function. If it passes, continue. Else, stop.</li> 
    * <li>Run fsm.setState(B) -- see docs for that method</li>
    * <li>Execute the transition's "doAfterTransition" method</li>
    * <li>Fire a change event, notifying interested observers that the transition has completed.</li>
@@ -201,8 +202,8 @@ public class FSM { // This class implements a Flying Spaghetti Monster
       if (debug) {
         Debug.out("FSM", "Event: " + evtName + ", " + trans.startState + " --> " + trans.endState);
       }
+      trans.doBeforeTransition();
       if (!trans.veto()) {
-        trans.doBeforeTransition();
         setState(trans.endState, false);
         trans.doAfterTransition();
         fireChangeEvent();
