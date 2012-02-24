@@ -39,6 +39,14 @@ public class OrientationConstraint extends Constraint {
   public OrientationConstraint() {
 
   }
+  
+  public NumericValue getValue() {
+    return angle;
+  }
+  
+  public void setValue(NumericValue nv) {
+    this.angle = nv;
+  }
 
   public String getType() {
     return "Orientation";

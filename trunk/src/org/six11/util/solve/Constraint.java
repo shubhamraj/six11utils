@@ -162,6 +162,17 @@ public abstract class Constraint {
   }
 
   public abstract boolean involves(Pt who);
+  
+  public boolean involvesAll(Pt... pts) {
+    boolean ret = true;
+    for (Pt pt : pts) {
+      if (!involves(pt)) {
+        ret = false;
+        break;
+      }
+    }
+    return ret;
+  }
 
   public abstract Pt[] getRelatedPoints();
 
