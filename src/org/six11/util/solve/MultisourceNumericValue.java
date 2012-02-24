@@ -1,6 +1,7 @@
 package org.six11.util.solve;
 
 import static org.six11.util.Debug.num;
+import static org.six11.util.Debug.bug;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,21 +29,25 @@ public class MultisourceNumericValue extends NumericValue {
 
   public void addValue(Source val) {
     sources.add(val);
+    bug("MultisourceNumericValue now has " + sources.size() + " sources.");
   }
 
   public Set<Source> getSources() {
     return sources;
   }
-  
+
   @Override
   public double getValue() {
     double ret = 0;
     if (sources.size() > 0) {
       double sum = 0;
       for (Source s : sources) {
+//        double v = s.getValue();
+//        bug("val: " + num(v));
         sum = sum + s.getValue();
       }
       ret = sum / sources.size();
+//      bug("return " + num(ret));
     }
     return ret;
   }

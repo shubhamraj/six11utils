@@ -33,9 +33,17 @@ public class AngleConstraint extends Constraint {
   }
 
   public AngleConstraint() {
-    
+
   }
   
+  public NumericValue getValue() {
+    return angle;
+  }
+  
+  public void setValue(NumericValue nv) {
+    this.angle = nv;
+  }
+
   public String getType() {
     return "Angle";
   }
@@ -60,7 +68,7 @@ public class AngleConstraint extends Constraint {
       }
     }
   }
-  
+
   /**
    * This is the accumulateCorrection method assuming a stationary fulcrum.
    */
@@ -85,10 +93,15 @@ public class AngleConstraint extends Constraint {
     }
   }
 
-  public double measureError() {
-    Vec fa = new Vec(a, f);
-    Vec fb = new Vec(b, f);
+  public static double measureAngle(Pt ptA, Pt ptFulcrum, Pt ptB) {
+    Vec fa = new Vec(ptA, ptFulcrum);
+    Vec fb = new Vec(ptB, ptFulcrum);
     double currentAngle = Functions.getSignedAngleBetween(fa, fb);
+    return currentAngle;
+  }
+
+  public double measureError() {
+    double currentAngle = measureAngle(a, f, b);
     double ret = Math.signum(currentAngle) * (Math.abs(currentAngle) - angle.getValue());
     return ret;
   }
@@ -100,25 +113,37 @@ public class AngleConstraint extends Constraint {
   public Line getSegment2() {
     return new Line(f, b);
   }
+  
+  public Pt getPtA() {
+    return a;
+  }
+  
+  public Pt getPtFulcrum() {
+    return f;
+  }
+  
+  public Pt getPtB() {
+    return b;
+  }
 
   public void draw(DrawingBuffer buf) {
     double e = measureError();
     Color col = (abs(e) > TOLERANCE) ? Color.RED : Color.GREEN;
     DrawingBufferRoutines.line(buf, getSegment1(), col, 2);
     DrawingBufferRoutines.line(buf, getSegment2(), col, 2);
-    DrawingBufferRoutines.text(buf, f.getTranslated(0, 10), num(toDegrees(angle.getValue())) + " deg",
-        col.darker());
+    DrawingBufferRoutines.text(buf, f.getTranslated(0, 10), num(toDegrees(angle.getValue()))
+        + " deg", col.darker());
   }
 
   public static Manipulator getManipulator() {
-    Manipulator man = new Manipulator(AngleConstraint.class, "Angle", //
-        new Manipulator.Param("a", "Point 1", true),
-        new Manipulator.Param("b", "Point 2", true),
-        new Manipulator.Param("f", "Fulcrum", true),
-        new Manipulator.Param("angle", "Angle (degrees)", true));
+    Manipulator man = new Manipulator(AngleConstraint.class,
+        "Angle", //
+        new Manipulator.Param("a", "Point 1", true), new Manipulator.Param("b", "Point 2", true),
+        new Manipulator.Param("f", "Fulcrum", true), new Manipulator.Param("angle",
+            "Angle (degrees)", true));
     return man;
   }
-  
+
   @Override
   public void assume(Manipulator m, VariableBank vars) {
     if (m.ptOrConstraint != getClass()) {
@@ -133,7 +158,7 @@ public class AngleConstraint extends Constraint {
     f = vars.getPointWithName(paramVals.get("f"));
     angle = new NumericValue(toRadians(Double.parseDouble(paramVals.get("angle"))));
   }
-  
+
   /**
    * Create a manipulator that holds the values of this constraint.
    */
@@ -150,7 +175,7 @@ public class AngleConstraint extends Constraint {
 
   @Override
   public String getHumanDescriptionString() {
-    return "Angle " + name(a) + ", " + name(b) + ", " + name(f) + num(toDegrees(angle.getValue())); 
+    return "Angle " + name(a) + ", " + name(b) + ", " + name(f) + num(toDegrees(angle.getValue()));
   }
 
   public JSONObject toJson() throws JSONException {
@@ -176,15 +201,23 @@ public class AngleConstraint extends Constraint {
 
   @Override
   public void replace(Pt oldPt, Pt newPt) {
-    if (oldPt == a) { a = newPt; } 
-    if (oldPt == b) { b = newPt; }
-    if (oldPt == f) { f = newPt; }
-    
+    if (oldPt == a) {
+      a = newPt;
+    }
+    if (oldPt == b) {
+      b = newPt;
+    }
+    if (oldPt == f) {
+      f = newPt;
+    }
+
   }
 
   @Override
   public Pt[] getRelatedPoints() {
-    return new Pt[] { a, b, f };
+    return new Pt[] {
+        a, b, f
+    };
   }
 
 }
