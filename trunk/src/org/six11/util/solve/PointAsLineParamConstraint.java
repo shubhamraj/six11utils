@@ -26,6 +26,7 @@ public class PointAsLineParamConstraint extends Constraint {
   NumericValue dist;
 
   public PointAsLineParamConstraint(Pt lineA, Pt lineB, NumericValue proportionFromAToB, Pt target) {
+    System.out.println("Warning: you should really not use the PointAsLineParamConstraint class.");
     this.lineA = lineA;
     this.lineB = lineB;
     this.target = target;
