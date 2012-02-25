@@ -348,6 +348,7 @@ public class ConstraintSolver {
   }
 
   public void removeConstraint(Constraint c) {
+    bug("removing basic constraint: " + c);
     vars.constraints.remove(c);
     if (ui != null) {
       ui.modelChanged();
@@ -374,6 +375,7 @@ public class ConstraintSolver {
         doomedConstraints.add(c);
       }
     }
+    bug("removing basic constraint related to " + doomed);
     vars.constraints.removeAll(doomedConstraints);
     wakeUp();
     return doomedConstraints;
