@@ -91,4 +91,12 @@ public abstract class Lists {
     }
     return ret;
   }
+  
+  public static <T> Set<T> makeSet(T...ts) {
+    Set<T> ret = new HashSet<T>();
+    for (T t : ts) {
+      ret.add(t);
+    }
+    return ret;
+  }
 }
