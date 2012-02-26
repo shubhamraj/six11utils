@@ -118,7 +118,7 @@ public abstract class Constraint {
     pt.setBoolean("pinned", val);
   }
 
-  public void accumulate(Pt pt, Vec correction, double heat) {
+  public Vec accumulate(Pt pt, Vec correction, double heat) {
     if (isPinned(pt)) {
       bug("Warning: you are adding a correction vector to point " + pt.getString("name")
           + ", but it is pinned. Constraint type: " + getType());
@@ -141,6 +141,7 @@ public abstract class Constraint {
       List<Vec> corrections = (List<Vec>) pt.getAttribute(ConstraintSolver.ACCUM_CORRECTION);
       corrections.add(correction);
     }
+    return correction;
   }
 
   public abstract void draw(DrawingBuffer buf);
