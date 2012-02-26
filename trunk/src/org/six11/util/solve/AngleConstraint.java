@@ -1,7 +1,9 @@
 package org.six11.util.solve;
 
 import java.awt.Color;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,11 +37,11 @@ public class AngleConstraint extends Constraint {
   public AngleConstraint() {
 
   }
-  
+
   public NumericValue getValue() {
     return angle;
   }
-  
+
   public void setValue(NumericValue nv) {
     this.angle = nv;
   }
@@ -49,21 +51,52 @@ public class AngleConstraint extends Constraint {
   }
 
   public void accumulateCorrection(double heat) {
-    int free = 2 - countPinned(a, b);
+    int free = 3 - countPinned(a, b, f);
     if (free > 0) {
       double e = measureError();
       if (abs(e) > TOLERANCE) {
-        // Rotate a and b about f by e/2 and -e/2 radians. (assuming free = 2)
+        // Rotate a and b about f by e/2 and -e/2 radians. (assuming free = 2).
+        // Also move fulcrum along bisector if it is free.
         double shift = e / free;
+        double abSum = 0;
+        Vec vecA = null;
+        Vec vecB = null;
+        Vec vecF = null;
         if (!isPinned(a)) {
           Pt rotatedA = Functions.rotatePointAboutPivot(a, f, shift);
-          Vec vecA = new Vec(rotatedA.x - a.x, rotatedA.y - a.y);
+          vecA = new Vec(rotatedA.x - a.x, rotatedA.y - a.y);
+          abSum = abSum + vecA.mag();
           accumulate(a, vecA, heat);
         }
         if (!isPinned(b)) {
           Pt rotatedB = Functions.rotatePointAboutPivot(b, f, -shift);
-          Vec vecB = new Vec(rotatedB.x - b.x, rotatedB.y - b.y);
+          vecB = new Vec(rotatedB.x - b.x, rotatedB.y - b.y);
+          abSum = abSum + vecB.mag();
           accumulate(b, vecB, heat);
+        }
+        if (!isPinned(f)) {
+          Vec toA = new Vec(f, a);
+          Vec toB = new Vec(f, b);
+          // cross product's tells us the 'handedness' of the triangle using f->a as a reference
+          double cross = toA.cross(toB);
+          double signCross = Math.signum(cross);
+          double signErr = Math.signum(e);
+          double dirF = 1.0;
+          if (signCross == signErr) {
+            dirF = -1.0;
+          }
+          Vec bisector = Vec.sum(toA, toB); // this bisects the triangle starting from f
+          // move fulcrum towards or away from centroid depending on handedness and error. 
+          // if the system is too acute the fulcrum moves inward; too obtuse and it moves outward
+          double magF = (abSum / 2.0);
+          double moveF = dirF * magF;
+          double damping = Math.sin(abs(e));
+          if (damping < 0) {
+            bug("damping is negative!");
+          }
+          moveF = moveF * damping; // dampen the fulcrum's movement because it tends to shorten lines a lot
+          vecF = bisector.getVectorOfMagnitude(moveF);
+          accumulate(f, vecF, heat);
         }
       }
     }
@@ -113,15 +146,15 @@ public class AngleConstraint extends Constraint {
   public Line getSegment2() {
     return new Line(f, b);
   }
-  
+
   public Pt getPtA() {
     return a;
   }
-  
+
   public Pt getPtFulcrum() {
     return f;
   }
-  
+
   public Pt getPtB() {
     return b;
   }
