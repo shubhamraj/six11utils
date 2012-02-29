@@ -38,6 +38,7 @@ public class ConstraintSolver {
   }
 
   public static final String ACCUM_CORRECTION = "accumulated correction";
+  public static final String LAST_SOLVER_ADJUSTMENT_VEC = "last solver adjustment";
 
   private List<Listener> stepListeners;
   private TestSolveUI ui = null;
@@ -179,10 +180,15 @@ public class ConstraintSolver {
           } else {
             naptime = 0;
           }
-          Thread.sleep(naptime);
         } catch (InterruptedException ex) {
-          ;
+          System.out.println("Interrupted in main constraint solver loop");
         }
+      }
+      try {
+        Thread.sleep(naptime);
+      } catch (InterruptedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
       }
     }
   }
@@ -251,6 +257,8 @@ public class ConstraintSolver {
           numFinished = numFinished + 1;
         }
         Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
+        double targetMag = delta.mag() / corrections.size();
+        delta = delta.getVectorOfMagnitude(targetMag); // divide by num. constraints on this point.
         double mag = delta.mag();
         totalError = totalError + mag;
         //        double r = random.nextDouble() * heat;
@@ -258,9 +266,12 @@ public class ConstraintSolver {
         double dampedMag = mag;
         // respects the shape of root function:
         if (dampedMag > 1.0) {
-          pt.move(delta.getVectorOfMagnitude(sqrt(dampedMag)));
+          Vec moveAmt = delta.getVectorOfMagnitude(sqrt(dampedMag)); 
+          pt.move(moveAmt);
+          pt.setAttribute(LAST_SOLVER_ADJUSTMENT_VEC, moveAmt);
         } else if (dampedMag > 0.0) {
           pt.move(delta);
+          pt.setAttribute(LAST_SOLVER_ADJUSTMENT_VEC, delta);
         }
       }
       residual = totalError;
