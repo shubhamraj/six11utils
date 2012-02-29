@@ -375,14 +375,12 @@ public class ConstraintSolver {
         doomedConstraints.add(c);
       }
     }
-    bug("removing basic constraint related to " + doomed);
     vars.constraints.removeAll(doomedConstraints);
     wakeUp();
     return doomedConstraints;
   }
 
   public void replacePoint(Pt oldPt, Pt newPt) {
-    bug("Renaming " + getName(oldPt) + " --> " + getName(newPt));
     vars.points.remove(oldPt);
     addPoint(newPt);
     if (!hasName(newPt)) {
@@ -397,7 +395,6 @@ public class ConstraintSolver {
   }
 
   public void replacePoint(Pt oldPt, String name, Pt newPt) {
-    bug("Renaming " + getName(oldPt) + " --> " + name);
     setName(newPt, name);
     replacePoint(oldPt, newPt);
   }

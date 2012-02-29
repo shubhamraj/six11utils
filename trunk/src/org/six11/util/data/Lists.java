@@ -12,7 +12,7 @@ import java.util.Set;
  * 
  **/
 public abstract class Lists {
-  
+
   public static boolean hasOverlap(Collection<?> bunchA, Collection<?> bunchB) {
     boolean ret = false;
     for (Object t : bunchA) {
@@ -23,7 +23,7 @@ public abstract class Lists {
     }
     return ret;
   }
-  
+
   public static <T> boolean isSameObject(List<T> list, int idx, T obj) {
     return list.size() > idx && list.get(idx) == obj;
   }
@@ -39,7 +39,7 @@ public abstract class Lists {
       list.set(list.size() - 1, obj);
     }
   }
-  
+
   public static boolean isLast(List<?> list, Object obj) {
     return (list.size() > 0 && getLast(list).equals(obj));
   }
@@ -63,7 +63,6 @@ public abstract class Lists {
     }
     return ret;
   }
-  
 
   public static <T> T getOne(Collection<T> items) {
     T ret = null;
@@ -72,7 +71,7 @@ public abstract class Lists {
     }
     return ret;
   }
-  
+
   public static <T> T removeOne(Set<T> items) {
     T ret = null;
     if (!items.isEmpty()) {
@@ -81,21 +80,33 @@ public abstract class Lists {
     }
     return ret;
   }
-  
+
   public static <T> Collection<T> intersect(Collection<T> groupA, Collection<T> groupB) {
     Collection<T> ret = new HashSet<T>();
-    for (T t: groupA) {
+    for (T t : groupA) {
       if (groupB.contains(t)) {
         ret.add(t);
       }
     }
     return ret;
   }
-  
-  public static <T> Set<T> makeSet(T...ts) {
+
+  public static <T> Set<T> makeSet(T... ts) {
     Set<T> ret = new HashSet<T>();
     for (T t : ts) {
       ret.add(t);
+    }
+    return ret;
+  }
+
+  public static <T> boolean areSetsEqual(Collection<T> a, Set<T> b) {
+    boolean ret = false;
+    if (a == null && b == null) {
+      ret = true;
+    } else if (a == null || b == null) {
+      ret = false;
+    } else if (a.size() == b.size() && a.containsAll(b)) {
+      ret = true;
     }
     return ret;
   }

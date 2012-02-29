@@ -31,6 +31,18 @@ public abstract class Constraint {
     this.messages = new StringBuffer();
     id = ID_COUNTER++;
   }
+  
+  /**
+   * Creates a constraint with a predetermined ID. The given JSON object *must* have an integer "id" value.
+   * @param obj
+   * @throws JSONException
+   */
+  public Constraint(JSONObject obj) throws JSONException  {
+    this.messages = new StringBuffer();
+    int jsonID = obj.getInt("id");
+    this.id = jsonID;
+    bug("Resuurected constraint: " + this.id);
+  }
 
   public String getSecretName() {
     return secretName;
@@ -108,12 +120,6 @@ public abstract class Constraint {
     return pt.getBoolean("pinned", false);
   }
 
-  //  public static double makeRandom(double src, double heat) {
-  //    double r = entropy.getNearbyDouble(src, src * heat / 4.0);
-  //    //    bug("makeRandom(" + src + ", " + heat + ") ==> " + r);
-  //    return r;
-  //  }
-
   public static void setPinned(Pt pt, boolean val) {
     pt.setBoolean("pinned", val);
   }
@@ -128,12 +134,9 @@ public abstract class Constraint {
       if (entropy.getBoolean()) {
         Vec correction2 = new Vec(correction.getX() * entropy.getDouble(2 * heat),
             correction.getY() * entropy.getDouble(2 * heat));
-//        bug(getClass().getName() + " " + id + ": Oscillation found: " + lastKnownError + " and "
-//            + measureError() + ": " + num(correction) + " --> " + num(correction2));
         correction = correction2;
       } else {
         add = false;
-//        bug("Not adding " + this + " this time.");
       }
     }
     if (add) {
@@ -179,6 +182,10 @@ public abstract class Constraint {
 
   public abstract void replace(Pt oldPt, Pt newPt);
 
+  public int getID() {
+    return id;
+  }
+  
   public String toString() {
     return getClass() + "." + id;
   }

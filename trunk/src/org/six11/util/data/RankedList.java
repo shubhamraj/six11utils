@@ -22,7 +22,7 @@ public class RankedList<T> {
 
     public int compareTo(RankedNode that) {
       int ret = 0;
-      if (this.val < that.val) {
+      if (this.val <= that.val) {
         ret = -1;
       } else if (this.val > that.val) {
         ret = 1;

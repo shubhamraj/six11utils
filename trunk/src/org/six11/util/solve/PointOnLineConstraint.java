@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.six11.util.Debug;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
@@ -18,6 +19,7 @@ import static org.six11.util.Debug.num;
 public class PointOnLineConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
+  public static final String NAME = "Point On Line";
 
   Pt a, b, m;
 
@@ -27,12 +29,13 @@ public class PointOnLineConstraint extends Constraint {
     this.m = m;
   }
 
-  public PointOnLineConstraint() {
-
+  public PointOnLineConstraint(JSONObject obj, VariableBank vars) throws JSONException {
+    super(obj);
+    fromJson(obj, vars);
   }
 
   public String getType() {
-    return "Point On Line";
+    return NAME;
   }
 
   public void accumulateCorrection(double heat) {
@@ -116,6 +119,9 @@ public class PointOnLineConstraint extends Constraint {
     a = vars.getPointWithName(obj.getString("p1"));
     b = vars.getPointWithName(obj.getString("p2"));
     m = vars.getPointWithName(obj.getString("p3"));
+    Debug.errorOnNull(a, "a");
+    Debug.errorOnNull(b, "b");
+    Debug.errorOnNull(m, "m");
   }
 
   @Override

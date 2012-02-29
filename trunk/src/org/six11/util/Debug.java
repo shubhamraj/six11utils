@@ -19,6 +19,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -517,5 +518,17 @@ public class Debug {
       pi.next();
     }
     return buf.toString();
+  }
+
+  public static void errorOnNull(Object o, String name) {
+    if (o == null) {
+      error(name + ": null");
+    }
+  }
+  
+  public static void error(String complaint) {
+    Toolkit.getDefaultToolkit().beep();
+    System.out.println(" -------------------------------------------- ERROR! -------------------------------------------- ");
+    stacktrace(complaint, 10);
   }
 }

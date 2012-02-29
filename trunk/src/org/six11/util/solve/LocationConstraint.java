@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.six11.util.Debug;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Pt;
@@ -16,7 +17,7 @@ import static org.six11.util.Debug.num;
 public class LocationConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
-
+  public static final String NAME = "Pin";
   Pt p, target;
 
   public LocationConstraint(Pt p, Pt target) {
@@ -24,12 +25,13 @@ public class LocationConstraint extends Constraint {
     this.target = target;
   }
   
-  public LocationConstraint() {
-    
+  public LocationConstraint(JSONObject obj, VariableBank vars) throws JSONException {
+    super(obj);
+    fromJson(obj, vars);
   }
 
   public String getType() {
-    return "Pin";
+    return NAME;
   }
 
   public void accumulateCorrection(double heat) {
@@ -96,6 +98,8 @@ public class LocationConstraint extends Constraint {
   public void fromJson(JSONObject obj, VariableBank vars) throws JSONException {
     p = vars.getPointWithName(obj.getString("p"));
     target = vars.getPointWithName(obj.getString("target"));
+    Debug.errorOnNull(p, "p");
+    Debug.errorOnNull(target, "target");
   }
 
   @Override

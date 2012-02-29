@@ -62,6 +62,7 @@ public class JsonIO {
     for (Constraint c : constraints) {
       JSONObject asJson = c.toJson();
       asJson.put("type", c.getType());
+      asJson.put("id", c.getID());
       ret.put(asJson);
     }
     return ret;
@@ -74,22 +75,21 @@ public class JsonIO {
       String type = obj.getString("type");
       Constraint c = null;
       if ("Angle".equals(type)) {
-        c = new AngleConstraint();
+        c = new AngleConstraint(obj, vars);
       } else if ("Distance".equals(type)) {
-        c = new DistanceConstraint();
+        c = new DistanceConstraint(obj, vars);
       } else if ("Pin".equals(type)) {
-        c = new LocationConstraint();
+        c = new LocationConstraint(obj, vars);
       } else if ("Orientation".equals(type)) {
-        c = new OrientationConstraint();
+        c = new OrientationConstraint(obj, vars);
       } else if ("Point As Line Param".equals(type)) {
-        c = new PointAsLineParamConstraint();
+        c = new PointAsLineParamConstraint(obj, vars);
       } else if ("Point On Line".equals(type)) {
-        c = new PointOnLineConstraint();
+        c = new PointOnLineConstraint(obj, vars);
       }
       if (c == null) {
         bug("** Unknown constraint type on load: " + type);
       } else {
-        c.fromJson(obj, vars);
         constraints.add(c);
       }
     }
