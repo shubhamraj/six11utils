@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.six11.util.Debug;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
@@ -23,7 +24,7 @@ import static java.lang.Math.toRadians;
 public class AngleConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
-
+  public static final String NAME = "Angle";
   Pt a, f, b;
   NumericValue angle;
 
@@ -34,8 +35,9 @@ public class AngleConstraint extends Constraint {
     this.angle = radians;
   }
 
-  public AngleConstraint() {
-
+  public AngleConstraint(JSONObject obj, VariableBank vars) throws JSONException {
+    super(obj);
+    fromJson(obj, vars);
   }
 
   public NumericValue getValue() {
@@ -47,7 +49,7 @@ public class AngleConstraint extends Constraint {
   }
 
   public String getType() {
-    return "Angle";
+    return NAME;
   }
 
   public void accumulateCorrection(double heat) {
@@ -225,6 +227,9 @@ public class AngleConstraint extends Constraint {
     b = vars.getPointWithName(obj.getString("b"));
     f = vars.getPointWithName(obj.getString("f"));
     angle = new NumericValue(obj.getDouble("angle"));
+    Debug.errorOnNull(a, "a");
+    Debug.errorOnNull(b, "b");
+    Debug.errorOnNull(f, "f");
   }
 
   @Override

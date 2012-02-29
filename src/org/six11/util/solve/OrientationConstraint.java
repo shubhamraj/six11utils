@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.six11.util.Debug;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
@@ -22,6 +23,8 @@ public class OrientationConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
 
+  public static final String NAME = "Orientation";
+  
   public Pt lineA1, lineA2, lineB1, lineB2;
   public NumericValue angle;
 
@@ -36,8 +39,9 @@ public class OrientationConstraint extends Constraint {
     this.angle = radians;
   }
 
-  public OrientationConstraint() {
-
+  public OrientationConstraint(JSONObject obj, VariableBank vars) throws JSONException {
+    super(obj);
+    fromJson(obj, vars);
   }
   
   public NumericValue getValue() {
@@ -49,7 +53,7 @@ public class OrientationConstraint extends Constraint {
   }
 
   public String getType() {
-    return "Orientation";
+    return NAME;
   }
 
   public void accumulateCorrection(double heat) {
@@ -177,6 +181,10 @@ public class OrientationConstraint extends Constraint {
     lineB1 = vars.getPointWithName(obj.getString("pB1"));
     lineB2 = vars.getPointWithName(obj.getString("pB2"));
     angle = new NumericValue(obj.getDouble("angle"));
+    Debug.errorOnNull(lineA1, "lineA1");
+    Debug.errorOnNull(lineA2, "lineA2");
+    Debug.errorOnNull(lineB1, "lineB1");
+    Debug.errorOnNull(lineB2, "lineB2");
   }
 
   @Override

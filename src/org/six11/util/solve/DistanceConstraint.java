@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.six11.util.Debug;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Line;
@@ -18,7 +19,7 @@ import static java.lang.Math.abs;
 public class DistanceConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
-
+  public static final String NAME = "Distance";
   public Pt a, b;
   public NumericValue d;
 
@@ -28,8 +29,9 @@ public class DistanceConstraint extends Constraint {
     this.d = d;
   }
   
-  public DistanceConstraint() {
-    
+  public DistanceConstraint(JSONObject obj, VariableBank vars) throws JSONException {
+    super(obj);
+    fromJson(obj, vars);
   }
 
   public Line getCurrentSegment() {
@@ -45,7 +47,7 @@ public class DistanceConstraint extends Constraint {
   }
 
   public String getType() {
-    return "Distance";
+    return NAME;
   }
 
   public void accumulateCorrection(double heat) {
@@ -132,6 +134,8 @@ public class DistanceConstraint extends Constraint {
     a = vars.getPointWithName(obj.getString("p1"));
     b = vars.getPointWithName(obj.getString("p2"));
     d = new NumericValue(obj.getDouble("dist"));
+    Debug.errorOnNull(a, "a");
+    Debug.errorOnNull(b, "b");
   }
 
   @Override

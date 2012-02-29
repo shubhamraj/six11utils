@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.six11.util.Debug;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Pt;
@@ -21,7 +22,8 @@ import static org.six11.util.Debug.num;
 public class PointAsLineParamConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
-
+  public static final String NAME = "Pont As Line Param";
+  
   Pt lineA, lineB, target;
   NumericValue dist;
 
@@ -34,12 +36,13 @@ public class PointAsLineParamConstraint extends Constraint {
     setPinned(target, true);
   }
 
-  public PointAsLineParamConstraint() {
-
+  public PointAsLineParamConstraint(JSONObject obj, VariableBank vars) throws JSONException {
+    super(obj);
+    fromJson(obj, vars);
   }
 
   public String getType() {
-    return "Point As Line Param";
+    return NAME;
   }
 
   public void accumulateCorrection(double heat) {
@@ -129,6 +132,9 @@ public class PointAsLineParamConstraint extends Constraint {
     lineB = vars.getPointWithName(obj.getString("p2"));
     target = vars.getPointWithName(obj.getString("target"));
     dist = new NumericValue(obj.getDouble("dist"));
+    Debug.errorOnNull(lineA, "lineA");
+    Debug.errorOnNull(lineB, "lineB");
+    Debug.errorOnNull(target, "target");
   }
 
   @Override
@@ -151,6 +157,8 @@ public class PointAsLineParamConstraint extends Constraint {
 
   @Override
   public Pt[] getRelatedPoints() {
-    return new Pt[] { lineA, lineB, target };
+    return new Pt[] {
+        lineA, lineB, target
+    };
   }
 }

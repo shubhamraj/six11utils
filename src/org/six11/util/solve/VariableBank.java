@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import static org.six11.util.Debug.bug;
 
 import org.six11.util.pen.Pt;
 
@@ -58,5 +59,22 @@ public class VariableBank {
   
   public abstract static class ConstraintFilter {
     public abstract Set<Constraint> filter(Set<Constraint> input);
+  }
+
+  public Constraint getConstraintWithID(int cID) {
+    Constraint ret = null;
+    for (Constraint c : constraints) {
+      if (c.getID() == cID) {
+        ret = c;
+        break;
+      }
+    }
+    if (ret == null) {
+      bug("Warning: variable bank does not contain a constraint with the id " + cID + ". Here's what I have:");
+      for (Constraint c : constraints){
+        bug("  " + c.getID() + " = " + c.getHumanDescriptionString());
+      }
+    }
+    return ret;
   }
 }
