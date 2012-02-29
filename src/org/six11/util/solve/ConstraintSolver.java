@@ -257,8 +257,8 @@ public class ConstraintSolver {
           numFinished = numFinished + 1;
         }
         Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
-        double targetMag = delta.mag() / corrections.size();
-        delta = delta.getVectorOfMagnitude(targetMag); // divide by num. constraints on this point.
+//        double targetMag = delta.mag() / corrections.size();
+//        delta = delta.getVectorOfMagnitude(targetMag); // divide by num. constraints on this point.
         double mag = delta.mag();
         totalError = totalError + mag;
         //        double r = random.nextDouble() * heat;

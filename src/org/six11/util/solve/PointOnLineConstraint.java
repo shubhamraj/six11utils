@@ -1,8 +1,11 @@
 package org.six11.util.solve;
 
 import java.awt.Color;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.six11.util.Debug;
@@ -21,12 +24,13 @@ public class PointOnLineConstraint extends Constraint {
   public static double TOLERANCE = 0.0001;
   public static final String NAME = "Point On Line";
 
-  Pt a, b, m;
+  Pt antipodeA, antipodeB;
+  Set<Pt> manyPoints;
 
-  public PointOnLineConstraint(Pt a, Pt b, Pt m) {
-    this.a = a;
-    this.b = b;
-    this.m = m;
+  public PointOnLineConstraint(Set<Pt> points) {
+    super();
+    manyPoints = new HashSet<Pt>(points);
+    makeAntipodes();
   }
 
   public PointOnLineConstraint(JSONObject obj, VariableBank vars) throws JSONException {
@@ -41,31 +45,41 @@ public class PointOnLineConstraint extends Constraint {
   public void accumulateCorrection(double heat) {
     double e = measureError();
     if (e > TOLERANCE) {
-      int pins = countPinned(a, b, m);
-      maybeMove(pins, a, b, m, heat); // possible move a towards the line formed by b and m
-      maybeMove(pins, b, a, m, heat); // b --> a-m
-      maybeMove(pins, m, a, b, heat); // m --> a-b
+      int pins = countPinned(manyPoints) - 2;
+      for (Pt pt : manyPoints) {
+        maybeMove(pins, pt, heat);
+      }
     }
   }
 
-  private void maybeMove(int pins, Pt move, Pt pt1, Pt pt2, double heat) {
-    if (!isPinned(move)) {
-      Pt near = Functions.getNearestPointOnLine(move, new Line(pt1, pt2));
-      double shift = near.distance(move) / (3 - pins);
-      Vec delta = new Vec(move, near).getVectorOfMagnitude(shift);
-      accumulate(move, delta, heat);
+  private void maybeMove(int pins, Pt move, double heat) {
+    if (move == antipodeA || move == antipodeB) {
+      // don't do anything.
+    } else {
+      if (!isPinned(move)) {
+        Pt near = Functions.getNearestPointOnLine(move, new Line(antipodeA, antipodeB));
+        double shift = near.distance(move) / (3 - pins);
+        Vec delta = new Vec(move, near).getVectorOfMagnitude(shift);
+        accumulate(move, delta, heat);
+      }
     }
   }
 
   @Override
   public double measureError() {
-    return Functions.getDistanceBetweenPointAndLine(m, new Line(a, b));
+    double sum = 0;
+    Line line = new Line(antipodeA, antipodeB);
+    for (Pt pt : manyPoints) {
+      sum = sum + Functions.getDistanceBetweenPointAndLine(pt, line);
+    }
+    bug("Error for POL: " + sum);
+    return sum;
   }
 
   @Override
   public void draw(DrawingBuffer buf) {
     Color col = (abs(measureError()) > TOLERANCE) ? Color.RED : Color.GREEN;
-    DrawingBufferRoutines.line(buf, new Line(a, b), col, 1.0);
+    DrawingBufferRoutines.line(buf, new Line(antipodeA, antipodeB), col, 1.0);
   }
 
   public static Manipulator getManipulator() {
@@ -77,17 +91,17 @@ public class PointOnLineConstraint extends Constraint {
 
   @Override
   public void assume(Manipulator man, VariableBank vars) {
-    if (man.ptOrConstraint != getClass()) {
-      bug("Can't build " + getClass().getName() + " based on manipulator for " + man.label
-          + "(its ptOrConstraint is " + man.ptOrConstraint.getName() + ")");
-    } else {
-      bug("Yay I can build a point-on-line thing from this manipulator");
-    }
-    Map<String, String> paramVals = man.getParamsAsMap();
-    bug(num(paramVals.values(), " "));
-    a = vars.getPointWithName(paramVals.get("p1"));
-    b = vars.getPointWithName(paramVals.get("p2"));
-    m = vars.getPointWithName(paramVals.get("p3"));
+    //    if (man.ptOrConstraint != getClass()) {
+    //      bug("Can't build " + getClass().getName() + " based on manipulator for " + man.label
+    //          + "(its ptOrConstraint is " + man.ptOrConstraint.getName() + ")");
+    //    } else {
+    //      bug("Yay I can build a point-on-line thing from this manipulator");
+    //    }
+    //    Map<String, String> paramVals = man.getParamsAsMap();
+    //    bug(num(paramVals.values(), " "));
+    //    a = vars.getPointWithName(paramVals.get("p1"));
+    //    b = vars.getPointWithName(paramVals.get("p2"));
+    //    m = vars.getPointWithName(paramVals.get("p3"));
   }
 
   /**
@@ -95,56 +109,81 @@ public class PointOnLineConstraint extends Constraint {
    */
   public Manipulator getManipulator(VariableBank vars) {
     Manipulator man = PointOnLineConstraint.getManipulator();
-    man.setParamValue("p1", a.getString("name"));
-    man.setParamValue("p2", b.getString("name"));
-    man.setParamValue("p3", m.getString("name"));
-    man.newThing = false;
-    man.constraint = this;
+    //    man.setParamValue("p1", a.getString("name"));
+    //    man.setParamValue("p2", b.getString("name"));
+    //    man.setParamValue("p3", m.getString("name"));
+    //    man.newThing = false;
+    //    man.constraint = this;
     return man;
   }
 
   public String getHumanDescriptionString() {
-    return "PointAsLineParam " + name(a) + ", " + name(b) + ", " + name(m);
+    return "PointAsLineParam " + name(antipodeA) + ", " + name(antipodeB) + ", "
+        + manyPoints.size() + " others";
   }
 
   public JSONObject toJson() throws JSONException {
     JSONObject ret = new JSONObject();
-    ret.put("p1", a.getString("name"));
-    ret.put("p2", b.getString("name"));
-    ret.put("p3", m.getString("name"));
+    JSONArray arr = new JSONArray();
+    for (Pt pt : manyPoints) {
+      arr.put(pt.getString("name"));
+    }
+    ret.put("points", arr);
     return ret;
   }
 
   public void fromJson(JSONObject obj, VariableBank vars) throws JSONException {
-    a = vars.getPointWithName(obj.getString("p1"));
-    b = vars.getPointWithName(obj.getString("p2"));
-    m = vars.getPointWithName(obj.getString("p3"));
-    Debug.errorOnNull(a, "a");
-    Debug.errorOnNull(b, "b");
-    Debug.errorOnNull(m, "m");
+    JSONArray arr = obj.getJSONArray("points");
+    manyPoints = new HashSet<Pt>();
+    for (int i = 0; i < arr.length(); i++) {
+      String name = arr.getString(i);
+      Pt pt = vars.getPointWithName(name);
+      manyPoints.add(pt);
+    }
+    makeAntipodes();
   }
 
   @Override
   public boolean involves(Pt who) {
-    return (a == who || b == who || m == who);
+    return manyPoints.contains(who);
   }
 
   @Override
   public void replace(Pt oldPt, Pt newPt) {
-    if (a == oldPt) {
-      a = newPt;
-    }
-    if (b == oldPt) {
-      b = newPt;
-    }
-    if (m == oldPt) {
-      m = newPt;
-    }
+    manyPoints.remove(oldPt);
+    manyPoints.add(newPt);
+    makeAntipodes();
   }
 
-  @Override
   public Pt[] getRelatedPoints() {
-    return new Pt[] { a, b, m };
+    return manyPoints.toArray(new Pt[0]);
   }
 
+  private void makeAntipodes() {
+    Pt[] points = getRelatedPoints();
+    Pt bestA = null;
+    Pt bestB = null;
+    double bestDist = 0;
+    for (int i = 0; i < points.length; i++) {
+      Pt a = points[i];
+      for (int j = i + 1; j < points.length; j++) {
+        Pt b = points[j];
+        double thisDist = a.distance(b);
+        if (thisDist > bestDist) {
+          bestDist = thisDist;
+          bestA = a;
+          bestB = b;
+        }
+      }
+    }
+    antipodeA = bestA;
+    antipodeB = bestB;
+  }
+
+  public void addPoints(Pt... pts) {
+    for (Pt pt : pts) {
+      manyPoints.add(pt);
+    }
+    makeAntipodes();
+  }
 }

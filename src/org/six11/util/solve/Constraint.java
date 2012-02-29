@@ -1,5 +1,6 @@
 package org.six11.util.solve;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.json.JSONException;
@@ -78,6 +79,16 @@ public abstract class Constraint {
     return ret;
   }
 
+  public static int countPinned(Collection<Pt> somePoints) {
+    int ret = 0;
+    for (Pt pt : somePoints) {
+      if (isPinned(pt)) {
+        ret++;
+      }
+    }
+    return ret;
+  }
+  
   /**
    * Use the values contained in the given manipulator
    * 
