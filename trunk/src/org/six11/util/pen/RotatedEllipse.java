@@ -257,6 +257,14 @@ public class RotatedEllipse {
         + ", rot: " + num(getRotation()) + ", center: " + num(center) + "]";
   }
 
+  public double getParamA() {
+    return a;
+  }
+
+  public double getParamB() {
+    return b;
+  }
+
   public Vec getAxisA() {
     return getVector(0).getScaled(a);
   }
