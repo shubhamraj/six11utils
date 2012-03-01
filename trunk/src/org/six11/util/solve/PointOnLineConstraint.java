@@ -45,30 +45,33 @@ public class PointOnLineConstraint extends Constraint {
   public void accumulateCorrection(double heat) {
     double e = measureError();
     if (e > TOLERANCE) {
-      int pins = countPinned(manyPoints) - 2;
+      int pins = countPinned(manyPoints);
+      Line target = getTargetLine();
       for (Pt pt : manyPoints) {
-        maybeMove(pins, pt, heat);
+        maybeMove(pins, pt, target, heat);
       }
     }
   }
 
-  private void maybeMove(int pins, Pt move, double heat) {
-    if (move == antipodeA || move == antipodeB) {
-      // don't do anything.
-    } else {
-      if (!isPinned(move)) {
-        Pt near = Functions.getNearestPointOnLine(move, new Line(antipodeA, antipodeB));
-        double shift = near.distance(move) / (3 - pins);
-        Vec delta = new Vec(move, near).getVectorOfMagnitude(shift);
-        accumulate(move, delta, heat);
-      }
+  public Line getTargetLine() {
+    Vec dir = new Vec(antipodeA, antipodeB);
+    Pt c = Functions.getMean(manyPoints);
+    return new Line(c, dir);
+  }
+
+  private void maybeMove(int pins, Pt move, Line target, double heat) {
+    if (!isPinned(move)) {
+      Pt near = Functions.getNearestPointOnLine(move, target);
+      double shift = near.distance(move) / (manyPoints.size() - pins);
+      Vec delta = new Vec(move, near).getVectorOfMagnitude(shift);
+      accumulate(move, delta, heat);
     }
   }
 
   @Override
   public double measureError() {
     double sum = 0;
-    Line line = new Line(antipodeA, antipodeB);
+    Line line = getTargetLine();
     for (Pt pt : manyPoints) {
       sum = sum + Functions.getDistanceBetweenPointAndLine(pt, line);
     }
