@@ -11,16 +11,20 @@ import org.six11.util.pen.Pt;
 public class VariableBank {
 
   List<Pt> points;
-  List<Constraint> constraints;
+  private List<Constraint> constraints;
   
   public VariableBank() {
     points = new ArrayList<Pt>();
     constraints = new ArrayList<Constraint>();
   }
 
+  public List<Constraint> getConstraints() {
+    return constraints;
+  }
+
   public void clear() {
     points.clear();
-    constraints.clear();
+    getConstraints().clear();
   }
   
   public Pt getPointWithName(String n) {
@@ -36,7 +40,7 @@ public class VariableBank {
   
   public Set<Constraint> searchConstraints(Set<ConstraintFilter> filters) {
     Set<Constraint> ret = new HashSet<Constraint>();
-    ret.addAll(constraints);
+    ret.addAll(getConstraints());
     for (ConstraintFilter filter : filters) {
       ret = filter.filter(ret);
     }
@@ -63,7 +67,7 @@ public class VariableBank {
 
   public Constraint getConstraintWithID(int cID) {
     Constraint ret = null;
-    for (Constraint c : constraints) {
+    for (Constraint c : getConstraints()) {
       if (c.getID() == cID) {
         ret = c;
         break;
@@ -71,7 +75,7 @@ public class VariableBank {
     }
     if (ret == null) {
       bug("Warning: variable bank does not contain a constraint with the id " + cID + ". Here's what I have:");
-      for (Constraint c : constraints){
+      for (Constraint c : getConstraints()){
         bug("  " + c.getID() + " = " + c.getHumanDescriptionString());
       }
     }

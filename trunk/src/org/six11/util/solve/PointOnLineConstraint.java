@@ -75,7 +75,6 @@ public class PointOnLineConstraint extends Constraint {
     for (Pt pt : manyPoints) {
       sum = sum + Functions.getDistanceBetweenPointAndLine(pt, line);
     }
-    bug("Error for POL: " + sum);
     return sum;
   }
 

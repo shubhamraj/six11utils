@@ -82,9 +82,6 @@ public class ConstraintSolver {
   }
 
   public void setFrameRate(int frameRate) {
-    if (frameRate != fps) {
-      bug("Changing framerate to " + frameRate);
-    }
     this.fps = frameRate;
   }
 
@@ -112,8 +109,8 @@ public class ConstraintSolver {
 
   protected void fire() {
     for (Listener lis : stepListeners) {
-      lis.constraintStepDone(currentState, numIterations, residual, vars.points.size(),
-          vars.constraints.size());
+      lis.constraintStepDone(currentState, numIterations, residual, vars.points.size(), vars
+          .getConstraints().size());
     }
   }
 
@@ -221,7 +218,7 @@ public class ConstraintSolver {
       // 2: poll all constraints and have them add correction vectors to each point
       Constraint worst = null;
       double worstError = 0;
-      for (Constraint c : vars.constraints) {
+      for (Constraint c : vars.getConstraints()) {
         c.clearMessages();
         if (heat > 0.6) {
           c.accumulateCorrection(heat);
@@ -234,7 +231,7 @@ public class ConstraintSolver {
         }
         c.pushLastError();
       }
-      for (Constraint c : vars.constraints) {
+      for (Constraint c : vars.getConstraints()) {
         if (debugOutput) {
           if (c == worst) {
             buf.append("[" + String.format(f + "] ", c.measureError()));
@@ -257,8 +254,8 @@ public class ConstraintSolver {
           numFinished = numFinished + 1;
         }
         Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
-//        double targetMag = delta.mag() / corrections.size();
-//        delta = delta.getVectorOfMagnitude(targetMag); // divide by num. constraints on this point.
+        //        double targetMag = delta.mag() / corrections.size();
+        //        delta = delta.getVectorOfMagnitude(targetMag); // divide by num. constraints on this point.
         double mag = delta.mag();
         totalError = totalError + mag;
         //        double r = random.nextDouble() * heat;
@@ -266,7 +263,7 @@ public class ConstraintSolver {
         double dampedMag = mag;
         // respects the shape of root function:
         if (dampedMag > 1.0) {
-          Vec moveAmt = delta.getVectorOfMagnitude(sqrt(dampedMag)); 
+          Vec moveAmt = delta.getVectorOfMagnitude(sqrt(dampedMag));
           pt.move(moveAmt);
           pt.setAttribute(LAST_SOLVER_ADJUSTMENT_VEC, moveAmt);
         } else if (dampedMag > 0.0) {
@@ -342,7 +339,7 @@ public class ConstraintSolver {
   }
 
   public List<Constraint> getConstraints() {
-    return vars.constraints;
+    return vars.getConstraints();
   }
 
   public VariableBank getVars() {
@@ -350,8 +347,8 @@ public class ConstraintSolver {
   }
 
   public void addConstraint(Constraint c) {
-    if (!vars.constraints.contains(c)) {
-      vars.constraints.add(c);
+    if (!vars.getConstraints().contains(c)) {
+      vars.getConstraints().add(c);
       if (ui != null) {
         ui.modelChanged();
       }
@@ -359,8 +356,8 @@ public class ConstraintSolver {
   }
 
   public void removeConstraint(Constraint c) {
-    bug("removing basic constraint: " + c);
-    vars.constraints.remove(c);
+    Debug.stacktrace("removing basic constraint: " + c, 8);
+    vars.getConstraints().remove(c);
     if (ui != null) {
       ui.modelChanged();
     }
@@ -381,12 +378,15 @@ public class ConstraintSolver {
   public Set<Constraint> removePoint(Pt doomed) {
     vars.points.remove(doomed);
     Set<Constraint> doomedConstraints = new HashSet<Constraint>();
-    for (Constraint c : vars.constraints) {
+    for (Constraint c : vars.getConstraints()) {
       if (c.involves(doomed)) {
         doomedConstraints.add(c);
       }
     }
-    vars.constraints.removeAll(doomedConstraints);
+    for (Constraint c : doomedConstraints) {
+      Debug.stacktrace("removing basic constraint: " + c, 8);
+    }
+    vars.getConstraints().removeAll(doomedConstraints);
     wakeUp();
     return doomedConstraints;
   }
@@ -397,7 +397,7 @@ public class ConstraintSolver {
     if (!hasName(newPt)) {
       Debug.stacktrace("point has no name", 6);
     }
-    for (Constraint c : vars.constraints) {
+    for (Constraint c : vars.getConstraints()) {
       if (c.involves(oldPt)) {
         c.replace(oldPt, newPt);
       }
