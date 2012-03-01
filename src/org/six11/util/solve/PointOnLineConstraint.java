@@ -188,4 +188,9 @@ public class PointOnLineConstraint extends Constraint {
     }
     makeAntipodes();
   }
+
+  public void remove(Pt pt) {
+    manyPoints.remove(pt);
+    makeAntipodes();
+  }
 }
