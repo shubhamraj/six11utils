@@ -249,7 +249,7 @@ public class TestSolveUI {
       public void actionPerformed(ActionEvent ev) {
         int row = table.getSelectionModel().getLeadSelectionIndex();
         Constraint constraint = tableModel.getConstraint(row);
-        main.vars.constraints.remove(constraint);
+        main.vars.getConstraints().remove(constraint);
         modelChanged();
       }
     };
@@ -491,12 +491,12 @@ public class TestSolveUI {
     }
 
     public int getRowCount() {
-      return main.vars.constraints.size();
+      return main.vars.getConstraints().size();
     }
 
     public Object getValueAt(int row, int col) {
       Object ret = null;
-      Constraint c = main.vars.constraints.get(row);
+      Constraint c = main.vars.getConstraints().get(row);
       if (col == 0) {
         ret = c.getHumanDescriptionString();
       } else if (col == 1) {
@@ -510,7 +510,7 @@ public class TestSolveUI {
     }
 
     public Constraint getConstraint(int row) {
-      return main.vars.constraints.get(row);
+      return main.vars.getConstraints().get(row);
     }
 
   }
@@ -556,7 +556,7 @@ public class TestSolveUI {
       }
       JsonIO io = new JsonIO();
       JSONArray points = io.write(main.vars.points, "name", "pinned");
-      JSONArray constraints = io.write(main.vars.constraints);
+      JSONArray constraints = io.write(main.vars.getConstraints());
       JSONObject top = new JSONObject();
       top.put("points", points);
       top.put("constraints", constraints);
@@ -608,10 +608,10 @@ public class TestSolveUI {
       JSONArray constraintArray = top.getJSONArray("constraints");
       List<Pt> points = io.readPoints(pointArray, "name", "pinned");
       main.vars.points.clear();
-      main.vars.constraints.clear();
+      main.vars.getConstraints().clear();
       main.vars.points.addAll(points);
       List<Constraint> constraints = io.readConstraints(constraintArray, main.vars);
-      main.vars.constraints.addAll(constraints);
+      main.vars.getConstraints().addAll(constraints);
       modelChanged();
     } catch (JSONException e) {
       // TODO Auto-generated catch block
