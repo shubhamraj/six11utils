@@ -317,8 +317,8 @@ public class RotatedEllipse {
         surface.add(getEllipticalPoint(t));
       }
     } catch (Throwable t) {
-      t.printStackTrace();
-      bug("Got " + t + ".");
+//      t.printStackTrace();
+      bug("Got " + t + ". Not showing stack trace because it would make me run out of heap space.");
       bug("  start: " + num(start));
       bug("    end: " + num(end));
       bug("   step: " + num(step));
