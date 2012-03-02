@@ -6,6 +6,7 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.six11.util.Debug;
+import org.six11.util.data.Lists;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Pt;
@@ -23,7 +24,7 @@ public class PointAsLineParamConstraint extends Constraint {
 
   public static double TOLERANCE = 0.0001;
   public static final String NAME = "Pont As Line Param";
-  
+
   Pt lineA, lineB, target;
   NumericValue dist;
 
@@ -39,6 +40,10 @@ public class PointAsLineParamConstraint extends Constraint {
   public PointAsLineParamConstraint(JSONObject obj, VariableBank vars) throws JSONException {
     super(obj);
     fromJson(obj, vars);
+  }
+
+  public boolean isValid(VariableBank vars) {
+    return vars.getPoints().containsAll(Lists.makeSet(lineA, lineB, target));
   }
 
   public String getType() {

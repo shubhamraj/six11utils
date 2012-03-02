@@ -109,7 +109,7 @@ public class ConstraintSolver {
 
   protected void fire() {
     for (Listener lis : stepListeners) {
-      lis.constraintStepDone(currentState, numIterations, residual, vars.points.size(), vars
+      lis.constraintStepDone(currentState, numIterations, residual, vars.getPoints().size(), vars
           .getConstraints().size());
     }
   }
@@ -206,7 +206,7 @@ public class ConstraintSolver {
     double totalError = 0;
     try {
       // 1: clear any current correction values
-      for (Pt pt : vars.points) {
+      for (Pt pt : vars.getPoints()) {
         List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
         if (corrections == null) {
           pt.setAttribute(ACCUM_CORRECTION, new ArrayList<Vec>());
@@ -247,7 +247,7 @@ public class ConstraintSolver {
 
       // 3: now all points have some accumulated correction. sum them and update the point's location.
       int numFinished = 0;
-      for (Pt pt : vars.points) {
+      for (Pt pt : vars.getPoints()) {
         List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
         pt.setBoolean("stable", corrections.size() == 0); // used by the UI
         if (corrections.size() == 0) {
@@ -272,7 +272,7 @@ public class ConstraintSolver {
         }
       }
       residual = totalError;
-      if (totalError < 0.0001 || numFinished == vars.points.size()) {
+      if (totalError < 0.0001 || numFinished == vars.getPoints().size()) {
         finished = true;
         currentState = State.Solved;
       }
@@ -304,7 +304,7 @@ public class ConstraintSolver {
   public boolean hasPoints(Pt... pts) {
     boolean ret = true;
     for (Pt pt : pts) {
-      if (!vars.points.contains(pt)) {
+      if (!vars.getPoints().contains(pt)) {
         ret = false;
         break;
       }
@@ -313,7 +313,7 @@ public class ConstraintSolver {
   }
 
   public List<Pt> getPoints() {
-    return vars.points;
+    return vars.getPoints();
   }
 
   public synchronized void addPoint(String name, Pt pt) {
@@ -326,12 +326,12 @@ public class ConstraintSolver {
   }
 
   public synchronized void addPoint(Pt pt) {
-    if (!vars.points.contains(pt)) {
+    if (!vars.getPoints().contains(pt)) {
       if (!hasName(pt)) {
         bug("warning: adding a point with no name");
       }
       //      Debug.stacktrace("made point " + pt.getString("name"), 8);
-      vars.points.add(pt);
+      vars.getPoints().add(pt);
     }
     if (ui != null) {
       ui.modelChanged();
@@ -376,10 +376,11 @@ public class ConstraintSolver {
   }
 
   public Set<Constraint> removePoint(Pt doomed) {
-    vars.points.remove(doomed);
+    vars.getPoints().remove(doomed);
     Set<Constraint> doomedConstraints = new HashSet<Constraint>();
     for (Constraint c : vars.getConstraints()) {
-      if (c.involves(doomed)) {
+      c.remove(doomed);
+      if (!c.isValid(vars)) {
         doomedConstraints.add(c);
       }
     }
@@ -392,7 +393,7 @@ public class ConstraintSolver {
   }
 
   public void replacePoint(Pt oldPt, Pt newPt) {
-    vars.points.remove(oldPt);
+    vars.getPoints().remove(oldPt);
     addPoint(newPt);
     if (!hasName(newPt)) {
       Debug.stacktrace("point has no name", 6);

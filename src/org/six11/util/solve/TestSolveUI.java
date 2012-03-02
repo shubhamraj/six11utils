@@ -555,7 +555,7 @@ public class TestSolveUI {
         file.createNewFile();
       }
       JsonIO io = new JsonIO();
-      JSONArray points = io.write(main.vars.points, "name", "pinned");
+      JSONArray points = io.write(main.vars.getPoints(), "name", "pinned");
       JSONArray constraints = io.write(main.vars.getConstraints());
       JSONObject top = new JSONObject();
       top.put("points", points);
@@ -607,9 +607,9 @@ public class TestSolveUI {
       JSONArray pointArray = top.getJSONArray("points");
       JSONArray constraintArray = top.getJSONArray("constraints");
       List<Pt> points = io.readPoints(pointArray, "name", "pinned");
-      main.vars.points.clear();
+      main.vars.getPoints().clear();
       main.vars.getConstraints().clear();
-      main.vars.points.addAll(points);
+      main.vars.getPoints().addAll(points);
       List<Constraint> constraints = io.readConstraints(constraintArray, main.vars);
       main.vars.getConstraints().addAll(constraints);
       modelChanged();
