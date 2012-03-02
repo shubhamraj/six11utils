@@ -10,7 +10,7 @@ import org.six11.util.pen.Pt;
 
 public class VariableBank {
 
-  List<Pt> points;
+  private List<Pt> points;
   private List<Constraint> constraints;
   
   public VariableBank() {
@@ -20,6 +20,10 @@ public class VariableBank {
 
   public List<Constraint> getConstraints() {
     return constraints;
+  }
+  
+  public List<Pt> getPoints() {
+    return points;
   }
 
   public void clear() {
@@ -36,6 +40,10 @@ public class VariableBank {
       }
     }
     return ret;
+  }
+  
+  public boolean hasPoint(Pt pt) {
+    return points.contains(pt);
   }
   
   public Set<Constraint> searchConstraints(Set<ConstraintFilter> filters) {

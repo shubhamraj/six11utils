@@ -32,13 +32,15 @@ public abstract class Constraint {
     this.messages = new StringBuffer();
     id = ID_COUNTER++;
   }
-  
+
   /**
-   * Creates a constraint with a predetermined ID. The given JSON object *must* have an integer "id" value.
+   * Creates a constraint with a predetermined ID. The given JSON object *must* have an integer "id"
+   * value.
+   * 
    * @param obj
    * @throws JSONException
    */
-  public Constraint(JSONObject obj) throws JSONException  {
+  public Constraint(JSONObject obj) throws JSONException {
     this.messages = new StringBuffer();
     int jsonID = obj.getInt("id");
     this.id = jsonID;
@@ -88,7 +90,7 @@ public abstract class Constraint {
     }
     return ret;
   }
-  
+
   /**
    * Use the values contained in the given manipulator
    * 
@@ -177,7 +179,7 @@ public abstract class Constraint {
   }
 
   public abstract boolean involves(Pt who);
-  
+
   public boolean involvesAll(Pt... pts) {
     boolean ret = true;
     for (Pt pt : pts) {
@@ -196,9 +198,23 @@ public abstract class Constraint {
   public int getID() {
     return id;
   }
-  
+
   public String toString() {
     return getClass() + "." + id;
+  }
+
+  public abstract boolean isValid(VariableBank vars);
+
+  /**
+   * Remove a point from the constraint. This is only for constraints like PointOnLineConstraint
+   * that can have a variable number of points. Therefore, this is not abstract, but should be
+   * implemented by constraints like PointOnLineConstraint that can use it. After removing points
+   * this way, check isValid().
+   * 
+   * @param doomed
+   */
+  public void remove(Pt doomed) {
+    // subclass override if needed
   }
 
 }

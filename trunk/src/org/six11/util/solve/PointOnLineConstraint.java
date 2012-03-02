@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.six11.util.Debug;
+import org.six11.util.data.Lists;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
@@ -36,6 +37,12 @@ public class PointOnLineConstraint extends Constraint {
   public PointOnLineConstraint(JSONObject obj, VariableBank vars) throws JSONException {
     super(obj);
     fromJson(obj, vars);
+  }
+  
+  
+
+  public boolean isValid(VariableBank vars) {
+    return manyPoints.size() > 2 && vars.getPoints().containsAll(manyPoints);
   }
 
   public String getType() {

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.six11.util.Debug;
+import org.six11.util.data.Lists;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Pt;
@@ -24,10 +25,14 @@ public class LocationConstraint extends Constraint {
     this.p = p;
     this.target = target;
   }
-  
+
   public LocationConstraint(JSONObject obj, VariableBank vars) throws JSONException {
     super(obj);
     fromJson(obj, vars);
+  }
+
+  public boolean isValid(VariableBank vars) {
+    return vars.getPoints().containsAll(Lists.makeSet(p));
   }
 
   public String getType() {
@@ -54,11 +59,11 @@ public class LocationConstraint extends Constraint {
       DrawingBufferRoutines.arrow(buf, p, target, 2, Color.LIGHT_GRAY);
     }
   }
-  
+
   public static Manipulator getManipulator() {
     Manipulator man = new Manipulator(LocationConstraint.class, "Location", //
-        new Manipulator.Param("p", "Point", true),
-        new Manipulator.Param("target", "Desired Location", true));
+        new Manipulator.Param("p", "Point", true), new Manipulator.Param("target",
+            "Desired Location", true));
     return man;
   }
 
@@ -83,11 +88,11 @@ public class LocationConstraint extends Constraint {
     man.constraint = this;
     return man;
   }
-  
+
   public String getHumanDescriptionString() {
     return "Location " + name(p) + " => " + name(target);
   }
-  
+
   public JSONObject toJson() throws JSONException {
     JSONObject ret = new JSONObject();
     ret.put("p", p.getString("name"));
@@ -109,15 +114,19 @@ public class LocationConstraint extends Constraint {
 
   @Override
   public void replace(Pt oldPt, Pt newPt) {
-    if (oldPt == p) { p = newPt; }
-    if (oldPt == target) { target = newPt; }
+    if (oldPt == p) {
+      p = newPt;
+    }
+    if (oldPt == target) {
+      target = newPt;
+    }
   }
 
   @Override
   public Pt[] getRelatedPoints() {
-    return new Pt[] { p, target };
+    return new Pt[] {
+        p, target
+    };
   }
-  
-
 
 }
