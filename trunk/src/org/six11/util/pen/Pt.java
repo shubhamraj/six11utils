@@ -173,6 +173,14 @@ public class Pt extends Point2D.Double implements Comparable<Pt> {
       return ret;
     }
   };
+  
+  public float fx() {
+    return (float) getX();
+  }
+  
+  public float fy() {
+    return (float) getY();
+  }
 
   public int ix() {
     return (int) getX();

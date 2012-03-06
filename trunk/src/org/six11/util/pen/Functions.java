@@ -769,33 +769,37 @@ public abstract class Functions {
     Pt prev = seq.get(start).copyXYT();
     ret.add(prev);
     int seqPointer = start + 1;
-    Pt next = seq.get(seqPointer);
-    while (seqPointer <= end) {
-      double dist = prev.distance(next);
-      if (dist + patchDist > threshold) {
-        // patch point between prev and next. update patchDist and prev.
-        double remainder = threshold - patchDist;
-        double frac = remainder / dist;
-        double dx = frac * (next.getX() - prev.getX());
-        double dy = frac * (next.getY() - prev.getY());
-        long dt = (long) (frac * (double) (next.getTime() - prev.getTime()));
-        Pt patchPt = new Pt(prev.getX() + dx, prev.getY() + dy, prev.getTime() + dt);
-        ret.add(patchPt);
-        prev = patchPt;
-        patchDist = 0;
-      } else {
-        // no patch point. update patchDist, prev and next, and seqPointer.
-        patchDist = patchDist + dist;
-        prev = next;
-        seqPointer++;
-        if (seqPointer <= end) {
-          next = seq.get(seqPointer);
+    if (seqPointer < seq.size()) {
+      
+      Pt next = seq.get(seqPointer);
+      while (seqPointer <= end) {
+        
+        double dist = prev.distance(next);
+        if (dist + patchDist > threshold) {
+          // patch point between prev and next. update patchDist and prev.
+          double remainder = threshold - patchDist;
+          double frac = remainder / dist;
+          double dx = frac * (next.getX() - prev.getX());
+          double dy = frac * (next.getY() - prev.getY());
+          long dt = (long) (frac * (double) (next.getTime() - prev.getTime()));
+          Pt patchPt = new Pt(prev.getX() + dx, prev.getY() + dy, prev.getTime() + dt);
+          ret.add(patchPt);
+          prev = patchPt;
+          patchDist = 0;
         } else {
-          break;
+          // no patch point. update patchDist, prev and next, and seqPointer.
+          patchDist = patchDist + dist;
+          prev = next;
+          seqPointer++;
+          if (seqPointer <= end) {
+            next = seq.get(seqPointer);
+          } else {
+            break;
+          }
         }
       }
+      ret.add(seq.get(end).copyXYT());
     }
-    ret.add(seq.get(end).copyXYT());
     return ret;
   }
 
@@ -1127,7 +1131,7 @@ public abstract class Functions {
       double dist = 0;
       for (int counter = 1; counter < points.size(); counter++) {
         int i = wrapMod(idxTarget + counter, n);
-        int j = wrapMod(i-1, n);
+        int j = wrapMod(i - 1, n);
         double d = points.get(i).distance(points.get(j));
         dist = dist + d;
         ret[i] = dist;
@@ -1136,7 +1140,7 @@ public abstract class Functions {
       dist = 0;
       for (int counter = 1; counter < points.size(); counter++) {
         int i = wrapMod(idxTarget - counter, n);
-        int j = wrapMod(i+1, n);
+        int j = wrapMod(i + 1, n);
         double d = points.get(i).distance(points.get(j));
         dist = dist + d;
         ret[i] = min(ret[i], dist);
