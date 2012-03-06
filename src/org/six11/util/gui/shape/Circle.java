@@ -38,6 +38,10 @@ public class Circle extends Ellipse2D.Double {
   public double getRadius() {
     return r;
   }
+  
+  public Pt getCenter() {
+    return new Pt(mid_x, mid_y);
+  }
 
   public List<Sequence> getGeometry() {
     // as you can see this is kinda bogus.
