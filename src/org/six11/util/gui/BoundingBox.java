@@ -264,19 +264,19 @@ public class BoundingBox {
   }
 
   public Pt getTopRight() {
-    return new Pt(minY, maxX);
+    return new Pt(minX, maxY);
   }
 
   public Pt getBotRight() {
-    return new Pt(maxY, maxX);
+    return new Pt(maxX, maxY);
   }
 
   public Pt getTopLeft() {
-    return new Pt(minY, minX);
+    return new Pt(minX, minY);
   }
   
   public Pt getBotLeft() {
-    return new Pt(maxY, minX);
+    return new Pt(maxX, minY);
   }
 
   public void translateToOrigin() {
