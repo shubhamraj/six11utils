@@ -2207,6 +2207,37 @@ public abstract class Functions {
     return angles;
   }
 
+  private static double getArcAngle(Pt target, Pt center) {
+    return atan2(target.y - center.y, target.x - center.x);
+  }
+
+  public static List<Pt> getCircularArc(Pt arc1, Pt arc2, Pt arc3, Pt center, int numSteps) {
+    double arc1T = getArcAngle(arc1, center);
+    double arc2T = getArcAngle(arc2, center);
+    double arc3T = getArcAngle(arc3, center);
+    List<Pt> surface = new ArrayList<Pt>();
+    List<Double> arcParams = Functions.makeMonotonicallyIncreasingAngles(arc1T, arc2T, arc3T);
+    double start = arcParams.get(0);
+    double end = arcParams.get(2);
+    double step = (end - start) / numSteps;
+    double r = arc1.distance(center);
+    for (double t = start; t <= end; t += step) {
+      surface.add(getCircularPoint(t, r, center));
+    }
+    return surface;
+  }
+  
+  /**
+   * Returns a point on the circle boundary, parameterized by the given radial angle. If you call
+   * this a bunch of times for t=0..2pi you sample the entire circle.
+   */
+  public static Pt getCircularPoint(double t, double r, Pt center) {
+    double x = (r * cos(t));
+    double y = (r * sin(t));
+    Pt ret = new Pt(x + center.x, y + center.y);
+    return ret;
+  }
+  
   private static char getAngleCode(double m, double n) {
     char ret = '+'; // non-decreasing: m < n
     if (m > n) {
