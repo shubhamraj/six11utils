@@ -53,7 +53,7 @@ public class BoundingBox {
   public void translate(Pt amt) {
     translate(amt.getX(), amt.getY());
   }
-  
+
   public void translate(double dx, double dy) {
     minX = minX + dx;
     maxX = maxX + dx;
@@ -79,6 +79,9 @@ public class BoundingBox {
     return buf.toString();
   }
 
+  /**
+   * Tells you if the bounding box has both x and y dimensions (e.g. is not empty.)
+   */
   public boolean isValid() {
     return (hasX && hasY);
   }
@@ -274,7 +277,7 @@ public class BoundingBox {
   public Pt getTopLeft() {
     return new Pt(minX, minY);
   }
-  
+
   public Pt getBotLeft() {
     return new Pt(maxX, minY);
   }
