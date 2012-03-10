@@ -312,16 +312,19 @@ public class RotatedEllipse {
     double start = arcParams.get(0);
     double end = arcParams.get(2);
     double step = (end - start) / numSteps;
+    if (step < 0.001) {
+      bug("Going to have issues. Step size is " + step);
+    }
     try {
       for (double t = start; t <= end; t += step) {
         surface.add(getEllipticalPoint(t));
       }
     } catch (Throwable t) {
 //      t.printStackTrace();
-      bug("Got " + t + ". Not showing stack trace because it would make me run out of heap space.");
-      bug("  start: " + num(start));
-      bug("    end: " + num(end));
-      bug("   step: " + num(step));
+      System.out.println("Got " + t + ". Not showing stack trace because it would make me run out of heap space.");
+      System.out.println("  start: " + num(start));
+      System.out.println("    end: " + num(end));
+      System.out.println("   step: " + num(step));
     }
     return surface;
   }
