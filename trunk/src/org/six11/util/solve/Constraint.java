@@ -44,7 +44,6 @@ public abstract class Constraint {
     this.messages = new StringBuffer();
     int jsonID = obj.getInt("id");
     this.id = jsonID;
-    bug("Resuurected constraint: " + this.id);
   }
 
   public String getSecretName() {
