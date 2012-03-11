@@ -31,6 +31,11 @@ public abstract class Strokes {
       BasicStroke.CAP_ROUND, // CAP
       BasicStroke.JOIN_ROUND, // JOIN
       1f); // miter limit
+  
+  public final static BasicStroke MEDIUM_STROKE = new BasicStroke(3.5f, // pen thickness
+      BasicStroke.CAP_ROUND, // CAP
+      BasicStroke.JOIN_ROUND, // JOIN
+      1f); // miter limit
 
   public static final BasicStroke THIN_STROKE = new BasicStroke(2f, // pen thickness
       BasicStroke.CAP_BUTT, // CAP
