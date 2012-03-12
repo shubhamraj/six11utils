@@ -39,6 +39,7 @@ public class ConstraintSolver {
 
   public static final String ACCUM_CORRECTION = "accumulated correction";
   public static final String LAST_SOLVER_ADJUSTMENT_VEC = "last solver adjustment";
+  private static final double MIN_ACCPETABLE_ERROR = 0.0001;
 
   private List<Listener> stepListeners;
   private TestSolveUI ui = null;
@@ -190,13 +191,13 @@ public class ConstraintSolver {
     }
   }
 
-  //  private double calcTotalConstraintError() {
-  //    double sum = 0;
-  //    for (Constraint c : vars.constraints) {
-  //      sum += abs(c.measureError());
-  //    }
-  //    return sum;
-  //  }
+  private double calcTotalConstraintError() {
+    double sum = 0;
+    for (Constraint c : vars.getConstraints()) {
+      sum += Math.abs(c.measureError());
+    }
+    return sum;
+  }
 
   @SuppressWarnings("unchecked")
   private double step(double prevError, double heat) {
@@ -272,7 +273,7 @@ public class ConstraintSolver {
         }
       }
       residual = totalError;
-      if (totalError < 0.0001 || numFinished == vars.getPoints().size()) {
+      if (totalError < MIN_ACCPETABLE_ERROR || numFinished == vars.getPoints().size()) {
         finished = true;
         currentState = State.Solved;
       }
@@ -365,9 +366,14 @@ public class ConstraintSolver {
 
   public void wakeUp() {
     synchronized (monitor) {
-      finished = false;
-      currentState = State.Working;
-      monitor.notify();
+      double err = calcTotalConstraintError();
+      if (err > MIN_ACCPETABLE_ERROR) {
+        finished = false;
+        currentState = State.Working;
+        monitor.notify();
+      } else {
+        bug("Not waking up solver since error in tolerance already.");
+      }
     }
   }
 
