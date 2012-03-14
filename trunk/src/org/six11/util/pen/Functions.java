@@ -8,8 +8,10 @@ import java.awt.geom.AffineTransform;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -1901,11 +1903,12 @@ public abstract class Functions {
     //        System.exit(0);
     //      }
     //    }
-    Sequence somePointsSeq = new Sequence(somePoints);
     RotatedEllipse ret = null;
-    if (!Functions.arePointsColinear(somePoints)) {
+    List<Pt> prunedList = getUniquePoints(somePoints);
+    Sequence somePointsSeq = new Sequence(prunedList);
+    if (prunedList.size() > 3 && !Functions.arePointsColinear(prunedList)) {
       Pt midPt = somePointsSeq.get(somePointsSeq.size() / 2);
-      RotatedEllipse ellie = EllipseFit.ellipseFit(somePoints);
+      RotatedEllipse ellie = EllipseFit.ellipseFit(prunedList);
       // don't want to work with very skinny ellipses.
       if (ellie.getMinorRadius() > 2) {
         if (isArc) {
@@ -1914,6 +1917,31 @@ public abstract class Functions {
         ret = ellie;
       }
     }
+    return ret;
+  }
+
+  /**
+   * Returns true if none of the points are at the same location (using Pt.
+   * @param somePoints
+   * @return
+   */
+  public static List<Pt> getUniquePoints(List<Pt> somePoints) {
+    Set<Pt> doomed = new HashSet<Pt>();
+    for (int i=0; i < somePoints.size()-1; i++) {
+      Pt left = somePoints.get(i);
+      for (int j=i+1; j < somePoints.size(); j++) {
+        Pt right =somePoints.get(j);
+        if (doomed.contains(right)) {
+          continue;
+        }
+        if (left.isSameLocation(right)) {
+          bug("Found redundant point: " + num(left) + " ~= " + num(right));
+          doomed.add(right);
+        }
+      }
+    }
+    List<Pt> ret = new ArrayList<Pt>(somePoints);
+    ret.removeAll(doomed);
     return ret;
   }
 
