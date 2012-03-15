@@ -4,17 +4,13 @@ import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.Math.min;
 import static java.lang.Math.max;
-import static java.lang.Math.abs;
 import static java.lang.Math.atan2;
 import static java.lang.Math.toDegrees;
 
 import static org.six11.util.Debug.num;
 import static org.six11.util.Debug.bug;
-// import org.six11.util.gui.shape.ShapeFactory;
 
-// import java.awt.geom.PathIterator;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
