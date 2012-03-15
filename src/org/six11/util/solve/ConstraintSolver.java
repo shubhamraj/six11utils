@@ -371,8 +371,6 @@ public class ConstraintSolver {
         finished = false;
         currentState = State.Working;
         monitor.notify();
-      } else {
-        bug("Not waking up solver since error in tolerance already.");
       }
     }
   }
