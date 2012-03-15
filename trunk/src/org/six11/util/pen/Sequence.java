@@ -44,6 +44,7 @@ public class Sequence implements Shape, Iterable<Pt> {
    * polyline.
    */
   protected boolean closedRegion;
+  private double statsNormFactor;
 
   public Sequence() {
     this(++ID_COUNTER);
@@ -784,48 +785,49 @@ public class Sequence implements Shape, Iterable<Pt> {
     return getLast().getTime() - getFirst().getTime();
   }
 
-  public double getRoughDensity() {
-    if (statsX == null || statsY == null) {
-      initRough();
+  public double getRoughDensity(double normalizationFactor) {
+    if (statsNormFactor != normalizationFactor || statsX == null || statsY == null) {
+      initRough(normalizationFactor);
     }
     return roughDensity;
   }
 
-  private void initRough() {
+  private void initRough(double normalizationFactor) {
+    statsNormFactor = normalizationFactor;
     statsX = new Statistics();
     statsY = new Statistics();
     // Note: there is a better way to do this. Normalizing the sequence is expensive. 
     // We could use the line length when calculating density instead.
-    Sequence seq = Functions.getNormalizedSequence(this, 5.0);
+    Sequence seq = Functions.getNormalizedSequence(this, 5.0 / statsNormFactor);
     for (Pt pt : seq) {
       statsX.addData(pt.getX());
       statsY.addData(pt.getY());
     }
-    double dx = (statsX.getMax() - statsX.getMin());
-    double dy = (statsY.getMax() - statsY.getMin());
+    double dx = (statsX.getMax() - statsX.getMin()) * normalizationFactor;
+    double dy = (statsY.getMax() - statsY.getMin()) * normalizationFactor;
     double densityX = ((double) statsX.getN()) / dx;
     double densityY = ((double) statsY.getN()) / dy;
     roughArea = dx * dy;
     roughDensity = densityX * densityY;
   }
 
-  public double getRoughArea() {
-    if (statsX == null || statsY == null) {
-      initRough();
+  public double getRoughArea(double normalizationFactor) {
+    if (statsNormFactor != normalizationFactor || statsX == null || statsY == null) {
+      initRough(normalizationFactor);
     }
     return roughArea;
   }
   
-  public double getRoughDX() {
-    if (statsX == null || statsY == null) {
-      initRough();
+  public double getRoughDX(double normalizationFactor) {
+    if (statsNormFactor != normalizationFactor || statsX == null || statsY == null) {
+      initRough(normalizationFactor);
     }
     return (statsX.getMax() - statsX.getMin());
   }
   
-  public double getRoughDY() {
-    if (statsX == null || statsY == null) {
-      initRough();
+  public double getRoughDY(double normalizationFactor) {
+    if (statsNormFactor != normalizationFactor || statsX == null || statsY == null) {
+      initRough(normalizationFactor);
     }
     return (statsY.getMax() - statsY.getMin());
   }
