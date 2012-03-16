@@ -248,6 +248,7 @@ public class ConstraintSolver {
 
       // 3: now all points have some accumulated correction. sum them and update the point's location.
       int numFinished = 0;
+      double biggestMove = 0;
       for (Pt pt : vars.getPoints()) {
         List<Vec> corrections = (List<Vec>) pt.getAttribute(ACCUM_CORRECTION);
         pt.setBoolean("stable", corrections.size() == 0); // used by the UI
@@ -255,20 +256,19 @@ public class ConstraintSolver {
           numFinished = numFinished + 1;
         }
         Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
-        //        double targetMag = delta.mag() / corrections.size();
-        //        delta = delta.getVectorOfMagnitude(targetMag); // divide by num. constraints on this point.
         double mag = delta.mag();
+
         totalError = totalError + mag;
-        //        double r = random.nextDouble() * heat;
-        //        double dampedMag = mag * r;
-        double dampedMag = mag;
+
         // respects the shape of root function:
-        if (dampedMag > 1.0) {
-          Vec moveAmt = delta.getVectorOfMagnitude(sqrt(dampedMag));
+        if (mag > 1.0) {
+          Vec moveAmt = delta.getVectorOfMagnitude(sqrt(mag));
           pt.move(moveAmt);
+          biggestMove = max(biggestMove, moveAmt.mag());
           pt.setAttribute(LAST_SOLVER_ADJUSTMENT_VEC, moveAmt);
-        } else if (dampedMag > 0.0) {
+        } else if (mag > 0.0) {
           pt.move(delta);
+          biggestMove = max(biggestMove, delta.mag());
           pt.setAttribute(LAST_SOLVER_ADJUSTMENT_VEC, delta);
         }
       }
@@ -276,6 +276,9 @@ public class ConstraintSolver {
       if (totalError < MIN_ACCPETABLE_ERROR || numFinished == vars.getPoints().size()) {
         finished = true;
         currentState = State.Solved;
+      }
+      if (biggestMove > 0.05) {
+        bug(String.format("Farthest move: %2.6f", biggestMove));
       }
       fire();
     } catch (Exception ex) {
@@ -387,9 +390,6 @@ public class ConstraintSolver {
       if (!c.isValid(vars)) {
         doomedConstraints.add(c);
       }
-    }
-    for (Constraint c : doomedConstraints) {
-      Debug.stacktrace("removing basic constraint: " + c, 8);
     }
     vars.getConstraints().removeAll(doomedConstraints);
     wakeUp();
