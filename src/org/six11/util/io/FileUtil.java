@@ -10,7 +10,7 @@ import java.util.Stack;
 import java.io.*;
 
 import javax.swing.JFileChooser;
-//import java.io.*;
+// import java.io.*;
 import javax.swing.filechooser.FileFilter;
 
 /**
@@ -107,6 +107,7 @@ public abstract class FileUtil {
       public boolean accept(File f) {
         return (f != null && (f.getName().endsWith(suffixWithDot) || f.isDirectory()));
       }
+
       public String getDescription() {
         return description;
       }
@@ -119,6 +120,34 @@ public abstract class FileUtil {
     List<File> ret = new ArrayList<File>();
     SuffixFileFilter filter = new SuffixFileFilter(suffix);
     searchForSuffix(filter, baseDir, ret);
+    return ret;
+  }
+
+  /**
+   * Make a file whose name looks something my "myThing-3.txt". It searches for the first available
+   * filename, where the number increases until it finds something.
+   * 
+   * @param baseDir
+   *          the directory where you want the file to be made.
+   * @param prefix
+   *          the first part of the filename, such as "myThing". Do not include a dash.
+   * @param suffix
+   *          the end of the filename, such as ".txt". you must include a dot if your filename has
+   *          it. e
+   * @param startNum
+   *          The number to start searching.
+   * @return the first file of the above format it finds.
+   */
+  public static File makeIncrementalFile(File baseDir, String prefix, String suffix, int startNum) {
+    File ret = null;
+    int num = startNum;
+    while (true) {
+      ret = new File(baseDir, prefix + "-" + num + suffix);
+      if (!ret.exists()) {
+        break;
+      }
+      num = num + 1;
+    }
     return ret;
   }
 
@@ -213,7 +242,7 @@ public abstract class FileUtil {
     }
     ret = ret && f.delete();
     if (!f.exists()) {
-      System.out.println("Deleted  "+ f.getAbsolutePath());
+      System.out.println("Deleted  " + f.getAbsolutePath());
     }
     return ret;
   }
@@ -249,13 +278,14 @@ public abstract class FileUtil {
     String p = new File(file).getParentFile().getPath();
     return p;
   }
-  
+
   public static void createIfNecessary(File f) throws IOException {
     if (!f.exists()) {
       if (!f.getParentFile().exists()) {
         boolean result = f.getParentFile().mkdirs();
         if (!result) {
-          throw new IOException("Can't create parent directory: " + f.getParentFile().getAbsolutePath());
+          throw new IOException("Can't create parent directory: "
+              + f.getParentFile().getAbsolutePath());
         }
       }
       boolean result = f.createNewFile();
