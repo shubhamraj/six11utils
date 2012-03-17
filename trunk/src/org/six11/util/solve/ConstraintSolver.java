@@ -40,6 +40,13 @@ public class ConstraintSolver {
   public static final String ACCUM_CORRECTION = "accumulated correction";
   public static final String LAST_SOLVER_ADJUSTMENT_VEC = "last solver adjustment";
   private static final double MIN_ACCPETABLE_ERROR = 0.0001;
+  private static final String LAST_SOLVER_DESIRED_ADJUSTMENT_VEC = "last desired solver adjustment";
+
+  /**
+   * When the heat value is above this threshold, each step() will move ALL points. Below this
+   * threshold, step() moves only the points associated with the most out-of-whack constraint.
+   */
+  private static final double HEAT_SINGLE_TARGET_THRESHOLD = 0.3;
 
   private List<Listener> stepListeners;
   private TestSolveUI ui = null;
@@ -145,6 +152,10 @@ public class ConstraintSolver {
     double heat = 1.0;
     double heatStep = -0.001;
     numIterations = 0;
+    Statistics errorStats = new Statistics();
+    int sampleStatsN = 10;
+    errorStats.setMaximumN(sampleStatsN);
+    double prevRunningErrorMean = 0;
     while (true) {
       synchronized (monitor) {
         try {
@@ -164,8 +175,24 @@ public class ConstraintSolver {
               ex.printStackTrace();
             }
           }
+          errorStats.addData(e);
+          if (errorStats.getN() == sampleStatsN && (numIterations % sampleStatsN == 0)) {
+            double thisRunningErrorMean = errorStats.getMean();
+            if (prevRunningErrorMean > 0) {
+              double improvementRatio = (thisRunningErrorMean / prevRunningErrorMean);
+              bug(String.format("mean de: %2.6f -- improve : %2.6f -- heat: %2.6f",
+                  thisRunningErrorMean, improvementRatio, heat));
+              if (improvementRatio > 0.95) { // if we not improving,
+                heat = heat + heatStep; // cool down a little bit.
+              }
+            }
+            prevRunningErrorMean = thisRunningErrorMean;
+          }
           prevError = e;
-          heat = heat + heatStep;
+          //          heat = heat + heatStep;
+          if (heat < HEAT_SINGLE_TARGET_THRESHOLD && heat - heatStep > HEAT_SINGLE_TARGET_THRESHOLD) {
+            bug("Cold :(");
+          }
           heat = max(0.1, heat);
           if (!finished) {
             currentState = State.Working;
@@ -221,7 +248,7 @@ public class ConstraintSolver {
       double worstError = 0;
       for (Constraint c : vars.getConstraints()) {
         c.clearMessages();
-        if (heat > 0.6) {
+        if (heat > HEAT_SINGLE_TARGET_THRESHOLD) {
           c.accumulateCorrection(heat);
         } else {
           double e = c.measureError();
@@ -257,18 +284,23 @@ public class ConstraintSolver {
         }
         Vec delta = Vec.sum(corrections.toArray(new Vec[0]));
         double mag = delta.mag();
-
+        biggestMove = max(biggestMove, mag);
         totalError = totalError + mag;
-
+        pt.setAttribute(LAST_SOLVER_DESIRED_ADJUSTMENT_VEC, delta);
+      }
+      double biggestActualMove = 0;
+      for (Pt pt : vars.getPoints()) {
         // respects the shape of root function:
-        if (mag > 1.0) {
-          Vec moveAmt = delta.getVectorOfMagnitude(sqrt(mag));
-          pt.move(moveAmt);
-          biggestMove = max(biggestMove, moveAmt.mag());
-          pt.setAttribute(LAST_SOLVER_ADJUSTMENT_VEC, moveAmt);
-        } else if (mag > 0.0) {
+        Vec desired = (Vec) pt.getAttribute(LAST_SOLVER_DESIRED_ADJUSTMENT_VEC);
+        Vec delta = desired;
+        if (biggestMove > 1) {
+          double targetMag = desired.mag() / biggestMove;
+          delta = desired.getVectorOfMagnitude(targetMag);
+        }
+        double mag = delta.mag();
+        if (mag > 0.0) {
           pt.move(delta);
-          biggestMove = max(biggestMove, delta.mag());
+          biggestActualMove = max(biggestActualMove, delta.mag());
           pt.setAttribute(LAST_SOLVER_ADJUSTMENT_VEC, delta);
         }
       }
@@ -276,9 +308,6 @@ public class ConstraintSolver {
       if (totalError < MIN_ACCPETABLE_ERROR || numFinished == vars.getPoints().size()) {
         finished = true;
         currentState = State.Solved;
-      }
-      if (biggestMove > 0.05) {
-        bug(String.format("Farthest move: %2.6f", biggestMove));
       }
       fire();
     } catch (Exception ex) {
