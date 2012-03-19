@@ -2,11 +2,12 @@ package org.six11.util.solve;
 
 import java.awt.Component;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import org.six11.util.Debug;
@@ -17,9 +18,7 @@ import org.six11.util.pen.Pt;
 import org.six11.util.pen.Vec;
 
 import static org.six11.util.Debug.bug;
-import static java.lang.Math.sqrt;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 public class ConstraintSolver {
 
@@ -59,6 +58,10 @@ public class ConstraintSolver {
   private double residual;
   private int numIterations;
   private boolean paused;
+  private boolean shouldPrintToFile;
+  private File debuggingFile;
+  private FileWriter debuggingFileWriter;
+  private Entropy entropy;
 
   public static void main(String[] in) throws Exception {
     new ConstraintSolver(in);
@@ -87,6 +90,7 @@ public class ConstraintSolver {
     this.vars = new VariableBank();
     this.stepListeners = new ArrayList<Listener>();
     this.buf = new StringBuilder();
+    this.entropy = Entropy.getEntropy();
   }
 
   public void setFrameRate(int frameRate) {
@@ -180,8 +184,6 @@ public class ConstraintSolver {
             double thisRunningErrorMean = errorStats.getMean();
             if (prevRunningErrorMean > 0) {
               double improvementRatio = (thisRunningErrorMean / prevRunningErrorMean);
-              bug(String.format("mean de: %2.6f -- improve : %2.6f -- heat: %2.6f",
-                  thisRunningErrorMean, improvementRatio, heat));
               if (improvementRatio > 0.95) { // if we not improving,
                 heat = heat + heatStep; // cool down a little bit.
               }
@@ -194,6 +196,7 @@ public class ConstraintSolver {
             bug("Cold :(");
           }
           heat = max(0.1, heat);
+          printDebug(heat);
           if (!finished) {
             currentState = State.Working;
           }
@@ -212,10 +215,47 @@ public class ConstraintSolver {
       try {
         Thread.sleep(naptime);
       } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
+      }  
+    }
+  }
+  
+  private void printDebug(double heat) {
+    if (shouldPrintToFile && debuggingFileWriter != null) {
+      // numIterations totalError heat c1name c1numPoints c1err ...
+      StringBuilder buf = new StringBuilder();
+      buf.append(String.format("%d\t%.6f\t%1.6f\t", numIterations, residual, heat));
+      for (int i = 0; i < vars.getConstraints().size(); i++) {
+        Constraint c = vars.getConstraints().get(i);
+        String dashedType = c.getType().replaceAll(" ", "-");
+        buf.append(String.format("%s\t%d\t%2.6f\t", dashedType, c.getRelatedPoints().length, Math.abs(c.measureError())));
+      }
+      buf.append("\n");
+      try {
+        debuggingFileWriter.append(buf.toString());
+        debuggingFileWriter.flush();
+      } catch (IOException ex) {
+        ex.printStackTrace();
+        bug("Got exception when writing debug file. I will stop debugging now.");
+        shouldPrintToFile = false;
       }
     }
+  }
+  
+  public void setFileDebug(File outfile) {
+    try {
+      if (debuggingFileWriter != null) { // close old one, if it exists
+        debuggingFileWriter.close();
+      }
+      debuggingFile = outfile;
+      debuggingFileWriter = new FileWriter(debuggingFile);
+      shouldPrintToFile = outfile != null;
+      bug("Constraint solver is writing massive amounts of debugging information to " + outfile.getAbsolutePath());
+    } catch (IOException e) {
+      bug("Will be unable to debug to file: " + outfile);
+      bug("Make sure it exists and is writeable and stuff.");
+    } 
+
   }
 
   private double calcTotalConstraintError() {
@@ -251,6 +291,7 @@ public class ConstraintSolver {
         if (heat > HEAT_SINGLE_TARGET_THRESHOLD) {
           c.accumulateCorrection(heat);
         } else {
+          bug("moving just one");
           double e = c.measureError();
           if (Math.abs(e) > Math.abs(worstError)) {
             worst = c;
@@ -299,6 +340,7 @@ public class ConstraintSolver {
         }
         double mag = delta.mag();
         if (mag > 0.0) {
+          delta = delta.getScaled(entropy.getDouble(heat)); // shorten delta by a random amount in range [0..heat]
           pt.move(delta);
           biggestActualMove = max(biggestActualMove, delta.mag());
           pt.setAttribute(LAST_SOLVER_ADJUSTMENT_VEC, delta);
