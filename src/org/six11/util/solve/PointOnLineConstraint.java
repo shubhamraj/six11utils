@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.six11.util.Debug;
 import org.six11.util.data.Lists;
+import org.six11.util.data.Statistics;
 import org.six11.util.pen.DrawingBuffer;
 import org.six11.util.pen.DrawingBufferRoutines;
 import org.six11.util.pen.Functions;
@@ -38,8 +39,6 @@ public class PointOnLineConstraint extends Constraint {
     super(obj);
     fromJson(obj, vars);
   }
-  
-  
 
   public boolean isValid(VariableBank vars) {
     return manyPoints.size() > 2 && vars.getPoints().containsAll(manyPoints);
@@ -61,6 +60,36 @@ public class PointOnLineConstraint extends Constraint {
   }
 
   public Line getTargetLine() {
+    return getTargetLineRegressionStyle();
+  }
+
+  private Line getTargetLineRegressionStyle() {
+    Pt mean = Functions.getMean(manyPoints);
+    Pt[] asArray = manyPoints.toArray(new Pt[0]);
+    double varianceX = 0;
+    double varianceY = 0;
+    double varianceXY = 0;
+    for (int i = 0; i < asArray.length; i++) {
+      double diffX = asArray[i].x - mean.x;
+      double diffY = asArray[i].y - mean.y;
+      varianceX = varianceX + (diffX * diffX); // diffX squared
+      varianceY = varianceY + (diffY * diffY); // diffY squared
+      varianceXY = varianceXY + (diffX * diffY); // diff X times diff Y
+    }
+    Vec slopeVec;
+    if (varianceX > varianceY) {
+      double slope = varianceXY / varianceX;
+      slopeVec = new Vec(1, slope).getUnitVector();
+    } else {
+      double slope = varianceXY / varianceY;
+      slopeVec = new Vec(slope, 1).getUnitVector();
+    }
+    
+    Line ret = new Line(mean, slopeVec);
+    return ret;
+  }
+
+  public Line getTargetLineAntipodeStyle() {
     Vec dir = new Vec(antipodeA, antipodeB);
     Pt c = Functions.getMean(manyPoints);
     return new Line(c, dir);
