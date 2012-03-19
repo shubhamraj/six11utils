@@ -77,6 +77,12 @@ public class DistanceConstraint extends Constraint {
   public double measureError() {
     double ret = 0;
     ret = a.distance(b) - d.getValue();
+    // TODO: experiment. Distance constraints tend to have way more error than other kinds of constraints. E.g. an angle
+    // constraint can have at most 3.14 error, but a distance constraint can be like 400 off. So when the error is large,
+    // just report some capped error.
+//    if (ret > 4) {
+//      ret = 4;
+//    }
     return ret;
   }
 
