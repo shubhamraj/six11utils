@@ -19,7 +19,6 @@ import static java.lang.Math.*;
 
 import static org.six11.util.Debug.bug;
 import static org.six11.util.Debug.num;
-import static org.six11.util.Debug.stacktrace;
 import org.six11.util.data.Statistics;
 import org.six11.util.math.EllipseFit;
 
@@ -772,10 +771,10 @@ public abstract class Functions {
     ret.add(prev);
     int seqPointer = start + 1;
     if (seqPointer < seq.size()) {
-      
+
       Pt next = seq.get(seqPointer);
       while (seqPointer <= end) {
-        
+
         double dist = prev.distance(next);
         if (dist + patchDist > threshold) {
           // patch point between prev and next. update patchDist and prev.
@@ -926,8 +925,6 @@ public abstract class Functions {
   public static Pt getNearestPointOnPolyline(Pt epicenter, List<Pt> polyline) {
     double minDist = Double.MAX_VALUE;
     Pt nearest = null;
-    double paramDist = 0;
-    Pt prev = null;
     if (polyline.size() > 1) {
       for (int i = 0; i < polyline.size() - 1; i++) {
         Pt vert = polyline.get(i);
@@ -1922,20 +1919,20 @@ public abstract class Functions {
 
   /**
    * Returns true if none of the points are at the same location (using Pt.
+   * 
    * @param somePoints
    * @return
    */
   public static List<Pt> getUniquePoints(List<Pt> somePoints) {
     Set<Pt> doomed = new HashSet<Pt>();
-    for (int i=0; i < somePoints.size()-1; i++) {
+    for (int i = 0; i < somePoints.size() - 1; i++) {
       Pt left = somePoints.get(i);
-      for (int j=i+1; j < somePoints.size(); j++) {
-        Pt right =somePoints.get(j);
+      for (int j = i + 1; j < somePoints.size(); j++) {
+        Pt right = somePoints.get(j);
         if (doomed.contains(right)) {
           continue;
         }
         if (left.isSameLocation(right)) {
-          bug("Found redundant point: " + num(left) + " ~= " + num(right));
           doomed.add(right);
         }
       }
@@ -1961,9 +1958,8 @@ public abstract class Functions {
   }
 
   public static double getEllipseError(RotatedEllipse ellie, List<Pt> points) {
-    int numPoints = (int) Math.ceil(Functions.getCurvilinearLength(points));
     double ret = 0;
-    List<Pt> ellipseSurface = ellie.initArc();//ellie.getRestrictedArcPath(numPoints);
+    List<Pt> ellipseSurface = ellie.initArc();
     double errorSum = 0;
     for (Pt pt : points) {
       Pt nearest = Functions.getNearestPointOnSequence(pt, ellipseSurface);
@@ -2249,12 +2245,14 @@ public abstract class Functions {
     double end = arcParams.get(2);
     double step = (end - start) / numSteps;
     double r = arc1.distance(center);
-    for (double t = start; t <= end; t += step) {
-      surface.add(getCircularPoint(t, r, center));
+    if (step > EQ_TOL) {
+      for (double t = start; t <= end; t += step) {
+        surface.add(getCircularPoint(t, r, center));
+      }
     }
     return surface;
   }
-  
+
   /**
    * Returns a point on the circle boundary, parameterized by the given radial angle. If you call
    * this a bunch of times for t=0..2pi you sample the entire circle.
@@ -2265,7 +2263,7 @@ public abstract class Functions {
     Pt ret = new Pt(x + center.x, y + center.y);
     return ret;
   }
-  
+
   private static char getAngleCode(double m, double n) {
     char ret = '+'; // non-decreasing: m < n
     if (m > n) {
