@@ -142,15 +142,15 @@ public abstract class Constraint {
           + ", but it is pinned. Constraint type: " + getType());
     }
     boolean add = true;
-    if (detectOscillation()) {
-      if (entropy.getBoolean()) {
-        Vec correction2 = new Vec(correction.getX() * entropy.getDouble(2 * heat),
-            correction.getY() * entropy.getDouble(2 * heat));
-        correction = correction2;
-      } else {
-        add = false;
-      }
-    }
+//    if (detectOscillation()) {
+//      if (entropy.getBoolean()) {
+//        Vec correction2 = new Vec(correction.getX() * entropy.getDouble(2 * heat),
+//            correction.getY() * entropy.getDouble(2 * heat));
+//        correction = correction2;
+//      } else {
+//        add = false;
+//      }
+//    }
     if (add) {
       @SuppressWarnings("unchecked")
       List<Vec> corrections = (List<Vec>) pt.getAttribute(ConstraintSolver.ACCUM_CORRECTION);

@@ -482,8 +482,8 @@ public class Debug {
   }
 
   public static void detectNaN(double v, String msg) {
-    if (Double.isNaN(v)) {
-      new RuntimeException(msg).printStackTrace();
+    if (Double.isNaN(v) || Double.isInfinite(v)) {
+      throw new RuntimeException(msg);
     }
   }
 

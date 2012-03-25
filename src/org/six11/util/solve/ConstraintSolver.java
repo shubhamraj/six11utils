@@ -96,6 +96,10 @@ public class ConstraintSolver {
   public void setFrameRate(int frameRate) {
     this.fps = frameRate;
   }
+  
+  public int getFrameRate() {
+    return fps;
+  }
 
   public void setDebugOut(boolean v) {
     this.debugOutput = v;
@@ -216,32 +220,67 @@ public class ConstraintSolver {
         Thread.sleep(naptime);
       } catch (InterruptedException e) {
         e.printStackTrace();
-      }  
+      }
     }
   }
-  
+
   private void printDebug(double heat) {
     if (shouldPrintToFile && debuggingFileWriter != null) {
-      // numIterations totalError heat c1name c1numPoints c1err ...
-      StringBuilder buf = new StringBuilder();
-      buf.append(String.format("%d\t%.6f\t%1.6f\t", numIterations, residual, heat));
-      for (int i = 0; i < vars.getConstraints().size(); i++) {
-        Constraint c = vars.getConstraints().get(i);
-        String dashedType = c.getType().replaceAll(" ", "-");
-        buf.append(String.format("%s\t%d\t%2.6f\t", dashedType, c.getRelatedPoints().length, Math.abs(c.measureError())));
-      }
-      buf.append("\n");
-      try {
-        debuggingFileWriter.append(buf.toString());
-        debuggingFileWriter.flush();
-      } catch (IOException ex) {
-        ex.printStackTrace();
-        bug("Got exception when writing debug file. I will stop debugging now.");
-        shouldPrintToFile = false;
+      //      if (false) {
+      //        // numIterations totalError heat c1name c1numPoints c1err ...
+      //        StringBuilder buf = new StringBuilder();
+      //        buf.append(String.format("%d\t%.6f\t%1.6f\t", numIterations, residual, heat));
+      //        for (int i = 0; i < vars.getConstraints().size(); i++) {
+      //          Constraint c = vars.getConstraints().get(i);
+      //          String dashedType = c.getType().replaceAll(" ", "-");
+      //          buf.append(String.format("%s\t%d\t%2.6f\t", dashedType, c.getRelatedPoints().length,
+      //              Math.abs(c.measureError())));
+      //        }
+      //        buf.append("\n");
+      //        try {
+      //          debuggingFileWriter.append(buf.toString());
+      //          debuggingFileWriter.flush();
+      //        } catch (IOException ex) {
+      //          ex.printStackTrace();
+      //          bug("Got exception when writing debug file. I will stop debugging now.");
+      //          shouldPrintToFile = false;
+      //        }
+      //      }
+      if (true) {
+        // numIterations totalError p1LastMove p2LastMove ...
+        StringBuilder buf = new StringBuilder();
+        if (numIterations == 1) {
+          buf.append("# col = " + vars.getPoints().size() + "\n");
+          buf.append("# plot for [i=2:col] 'file.dat' using 1:i with lines title column(i)\n");
+          buf.append("Step\tTotalError");
+          for (Pt pt : vars.getPoints()) {
+            buf.append("\t" + pt.getString("name"));
+          }
+          buf.append("\n");
+        }
+        buf.append(numIterations + "\t" + residual + "\t");
+        for (int i = 0; i < vars.getPoints().size(); i++) { //
+          Pt pt = vars.getPoints().get(i);
+          Vec delta = (Vec) pt.getAttribute(LAST_SOLVER_ADJUSTMENT_VEC);
+          if (delta != null) {
+            buf.append("\t" + delta.mag());
+          } else {
+            buf.append("0");
+          }
+        }
+        buf.append("\n");
+        try {
+          debuggingFileWriter.append(buf.toString());
+          debuggingFileWriter.flush();
+        } catch (IOException ex) {
+          ex.printStackTrace();
+          bug("Got exception when writing debug file. I will stop debugging now.");
+          shouldPrintToFile = false;
+        }
       }
     }
   }
-  
+
   public void setFileDebug(File outfile) {
     try {
       if (debuggingFileWriter != null) { // close old one, if it exists
@@ -250,11 +289,12 @@ public class ConstraintSolver {
       debuggingFile = outfile;
       debuggingFileWriter = new FileWriter(debuggingFile);
       shouldPrintToFile = outfile != null;
-      bug("Constraint solver is writing massive amounts of debugging information to " + outfile.getAbsolutePath());
+      bug("Constraint solver is writing massive amounts of debugging information to "
+          + outfile.getAbsolutePath());
     } catch (IOException e) {
       bug("Will be unable to debug to file: " + outfile);
       bug("Make sure it exists and is writeable and stuff.");
-    } 
+    }
 
   }
 
@@ -284,34 +324,10 @@ public class ConstraintSolver {
       }
 
       // 2: poll all constraints and have them add correction vectors to each point
-      Constraint worst = null;
-      double worstError = 0;
       for (Constraint c : vars.getConstraints()) {
         c.clearMessages();
-        if (heat > HEAT_SINGLE_TARGET_THRESHOLD) {
-          c.accumulateCorrection(heat);
-        } else {
-          bug("moving just one");
-          double e = c.measureError();
-          if (Math.abs(e) > Math.abs(worstError)) {
-            worst = c;
-            worstError = e;
-          }
-        }
+        c.accumulateCorrection(heat);
         c.pushLastError();
-      }
-      for (Constraint c : vars.getConstraints()) {
-        if (debugOutput) {
-          if (c == worst) {
-            buf.append("[" + String.format(f + "] ", c.measureError()));
-          } else {
-            buf.append(String.format(f + " ", c.measureError()));
-          }
-        }
-      }
-      if (worst != null) {
-        //        bug("Worst offender: " + worst);
-        worst.accumulateCorrection(heat);
       }
 
       // 3: now all points have some accumulated correction. sum them and update the point's location.
@@ -513,4 +529,5 @@ public class ConstraintSolver {
   public boolean isPaused() {
     return paused;
   }
+
 }
