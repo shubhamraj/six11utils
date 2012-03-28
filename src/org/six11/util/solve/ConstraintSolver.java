@@ -96,7 +96,7 @@ public class ConstraintSolver {
   public void setFrameRate(int frameRate) {
     this.fps = frameRate;
   }
-  
+
   public int getFrameRate() {
     return fps;
   }
@@ -324,10 +324,34 @@ public class ConstraintSolver {
       }
 
       // 2: poll all constraints and have them add correction vectors to each point
+      Constraint worst = null;
+      double worstError = 0;
       for (Constraint c : vars.getConstraints()) {
         c.clearMessages();
-        c.accumulateCorrection(heat);
+        if (heat > HEAT_SINGLE_TARGET_THRESHOLD) {
+          c.accumulateCorrection(heat);
+        } else {
+          bug("moving just one");
+          double e = c.measureError();
+          if (Math.abs(e) > Math.abs(worstError)) {
+            worst = c;
+            worstError = e;
+          }
+        }
         c.pushLastError();
+      }
+      for (Constraint c : vars.getConstraints()) {
+        if (debugOutput) {
+          if (c == worst) {
+            buf.append("[" + String.format(f + "] ", c.measureError()));
+          } else {
+            buf.append(String.format(f + " ", c.measureError()));
+          }
+        }
+      }
+      if (worst != null) {
+        //        bug("Worst offender: " + worst);
+        worst.accumulateCorrection(heat);
       }
 
       // 3: now all points have some accumulated correction. sum them and update the point's location.
