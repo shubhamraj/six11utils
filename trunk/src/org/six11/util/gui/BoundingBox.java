@@ -292,4 +292,10 @@ public class BoundingBox {
     }
   }
 
+  public void addAll(Pt... points) {
+    for (Pt pt : points) {
+      add(pt);
+    }
+  }
+
 }
