@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 import java.util.Map;
 
 import javax.swing.Action;
@@ -77,6 +78,11 @@ public class Components {
         rp.registerKeyboardAction(action, s, JComponent.WHEN_IN_FOCUSED_WINDOW);
       }
     }
+  }
+  
+  public static Graphics2D getHeadlessGraphics() {
+    BufferedImage im = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
+    return im.createGraphics();
   }
 
 }
