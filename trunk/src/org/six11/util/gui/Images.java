@@ -14,6 +14,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.util.List;
 
+import javax.swing.ImageIcon;
+
 /**
  * A utility class for working with images.
  **/
@@ -108,5 +110,16 @@ public class Images {
     boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
     WritableRaster raster = bi.copyData(null);
     return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
-   }
+  }
+
+  /** Returns an ImageIcon, or null if the path was invalid. */
+  public static ImageIcon createImageIcon(String path, String description) {
+    URL imgURL = "".getClass().getResource(path); // weird "".getClass() syntax to use String's classloader
+    if (imgURL != null) {
+      return new ImageIcon(imgURL, description);
+    } else {
+      System.err.println("Couldn't find file: " + path);
+      return null;
+    }
+  }
 }
