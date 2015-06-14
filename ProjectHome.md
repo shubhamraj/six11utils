@@ -1,0 +1,1 @@
+This is project-agnostic Java utility code. It includes networking, math, IO, GUI, and logging classes.
